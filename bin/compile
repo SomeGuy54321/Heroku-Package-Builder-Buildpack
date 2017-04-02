@@ -117,9 +117,9 @@ fi
 
 ##########
 # do stuff
-source utils-extra
-source steps/install_linuxbrew.sh
-source steps/install_packages.sh
+source $BIN_DIR/utils-extra
+source $BIN_DIR/steps/install_linuxbrew.sh
+source $BIN_DIR/steps/install_packages.sh
 ##########
 
 
