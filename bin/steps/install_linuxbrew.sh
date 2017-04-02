@@ -5,7 +5,7 @@ function debug-here() {
     if [ $DEBUG_HERE -gt 0 ]; then
         print-env
         do-debug "Relevant local variables:"
-        set -o posix && set | sort | grep -E 'HOMEBREW|PATH|HOME|APP_DIR'
+        set -o posix && set | sort | grep -E 'HOMEBREW|PATH|HOME|APP_DIR' | indent
     fi
 }
 
@@ -46,7 +46,7 @@ fi
 
 # install selected packages
 debug-here
-source install_packages.sh
+source $BIN_DIR/steps/install_packages.sh
 
 
 # reset to default locations
