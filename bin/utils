@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+
+shopt -s extglob
+
+[ $(uname) == "Darwin" ] && SED_FLAG='-l' || SED_FLAG='-u'
+
+BUILD_DEBUG=0  # just so there isn't an error thrown when this is sourced, shoudl be overridden
+
+function set-default-configvar() {
+    local this_var=$1  # no spaces in var name
+    local this_val="$2"
+    local default="$3"
+
+    # this must be shortened...
+    if [ -s "$this_val" ]; then
+        export $this_var=$(cat "$this_val" 2>/dev/null | head -n1 || echo "$default")
+    else
+        export $this_var="$default"
+    fi
+
+
+}
+
+function print-env() {
+    echo ""
+    puts-step "Current environment:"
+    env | sort | indent
+    echo ""
+}
+
+function do-debug() {
+    if [ $BUILD_DEBUG -gt 0 ]; then
+        echo "-----> DEBUG1: $@"
+    fi
+}
+
+# Syntax sugar.
+indent() {
+    RE="s/^/       /"
+    sed $SED_FLAG "$RE"
+}
+
+indent-debug() {
+    RE="s/^/       /"
+    if [ $BUILD_DEBUG -gt 0 ]; then
+        sed $SED_FLAG "$RE"
+    fi
+}
+
+# Clean up pip output
+cleanup() {
+    do-debug "Running cleanup()"
+    sed $SED_FLAG -e 's/\.\.\.\+/.../g' | sed $SED_FLAG '/already satisfied/Id' | sed $SED_FLAG -e '/Overwriting/Id' |  sed $SED_FLAG -e '/python executable/Id' | sed $SED_FLAG -e '/no previously-included files/Id'
+}
+
+# Buildpack Steps.
+function puts-step (){
+    echo "-----> $@"
+}
+
+# Buildpack Warnings.
+function puts-warn (){
+    echo " !     $@"
+}
+
+# Usage: $ set-env key value
+function set-env (){
+    do-debug "Adding 'export $1=$2' to $PROFILE_PATH"
+    echo "export $1=$2" >> $PROFILE_PATH
+}
+
+# Usage: $ set-default-env key value
+function set-default-env (){
+    # sets $1 to $2 if $1 isnt already set
+    do-debug "Adding 'export $1=\${$1:-$2}' to $PROFILE_PATH"
+    echo "export $1=\${$1:-$2}" >> $PROFILE_PATH
+}
+
+# Usage: $ set-default-env key value
+function un-set-env (){
+    do-debug "Adding 'unset $1' to $PROFILE_PATH"
+    echo "unset $1" >> $PROFILE_PATH
+}
+
+# https://devcenter.heroku.com/articles/buildpack-api#bin-compile-summary
+function export_env_dir() {
+  env_dir=$1
+  whitelist_regex=${2:-''}
+  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
+}
+
+# Does some serious copying.
+function deep-cp (){
+  find -H $1 -maxdepth 1 -name '.*' -a \( -type d -o -type f -o -type l \) -exec cp -a '{}' $2 \;
+  cp -r $1/!(tmp) $2
+  # echo copying $1 to $2
+}
+
+# Does some serious moving.
+function deep-mv (){
+  deep-cp $1 $2
+
+  rm -fr $1/!(tmp)
+  find -H $1 -maxdepth 1 -name '.*' -a \( -type d -o -type f -o -type l \) -exec rm -fr '{}' \;
+}
+
+## Section adapted from https://github.com/heroku/heroku-buildpack-python/blob/master/bin/utils#L56
+## Does some serious copying.
+#deep-cp() {
+#    [ $BUILD_DEBUG -gt 1 ] && VERBOSE="--verbose" || VERBOSE=""
+#    declare source="$1" target="$2"
+#    mkdir -p "$target"
+#
+#  # cp doesn't like being called without source params,
+#  # so make sure they expand to something first.
+#  # subshell to avoid surprising caller with shopts.
+#  (
+#    shopt -s nullglob dotglob
+#    set -- "$source"/!(tmp|.|..)
+#    [[ $# == 0 ]] || cp $VERBOSE -a "$@" "$target"
+#  )
+#}
+#
+## Does some serious deleting.
+#deep-rm() {
+#    [ $BUILD_DEBUG -gt 1 ] && VERBOSE="--verbose" || VERBOSE=""
+#    # subshell to avoid surprising caller with shopts.
+#    (
+#        shopt -s dotglob
+#        rm $VERBOSE -rf "$1"/!(.curlrc|.netrc|tmp|.|..)
+#    )
+#}
+#
+## Does some serious moving.
+#deep-mv() {
+#  deep-cp "$1" "$2"
+#  deep-rm "$1"
+#}
+#
+#sub-env() {
+#
+#  WHITELIST=${2:-''}
+#  BLACKLIST=${3:-'^(GIT_DIR|PYTHONHOME|LD_LIBRARY_PATH|LIBRARY_PATH|PATH)$'}
+#
+#  # Python-specific variables.
+#  export PYHONHOME=$BUILD_DIR/$BUILDCACHE/python
+#  export PYTHONPATH=$BUILD_DIR/
+#
+#  (
+#    if [ -d "$ENV_DIR" ]; then
+#      for e in $(ls $ENV_DIR); do
+#        echo "$e" | grep -E "$WHITELIST" | grep -qvE "$BLACKLIST" &&
+#        export "$e=$(cat $ENV_DIR/$e)"
+#        :
+#      done
+#    fi
+#
+#    $1
+#
+#  )
+#}
+
+# Get things from CONFIG_DIR
+# arg1 = file to check for, cat contents if found
+# arg2 = what to echo if file not found
+get-configvar() {
+    # get things from CONFIG_DIR
+    CHECK_FOR="$1"
+    DEFAULT="$2"
+    if [ -f "$CHECK_FOR" ]; then
+        cat "$CHECK_FOR" | head -n1 2>/dev/null
+    else
+        echo "$DEFAULT"
+    fi
+}
+
+# Buildpack Commands.
+puts-cmd() {
+  echo "     $ $@"
+}
+
+do-debug "Ran 'source $_'"

@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# Usage:
+#
+#     $ bin/compile <build-dir> <cache-dir> <env-path>
+
+# Fail fast and fail hard.
+set -eo pipefail
+
+# passed by compiler
+export BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
+export BUILD_DIR=$1
+export CACHE_DIR=$2
+export CONFIG_DIR=$3
+
+# Syntactic starch (more complex)
+source $BIN_DIR/utils
+
+# print our all environment variables
+#print-env
+
+# print last few commands
+#set -o history -o histexpand
+#puts-step "Last few commands:"
+#history 10 | indent
+
+# get things from CONFIG_DIR
+export BUILDCACHE=$(get-configvar "$CONFIG_DIR/BUILDCACHE" ".buildcache")
+BUILDPACK_XTRACE=$(get-configvar "$CONFIG_DIR/BUILDPACK_XTRACE" 0)  # print all commands to log
+export BUILD_DEBUG=$(get-configvar "$CONFIG_DIR/BUILD_DEBUG" 0)  # trigger the specially placed debug messages and verbose outputs
+
+
+# print all commands to log
+[ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || true && set +o xtrace
+
+
+# check if i got the right PATH form last buildpack
+# assume it contained the same BUILDCACHE, if not rebuild it
+do-debug "PATH when starting: $PATH"
+do-debug "PREV_BUILDPACK_PATH when starting: $PREV_BUILDPACK_PATH"
+
+
+# Paths.
+ROOT_DIR=$(dirname $BIN_DIR)
+export EXPORT_PATH="$(cd $(dirname $BIN_DIR/../export); pwd)"
+# use epoch date to hopefully control the order
+# in which the profile.d scripts are executed
+export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
+#PATH_CHECK=$(echo "$PATH" | grep "$BUILDCACHE" --color=never 2>/dev/null)
+#if [ ! "$PATH_CHECK" ]; then
+#    puts-warn "PATH did not contain ${BUILDCACHE}. Building PATH vars from scratch."
+#    # only add things to path which are created
+#    # here, extras can be added in .profile
+#    export PATH="/app/$BUILDCACHE/$CONDA_RELDIRPATH_UNDER_BUILDCACHE/bin:/app/$BUILDCACHE/bin:/app/$BUILDCACHE/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
+#fi
+
+
+# Directory Hacks for path consistiency.
+APP_DIR='/app'
+TMP_APP_DIR=$CACHE_DIR/tmp_app_dir
+CACHED_DIRS="$BUILDCACHE .ssh"
+export LOCAL_ROOT="$APP_DIR/$BUILDCACHE"
+
+
+# Sanitizing environment variables.
+unset GIT_DIR #CONDA_RELDIRPATH_UNDER_BUILDCACHE
+
+
+# Move whole APP_DIR to TMP_APP_DIR (which is in /tmp)
+mkdir -p $TMP_APP_DIR
+deep-mv $APP_DIR $TMP_APP_DIR
+
+
+# Copy Application code in.
+deep-mv $BUILD_DIR $APP_DIR
+
+
+# Set new context.
+ORIG_BUILD_DIR=$BUILD_DIR
+BUILD_DIR=$APP_DIR
+
+
+# Switch to the repo's context.
+cd $BUILD_DIR
+
+
+# Experimental pre_compile hook.
+source $BIN_DIR/steps/hooks/pre_compile
+
+
+# ### The Cache
+mkdir -p $CACHE_DIR
+
+
+# Restore old artifacts from the cache.
+for dir in $CACHED_DIRS; do
+    do-debug "Resursive copying $CACHE_DIR/$dir to $(pwd)"
+    cp -R $CACHE_DIR/$dir . &> /dev/null || true
+done
+
+
+#set +e
+#if [ ! -d "$BUILDCACHE" ]; then
+#    do-debug 'Making local root ~/$BUILDCACHE'
+#    mkdir -p $BUILDCACHE
+#    for d in bin sbin etc share lib include src; do
+#        mkdir -p $BUILDCACHE/$d
+#    done
+#    unset d
+#fi
+#set -e
+
+
+# Make profile.d directory.
+if [ ! -d "$PROFILE_PATH" ]; then
+    mkdir -p $(dirname $PROFILE_PATH)
+fi
+
+##########
+# do stuff
+source utils-extra
+source steps/install_linuxbrew.sh
+source steps/install_packages.sh
+##########
+
+
+## Set context environment variables.
+set-env PATH "$HOME/.linuxbrew/bin:\$PATH"
+set-env MANPATH "$HOME/.linuxbrew/share/man:\$MANPATH"
+set-env INFOPATH "$HOME/.linuxbrew/share/info:\$INFOPATH"
+
+
+# Experimental post_compile hook.
+source $BIN_DIR/steps/hooks/post_compile
+
+
+# ### Fin.
+deep-mv $BUILD_DIR $ORIG_BUILD_DIR
+deep-mv $TMP_APP_DIR $APP_DIR
+
+
+# writing the export file dynamically
+cat <<EOF > $BIN_DIR/../export
+
+export PREV_BUILDPACK_PATH=$PATH
+
+EOF
