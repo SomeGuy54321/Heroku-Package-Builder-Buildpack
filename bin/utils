@@ -145,8 +145,18 @@ function show_files() {
     ls -Flah $APP_DIR/public | indent-debug || true
     do-debug "Contents of $APP_DIR/tmp:"
     ls -Flah $APP_DIR/tmp | indent-debug || true
+
+
     do-debug "Contents of $TMP_APP_DIR:"
     ls -Flah $TMP_APP_DIR | indent-debug || true
+    do-debug "Contents of $TMP_APP_DIR/bin:"
+    ls -Flah $TMP_APP_DIR/bin | indent-debug || true
+    do-debug "Contents of $TMP_APP_DIR/:"
+    ls -Flah $TMP_APP_DIR/.bundle | indent-debug || true
+    do-debug "Contents of $TMP_APP_DIR/:"
+    ls -Flah $TMP_APP_DIR/ | indent-debug || true
+    do-debug "Contents of $TMP_APP_DIR/:"
+    ls -Flah $TMP_APP_DIR/ | indent-debug || true
 
 
     do-debug "Contents of $BIN_DIR:"

@@ -59,6 +59,11 @@ export LOCAL_ROOT="$APP_DIR/$BUILDCACHE"
 unset GIT_DIR #CONDA_RELDIRPATH_UNDER_BUILDCACHE
 
 
+# try smth
+do-debug "Trying to find .linuxbrew:"
+find / -type d -path '*/.linuxbrew*' -print -quit 2>/dev/null
+
+
 # Move whole APP_DIR to TMP_APP_DIR (which is in /tmp)
 mkdir -p $TMP_APP_DIR
 deep-mv $APP_DIR $TMP_APP_DIR
