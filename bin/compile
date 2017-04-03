@@ -78,6 +78,7 @@ CURR_DIR="$PWD"
 show_linuxbrew_files
 
 # Move the linuxbrew cache to APP_DIR, or optionally reinstall by deleting the cache dirs
+do-debug "PACKAGE_BUILDER_REINSTALL_LINUXBREW=\"$PACKAGE_BUILDER_REINSTALL_LINUXBREW\""
 for d in $LINUXBREW_DIRS; do
     if [ $PACKAGE_BUILDER_REINSTALL_LINUXBREW -gt 0 ]; then
         do-debug "Deleting cache $d"

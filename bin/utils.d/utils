@@ -22,7 +22,7 @@ function set-default-configvar() {
 function print-env() {
     echo ""
     puts-step "Current environment:"
-    env | sort | indent
+    env | sort |& indent
     echo ""
 }
 
@@ -133,7 +133,7 @@ puts-cmd() {
 function show_files() {
     VAR="$1"
     do-debug "Contents of $VAR:"
-    ls -Flah "${VAR}" | indent-debug |& indent-debug || true
+    ls -Flah "${VAR}" |& indent-debug || true
 }
 
 function show_linuxbrew_files() {
@@ -148,7 +148,7 @@ function show_linuxbrew_files() {
 # Does some serious copying.
 function deep_cp_subdirs(){
     for f in $(ls -A $1); do
-        cp -af $f $2 | indent || true
+        cp -af $f $2 |& indent || true
     done
     unset f
 }
@@ -157,7 +157,7 @@ function deep_cp_subdirs(){
 function export_configvar() {
     VAR="$1"
     DEFAULT="$2"
-    SET_TO="$(cat ${CONFIG_DIR}/${VAR} | indent-debug |& indent-debug)" || SET_TO="$DEFAULT"
+    SET_TO="$(cat ${CONFIG_DIR}/${VAR} |& indent-debug)" || SET_TO="$DEFAULT"
     do-debug "Setting $VAR to \"$DEFAULT\""
     export "$VAR"="$SET_TO" || puts-warn "Unable to set configvar $VAR to \"$SET_TO\""
     unset SET_TO DEFAULT VAR
