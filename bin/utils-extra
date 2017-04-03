@@ -73,7 +73,7 @@ function debug_heavy() {
 }
 
 # makes the brew output not show lines starting with '       ==>'
-alias brew_quiet() {
+function brew_quiet() {
     if [ $PACKAGE_BUILDER_INSTALL_QUIET -gt 0 ]; then
         grep -vE "^\s*==> " --line-buffered
     fi
