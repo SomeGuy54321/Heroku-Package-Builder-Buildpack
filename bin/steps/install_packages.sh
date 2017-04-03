@@ -110,6 +110,8 @@ function main() {
             $BUILD_DIR/$script $@
         done
     done
+    puts-step "Running brew cleanup"
+    brew cleanup | indent
 }
 
 main

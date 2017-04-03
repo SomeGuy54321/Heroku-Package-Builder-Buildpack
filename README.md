@@ -53,8 +53,9 @@ CONFIG VARS
 
 NOTES
 ====
-- If the build process times out before all packages are installed, reduce the number of packages in `package-extras.yaml` until you have a successful build. Then on the next build replace the successful packages with the removed packages. The successfully installed packages should still be available.
-- This package mostly depends on [Linuxbrew](https://github.com/Linuxbrew/brew), which is a fork of  [Homebrew](https://github.com/Homebrew/brew), which collects some anonymized info about your usage. To disable this set the config var `HOMEBREW_NO_ANALYTICS` to `1`.
+1. If the build process times out before all packages are installed, reduce the number of packages in `package-extras.yaml` until you have a successful build. Then on the next build replace the successful packages with the removed packages. The successfully installed packages should still be available.
+2. If you can't even get one package to build, have a look in the build log and see what its dependencies are. Try installing those individually before the main package, following the pattern in (1).
+3. This package mostly depends on [Linuxbrew](https://github.com/Linuxbrew/brew), which is a fork of  [Homebrew](https://github.com/Homebrew/brew), which collects some anonymized info about your usage. To disable this set the config var `HOMEBREW_NO_ANALYTICS` to `1`.
 
 TODO
 ====
