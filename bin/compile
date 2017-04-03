@@ -153,7 +153,7 @@ source $BIN_DIR/steps/hooks/post_compile
 
 # ### Fin.
 deep-mv $BUILD_DIR $ORIG_BUILD_DIR
-deep-mv $TMP_APP_DIR $APP_DIR
+deep-cp $TMP_APP_DIR $APP_DIR
 
 
 # writing the export file dynamically
