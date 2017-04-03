@@ -15,13 +15,6 @@ export CONFIG_DIR=$3
 # Syntactic starch (more complex)
 source $BIN_DIR/utils
 
-# print our all environment variables
-#print-env
-
-# print last few commands
-#set -o history -o histexpand
-#puts-step "Last few commands:"
-#history 10 | indent
 
 # get things from CONFIG_DIR
 export BUILDCACHE=$(get-configvar "$CONFIG_DIR/BUILDCACHE" ".buildcache")
