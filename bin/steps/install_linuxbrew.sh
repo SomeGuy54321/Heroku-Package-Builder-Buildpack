@@ -10,7 +10,7 @@ DEBUG_HERE=1
 # linuxbrew bases its installation on the HOME variable
 # so TEMPORARILY we set this to the BUILD_DIR
 OLD_HOME=$HOME
-export HOME=$BUILD_DIR
+export HOME=$TMP_APP_DIR
 OLD_PATH=$PATH
 export PATH="$HOME/.linuxbrew/bin:$PATH"
 do-debug "PATH before checking if we install linuxbrew: '$PATH'"
