@@ -77,6 +77,7 @@ show_linuxbrew_files
 
 # Move the linuxbrew cache to APP_DIR, or optionally reinstall by deleting the cache dirs
 do-debug "PACKAGE_BUILDER_REINSTALL_LINUXBREW=\"$PACKAGE_BUILDER_REINSTALL_LINUXBREW\""
+show_files "$PWD/"
 for d in $LINUXBREW_DIRS; do
 
     if [ $PACKAGE_BUILDER_REINSTALL_LINUXBREW -gt 0 ]; then
@@ -97,6 +98,7 @@ for d in $LINUXBREW_DIRS; do
 
     fi
 done
+show_files "$PWD/"
 
 show_linuxbrew_files
 
