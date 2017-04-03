@@ -72,6 +72,14 @@ mkdir -p $CACHE_DIR
 
 
 ### START Linuxbrew-specific stuff #####################################################################################
+# debugging
+show_files $BUILD_DIR/.cache
+show_files $BUILD_DIR/.linuxbrew
+show_files $APP_DIR/.cache
+show_files $APP_DIR/.linuxbrew
+show_files $CACHE_DIR/.cache
+show_files $CACHE_DIR/.linuxbrew
+
 ORIG_CACHE_DIR=$CACHE_DIR
 CACHE_DIR=$CACHE_DIR/packagebuilder_cache
 LINUXBREW_DIRS=".linuxbrew .cache"
@@ -116,10 +124,10 @@ done
 rm -rf "$CURR_DIR/.cache"/*
 
 # debugging
-show_files $CURR_DIR/.cache
 show_files $BUILD_DIR/.cache
-show_files $CURR_DIR/.linuxbrew
 show_files $BUILD_DIR/.linuxbrew
+show_files $APP_DIR/.cache
+show_files $APP_DIR/.linuxbrew
 show_files $CACHE_DIR/.cache
 show_files $CACHE_DIR/.linuxbrew
 ### END Linuxbrew-specific stuff #######################################################################################
@@ -133,12 +141,19 @@ set-env PATH "\$HOME/.linuxbrew/bin:\$PATH"
 set-env MANPATH "\$HOME/.linuxbrew/share/man:\$MANPATH"
 set-env INFOPATH "\$HOME/.linuxbrew/share/info:\$INFOPATH"
 set-default-env HOMEBREW_NO_ANALYTICS $HOMEBREW_NO_ANALYTICS
-unexport_all_configvars
+#unexport_all_configvars
 
 
 # Move all things in /app to BUILD_DIR (which will eventually be moved back)
 deep-mv $BUILD_DIR $ORIG_BUILD_DIR
 
+# debugging
+show_files $BUILD_DIR/.cache
+show_files $BUILD_DIR/.linuxbrew
+show_files $APP_DIR/.cache
+show_files $APP_DIR/.linuxbrew
+show_files $CACHE_DIR/.cache
+show_files $CACHE_DIR/.linuxbrew
 
 # writing the export file dynamically
 cat <<EOF > $BIN_DIR/../export
