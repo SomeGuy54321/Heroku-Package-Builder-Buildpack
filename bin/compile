@@ -1,33 +1,30 @@
 #!/usr/bin/env bash
+# Explanation:
+#   - All git code is initially in BUILD_DIR
+#   - Move all git code from BUILD_DIR to APP_DIR (i.e. /app)
+#   - Move the selected CACHE_DIR code to APP_DIR too
+#   - Do stuff in APP_DIR
+#   - Copy some of the APP_DIR stuff to CACHE_DIR
+#   - Move all of APP_DIR to BUILD_DIR
 # Usage:
-#
 #     $ bin/compile <build-dir> <cache-dir> <env-path>
-
+export BUILD_START_TIME=$(date +'%s')
 # Fail fast and fail hard.
 set -eo pipefail
 
 # passed by compiler
-export BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
+export BIN_DIR=$(cd $(dirname $0); pwd)
 export BUILD_DIR=$1
 export CACHE_DIR=$2
 export CONFIG_DIR=$3
 
+# Sanitizing environment variables.
+unset GIT_DIR
+
 # Syntactic starch (more complex)
-source $BIN_DIR/utils
-
-# get things from CONFIG_DIR
-export BUILDCACHE=$(get-configvar "$CONFIG_DIR/BUILDCACHE" ".heroku")
-BUILDPACK_XTRACE=$(get-configvar "$CONFIG_DIR/BUILDPACK_XTRACE" 0)  # print all commands to log
-export BUILD_DEBUG=$(get-configvar "$CONFIG_DIR/BUILD_DEBUG" 0)  # trigger the specially placed debug messages and verbose outputs
-export PACKAGE_BUILDER_NOBUILDFAIL=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_NOBUILDFAIL" 0)  # dont fail if a package fails to install
-export HOMEBREW_NO_ANALYTICS=$(get-configvar "$CONFIG_DIR/HOMEBREW_NO_ANALYTICS" 0)
-export PACKAGE_BUILDER_HOMEBREW_VERBOSE=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_HOMEBREW_VERBOSE" 0)
-export PACKAGE_BUILDER_INSTALL_QUIET=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_INSTALL_QUIET" 0)
-export PACKAGE_BUILDER_REINSTALL_LINUXBREW=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_REINSTALL_LINUXBREW" 0)
-
-
-# print all commands to log
-[ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace
+for f in $(ls -d $BIN_DIR/utils.d/*); do
+    source $f
+done
 
 # check if i got the right PATH form last buildpack
 # assume it contained the same BUILDCACHE, if not rebuild it
@@ -38,85 +35,69 @@ do-debug "BUILD_DIR when starting: '$BUILD_DIR'"
 do-debug "CACHE_DIR when starting: '$CACHE_DIR'"
 do-debug "CONFIG_DIR when starting: '$CONFIG_DIR'"
 
-# Paths.
-ROOT_DIR=$(dirname $BIN_DIR)
-export EXPORT_PATH="$(cd $(dirname $BIN_DIR/../export); pwd)"
-# use epoch date to hopefully control the order
-# in which the profile.d scripts are executed
+
+# get things from CONFIG_DIR
+export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 15
+export_configvar BUILDCACHE ".heroku"
+export_configvar PACKAGE_BUILDER_NOBUILDFAIL 0  # dont fail if a package fails to install
+export_configvar HOMEBREW_NO_ANALYTICS 0
+export_configvar PACKAGE_BUILDER_REINSTALL_LINUXBREW 0
+# use epoch date to hopefully control the order in which the profile.d scripts are executed
 export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
 
-# Directory Hacks for path consistiency.
-APP_DIR='/app'
-PACKAGEBUILDER_CACHE=$CACHE_DIR/packagebuilder_cache
-CACHED_DIRS=".linuxbrew .cache"
 
-    #show_files #################################################################
-    # try smth
-    do-debug "Trying to find .linuxbrew:"
-    find / -type d -path '*.linuxbrew*' -print -quit  | indent-debug || true
+# debug settings
+export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
+export_configvar BUILDPACK_XTRACE 0  # print all commands to log
+[ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace  # print all commands to log, or not
+export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
+if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
+export_configvar PACKAGE_BUILDER_INSTALL_QUIET 0
 
-# Sanitizing environment variables.
-unset GIT_DIR
+# setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
+# do something with this someday
+export BUILD_MAX_RUNTIME="$(($(date +'%s')+($PACKAGE_BUILDER_MAX_BUILDTIME * 60)))" || export BUILD_MAX_RUNTIME="$(($(date +'%s')+(15 * 60)))"
 
-# Move whole APP_DIR to PACKAGEBUILDER_CACHE (which is in /tmp)
-mkdir -p $PACKAGEBUILDER_CACHE
-#deep-mv $APP_DIR $PACKAGEBUILDER_CACHE
 
-#    show_files #################################################################
-
-# Copy Application code in.
+# Move all code from BUILD_DIR to APP_DIR, make APP_DIR the new BUILD_DIR, and enter the new BUILD_DIR
+APP_DIR="/app"
 deep-mv $BUILD_DIR $APP_DIR
-
-
-# Set new context.
 ORIG_BUILD_DIR=$BUILD_DIR
 BUILD_DIR=$APP_DIR
+cd $BUILD_DIR
 
 
-# Switch to the repo's context.
-#cd $BUILD_DIR
-cd $PACKAGEBUILDER_CACHE
-
-# Experimental pre_compile hook.
-source $BIN_DIR/steps/hooks/pre_compile
+# Get my specific cache
+mkdir -p $CACHE_DIR
 
 
-# ### The Cache
-#mkdir -p $CACHE_DIR
+### START Linuxbrew-specific stuff #####################################################################################
+ORIG_CACHE_DIR=$CACHE_DIR
+CACHE_DIR=$CACHE_DIR/packagebuilder_cache
+LINUXBREW_DIRS=".linuxbrew .cache"
+CURR_DIR="$PWD"
 
-  #  show_files #################################################################
+# Move the linuxbrew cache to APP_DIR, or optionally reinstall by deleting the cache dirs
+for d in $LINUXBREW_DIRS; do
+    if [ $PACKAGE_BUILDER_REINSTALL_LINUXBREW -gt 0 ]; then
+        do-debug "Deleting cache $d"
+        rm -rf "$CACHE_DIR/$d" || true
+    else
+        do-debug "Moving $CACHE_DIR/$d to $CURR_DIR"
+        [ -d "$d" ] && cp -af "$CACHE_DIR/$d" . || true
+        do-debug "Deleting old cache $CACHE_DIR/$d"
+        rm -rf "$CACHE_DIR/$d" || true
+    fi
+done
 
-# Restore old artifacts from the cache.
-#for dir in $CACHED_DIRS; do
-#    do-debug "Resursive copying $CACHE_DIR/$dir to $(pwd)"
-#    cp -R $CACHE_DIR/$dir . &> /dev/null || true
-#done
-
-
-##########
-# reset
-[ $PACKAGE_BUILDER_REINSTALL_LINUXBREW -gt 0 ] && rm -rf $PACKAGEBUILDER_CACHE/.linuxbrew $PACKAGEBUILDER_CACHE/.cache || true
-
-# do stuff
-source $BIN_DIR/utils-extra
-
-# linuxbrew bases its installation on the HOME variable
-# so TEMPORARILY we set this to the BUILD_DIR
-OLD_HOME=$HOME; export HOME=$PACKAGEBUILDER_CACHE
+# linuxbrew bases its installation on the HOME variable so temporarily we set this to the BUILD_DIR
+OLD_HOME=$HOME; export HOME=$BUILD_DIR
 OLD_PATH=$PATH; export PATH="$HOME/.linuxbrew/bin:$PATH"
-
-do-debug "PATH before checking if we install linuxbrew: '$PATH'"
-show_files
-show_linuxbrew
-
-source $BIN_DIR/steps/install_linuxbrew.sh
-
 OLD_MANPATH=$MANPATH; export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
 OLD_INFOPATH=$INFOPATH; export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
-if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi
+do-debug "PATH before checking if we install linuxbrew: '$PATH'"
 
-# install selected packages
-#debug_heavy
+source $BIN_DIR/steps/install_linuxbrew.sh
 source $BIN_DIR/steps/install_packages.sh
 
 # reset to default locations
@@ -127,30 +108,40 @@ export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
 
 do-debug "Recursive copying $PACKAGEBUILDER_CACHE to $APP_DIR"
 deep_cp_subdirs $PACKAGEBUILDER_CACHE $APP_DIR
-##########
+
+# Copy the new linuxbrew directories to CACHE_DIR
+for d in $LINUXBREW_DIRS; do
+    do-debug "Copying $d to $PWD"
+    cp -af "$d" "$CACHE_DIR"  # if it fails here then the build should fail
+done
+
+# empty the local .cache to save space
+rm -rf "$CURR_DIR/.cache"/*
+
+# debugging
+show_files $CURR_DIR/.cache
+show_files $BUILD_DIR/.cache
+show_files $CURR_DIR/.linuxbrew
+show_files $BUILD_DIR/.linuxbrew
+show_files $CACHE_DIR/.cache
+show_files $CACHE_DIR/.linuxbrew
+### END Linuxbrew-specific stuff #######################################################################################
 
 
 # Make profile.d directory.
-if [ ! -d "$PROFILE_PATH" ]; then
-    mkdir -p $(dirname $PROFILE_PATH)
-fi
+[ ! -d "$PROFILE_PATH" ] && mkdir -p $(dirname $PROFILE_PATH) || true
 
 ## Set context environment variables.
-set-env PATH "$HOME/.linuxbrew/bin:\$PATH"
-set-env MANPATH "$HOME/.linuxbrew/share/man:\$MANPATH"
-set-env INFOPATH "$HOME/.linuxbrew/share/info:\$INFOPATH"
+set-env PATH "\$HOME/.linuxbrew/bin:\$PATH"
+set-env MANPATH "\$HOME/.linuxbrew/share/man:\$MANPATH"
+set-env INFOPATH "\$HOME/.linuxbrew/share/info:\$INFOPATH"
 set-default-env HOMEBREW_NO_ANALYTICS $HOMEBREW_NO_ANALYTICS
+unexport_all_configvars
 
 
-# Experimental post_compile hook.
-source $BIN_DIR/steps/hooks/post_compile
-
-
-# ### Fin.
+# Move all things in /app to BUILD_DIR (which will eventually be moved back)
 deep-mv $BUILD_DIR $ORIG_BUILD_DIR
-#deep-mv $PACKAGEBUILDER_CACHE $APP_DIR
 
-show_files
 
 # writing the export file dynamically
 cat <<EOF > $BIN_DIR/../export

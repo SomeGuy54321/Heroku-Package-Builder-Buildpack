@@ -3,7 +3,7 @@
 
 This buildpack mostly uses [Linuxbrew](https://github.com/Linuxbrew/brew).
 
-Use this by finding the package you want [here](http://brewformulas.org/search?utf8=%E2%9C%93&search%5Bterm%5D=&commit=Search) and placing them in `package-extras.yaml` in your root directory like so:
+Use this by finding the package you want [here](http://brewformulas.org/search?utf8=%E2%9C%93&search%5Bterm%5D=&commit=Search) and placing them in `package-extras.yaml` in the root of your git repo like so:
 ```
 packages:
   - postgresql
@@ -54,10 +54,20 @@ YAML Setup
 
 CONFIG VARS
 ===========
-*PACKAGE_BUILDER_NOBUILDFAIL* (1 or 0) - do not fail the whole build if a single package fails to install
-*PACKAGE_BUILDER_HOMEBREW_VERBOSE* (1 or 0) - if =1, print all make output to build log
-*PACKAGE_BUILDER_INSTALL_QUIET* (1 or 0) - remove excessive install output (not working)
-*PACKAGE_BUILDER_REINSTALL_LINUXBREW* (1 or 0) - removes all packages installed before and starts anew
+__*PACKAGE_BUILDER_NOBUILDFAIL*__ (1 or 0)<br>
+Do not fail the whole build if a single package fails to install
+
+__*PACKAGE_BUILDER_HOMEBREW_VERBOSE*__ (1 or 0)<br>
+If =1, print all make output to build log
+
+__*PACKAGE_BUILDER_INSTALL_QUIET*__ (1 or 0)<br>
+Remove excessive install output (not working)
+
+__*PACKAGE_BUILDER_REINSTALL_LINUXBREW*__ (1 or 0)<br>
+Removes all packages installed before and starts anew
+
+__*PACKAGE_BUILDER_MAX_BUILDTIME*__ (time in minutes)<br>
+Max time to take building (not exact) (not working)
 
 
 NOTES

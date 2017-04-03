@@ -44,7 +44,7 @@ function brew_do() {
     FLAGS="$3"
     export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
 
-    brew $ACTION $PACKAGE $FLAGS | indent #| brew_quiet
+    brew $ACTION $PACKAGE $FLAGS | indent | brew_quiet
 
     # if the install failed try again
     if [ $? -gt 0 ]; then
@@ -55,10 +55,8 @@ function brew_do() {
             retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $JOB_REDUCE_INCREMENT )))
             brew_do $ACTION $PACKAGE $FLAGS
 
-        # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that
-        # before giving up
-        local JOB_REDUCE_MAX_TRIES_PLUS1=$(( $JOB_REDUCE_MAX_TRIES + 1 ))
-        elif [ $INSTALL_TRY_NUMBER -eq $JOB_REDUCE_MAX_TRIES_PLUS1 ] && [ $HOMEBREW_MAKE_JOBS -neq 1 ]; then
+        # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
+        elif [ $INSTALL_TRY_NUMBER -eq $(( $JOB_REDUCE_MAX_TRIES + 1 )) ] && [ $HOMEBREW_MAKE_JOBS -neq 1 ]; then
 
             retry_print $PACKAGE 1
             brew_do $ACTION $PACKAGE $FLAGS
@@ -132,7 +130,7 @@ function main() {
     done
 
     puts-step "Running brew cleanup"
-    brew cleanup | indent
+    brew cleanup | indent | brew_quiet
 }
 
 main

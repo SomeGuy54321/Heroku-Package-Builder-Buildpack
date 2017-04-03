@@ -72,10 +72,12 @@ function debug_heavy() {
     set -o posix && set | sort | grep -E "HOMEBREW|PATH|HOME|APP_DIR|PACKAGE_EXTRAS" | indent
 }
 
-# makes the brew output not show lines starting with '       ==>'
+# makes the brew output not show lines starting with '  ==>'
 function brew_quiet() {
     if [ $PACKAGE_BUILDER_INSTALL_QUIET -gt 0 ]; then
-        grep -vE "^\s*==> " --line-buffered
+        grep -vE --line-buffered '^\s*==>'
+    else
+        tee
     fi
 }
 
