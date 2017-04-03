@@ -83,17 +83,17 @@ for d in $LINUXBREW_DIRS; do
     if [ $PACKAGE_BUILDER_REINSTALL_LINUXBREW -gt 0 ]; then
 
         do-debug "Deleting cache $d"
-        rm -rf "$CACHE_DIR/$d" || true
+        rm -rf $CACHE_DIR/$d || true
         show_files "$CACHE_DIR/"
 
     else
 
         do-debug "Moving $CACHE_DIR/$d to $CURR_DIR"
-        [ -d "$d" ] && cp -af "$CACHE_DIR/$d" . || true
+        cp -af $CACHE_DIR/$d $PWD/ || true
         show_files $PWD/$d
 
         do-debug "Deleting old cache $CACHE_DIR/$d"
-        rm -rf "$CACHE_DIR/$d" || true
+        rm -rf $CACHE_DIR/$d || true
         show_files "$CACHE_DIR/"
 
     fi
