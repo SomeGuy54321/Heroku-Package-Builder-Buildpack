@@ -15,7 +15,6 @@ export CONFIG_DIR=$3
 # Syntactic starch (more complex)
 source $BIN_DIR/utils
 
-
 # get things from CONFIG_DIR
 export BUILDCACHE=$(get-configvar "$CONFIG_DIR/BUILDCACHE" ".heroku")
 BUILDPACK_XTRACE=$(get-configvar "$CONFIG_DIR/BUILDPACK_XTRACE" 0)  # print all commands to log
@@ -25,10 +24,8 @@ export HOMEBREW_NO_ANALYTICS=$(get-configvar "$CONFIG_DIR/HOMEBREW_NO_ANALYTICS"
 export PACKAGE_BUILDER_HOMEBREW_VERBOSE=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_HOMEBREW_VERBOSE" 0)
 export PACKAGE_BUILDER_INSTALL_QUIET=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_INSTALL_QUIET" 0)
 
-
 # print all commands to log
 [ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace
-
 
 # check if i got the right PATH form last buildpack
 # assume it contained the same BUILDCACHE, if not rebuild it
@@ -39,7 +36,6 @@ do-debug "BUILD_DIR when starting: '$BUILD_DIR'"
 do-debug "CACHE_DIR when starting: '$CACHE_DIR'"
 do-debug "CONFIG_DIR when starting: '$CONFIG_DIR'"
 
-
 # Paths.
 ROOT_DIR=$(dirname $BIN_DIR)
 export EXPORT_PATH="$(cd $(dirname $BIN_DIR/../export); pwd)"
@@ -47,30 +43,24 @@ export EXPORT_PATH="$(cd $(dirname $BIN_DIR/../export); pwd)"
 # in which the profile.d scripts are executed
 export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
 
-
 # Directory Hacks for path consistiency.
 APP_DIR='/app'
-TMP_APP_DIR=$CACHE_DIR/tmp_app_dir
+PACKAGEBUILDER_CACHE=$CACHE_DIR/packagebuilder_cache
 CACHED_DIRS=".linuxbrew .cache"
 
-
-show_files #################################################################
-
+    show_files #################################################################
+    # try smth
+    do-debug "Trying to find .linuxbrew:"
+    find / -type d -path '*.linuxbrew*' -print -quit  | indent-debug || true
 
 # Sanitizing environment variables.
 unset GIT_DIR #CONDA_RELDIRPATH_UNDER_BUILDCACHE
 
+# Move whole APP_DIR to PACKAGEBUILDER_CACHE (which is in /tmp)
+mkdir -p $PACKAGEBUILDER_CACHE
+#deep-mv $APP_DIR $PACKAGEBUILDER_CACHE
 
-# try smth
-do-debug "Trying to find .linuxbrew:"
-find / -type d -path '*.linuxbrew*' -print -quit  | indent-debug || true
-
-
-# Move whole APP_DIR to TMP_APP_DIR (which is in /tmp)
-mkdir -p $TMP_APP_DIR
-deep-mv $APP_DIR $TMP_APP_DIR
-
-    show_files #################################################################
+#    show_files #################################################################
 
 # Copy Application code in.
 deep-mv $BUILD_DIR $APP_DIR
@@ -82,23 +72,23 @@ BUILD_DIR=$APP_DIR
 
 
 # Switch to the repo's context.
-cd $BUILD_DIR
-
+#cd $BUILD_DIR
+cd $PACKAGEBUILDER_CACHE
 
 # Experimental pre_compile hook.
 source $BIN_DIR/steps/hooks/pre_compile
 
 
 # ### The Cache
-mkdir -p $CACHE_DIR
+#mkdir -p $CACHE_DIR
 
-    show_files #################################################################
+  #  show_files #################################################################
 
 # Restore old artifacts from the cache.
-for dir in $CACHED_DIRS; do
-    do-debug "Resursive copying $CACHE_DIR/$dir to $(pwd)"
-    cp -R $CACHE_DIR/$dir . &> /dev/null || true
-done
+#for dir in $CACHED_DIRS; do
+#    do-debug "Resursive copying $CACHE_DIR/$dir to $(pwd)"
+#    cp -R $CACHE_DIR/$dir . &> /dev/null || true
+#done
 
 
 ##########
@@ -107,7 +97,7 @@ source $BIN_DIR/utils-extra
 
 # linuxbrew bases its installation on the HOME variable
 # so TEMPORARILY we set this to the BUILD_DIR
-OLD_HOME=$HOME; export HOME=$TMP_APP_DIR
+OLD_HOME=$HOME; export HOME=$PACKAGEBUILDER_CACHE
 OLD_PATH=$PATH; export PATH="$HOME/.linuxbrew/bin:$PATH"
 
 do-debug "PATH before checking if we install linuxbrew: '$PATH'"
@@ -130,7 +120,7 @@ export PATH=$OLD_PATH; do-debug "PATH reset to '$PATH'"
 export MANPATH=$OLD_MANPATH; do-debug "MANPATH reset to '$MANPATH'"
 export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
 
-deep-cp $TMP_APP_DIR/.linuxbrew $APP_DIR
+deep-cp $PACKAGEBUILDER_CACHE $APP_DIR
 ##########
 
 
@@ -151,13 +141,13 @@ source $BIN_DIR/steps/hooks/post_compile
 
 
 # ### Fin.
-deep-mv $BUILD_DIR $ORIG_BUILD_DIR
+#deep-mv $BUILD_DIR $ORIG_BUILD_DIR
 
-for d in $(ls -A $TMP_APP_DIR); do
-    if [[ "$d" != ".linuxbuild" ]]; then
-        deep-mv $TMP_APP_DIR/$d $APP_DIR
-    fi
-done
+#for d in $(ls -A $PACKAGEBUILDER_CACHE); do
+#    if [[ "$d" != ".linuxbuild" ]]; then
+#        deep-mv $PACKAGEBUILDER_CACHE/$d $APP_DIR
+#    fi
+#done
 
 # writing the export file dynamically
 cat <<EOF > $BIN_DIR/../export
