@@ -150,6 +150,8 @@ source $BIN_DIR/steps/hooks/post_compile
 #    fi
 #done
 
+show_files
+
 # writing the export file dynamically
 cat <<EOF > $BIN_DIR/../export
 
