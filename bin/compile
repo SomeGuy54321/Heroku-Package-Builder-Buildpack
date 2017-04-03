@@ -23,6 +23,7 @@ export PACKAGE_BUILDER_NOBUILDFAIL=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_
 export HOMEBREW_NO_ANALYTICS=$(get-configvar "$CONFIG_DIR/HOMEBREW_NO_ANALYTICS" 0)
 export PACKAGE_BUILDER_HOMEBREW_VERBOSE=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_HOMEBREW_VERBOSE" 0)
 export PACKAGE_BUILDER_INSTALL_QUIET=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_INSTALL_QUIET" 0)
+export PACKAGE_BUILDER_REINSTALL_LINUXBREW=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_REINSTALL_LINUXBREW" 0)
 
 # print all commands to log
 [ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace
@@ -93,7 +94,7 @@ source $BIN_DIR/steps/hooks/pre_compile
 
 ##########
 # reset
-rm -rf $PACKAGEBUILDER_CACHE/.linuxbrew $PACKAGEBUILDER_CACHE/.cache
+[ $PACKAGE_BUILDER_REINSTALL_LINUXBREW -gt 0 ] && rm -rf $PACKAGEBUILDER_CACHE/.linuxbrew $PACKAGEBUILDER_CACHE/.cache || true
 
 # do stuff
 source $BIN_DIR/utils-extra
