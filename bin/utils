@@ -169,9 +169,9 @@ function show_files() {
 
 
 # Does some serious copying.
-function deep-cp2(){
+function deep_cp_subdirs(){
   find -H $1 -maxdepth 1 -name '.*' -a \( -type d -o -type f -o -type l \) -exec cp -a '{}' $2 \;
-  cp -r $1/. $2
+  cp -ar "$1/." $2
 }
 
 do-debug "Ran 'source $_'"
