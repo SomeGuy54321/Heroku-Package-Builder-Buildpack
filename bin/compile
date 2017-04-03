@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -eo pipefail
 # Explanation:
 #   - All git code is initially in BUILD_DIR
 #   - Move all git code from BUILD_DIR to APP_DIR (i.e. /app)
@@ -8,12 +9,14 @@
 #   - Move all of APP_DIR to BUILD_DIR
 #
 # Using this commit tag:
-LINUXBREW_COMMIT="d8c8b867b"
+export LINUXBREW_COMMIT="d8c8b867b"  # git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1
+#
+# Start time:
+export BUILD_START_TIME=$(date +'%s')
+#
 # Usage:
 #     $ bin/compile <build-dir> <cache-dir> <env-path>
-export BUILD_START_TIME=$(date +'%s')
-# Fail fast and fail hard.
-set -eo pipefail
+
 
 # passed by compiler
 export BIN_DIR=$(cd $(dirname $0); pwd)

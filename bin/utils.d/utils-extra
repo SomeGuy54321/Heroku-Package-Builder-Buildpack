@@ -90,3 +90,19 @@ function show_linuxbrew() {
     do-debug "Contents of $HOME/.linuxbrew/Cellar:"
     ls -Flah $HOME/.linuxbrew/Cellar | indent-debug || true
 }
+
+function git_commit_check() {
+
+    LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1)"
+    if [[ "$LINUXBREW_CURRENT_COMMIT" != "$LINUXBREW_COMMIT" ]]; then
+
+        puts-step "Updating git repo"
+        git --git-dir="$BUILD_DIR/.linuxbrew/.git" reset --hard $LINUXBREW_COMMIT |& indent |& brew_quiet
+
+        puts-step "Aggressively optimizing git repo"
+        git --git-dir="$BUILD_DIR/.linuxbrew/.git" gc --aggressive |& indent |& brew_quiet
+
+    fi
+#    puts-step "Updating Linuxbrew"
+#    brew update |& indent |& brew_quiet
+}
