@@ -33,6 +33,7 @@ function do-debug() {
         echo "-----> DEBUG1: $@"
     fi
 }
+alias do_debug='do-debug'
 
 # Syntax sugar.
 indent() {
@@ -46,6 +47,7 @@ indent-debug() {
         sed $SED_FLAG "$RE"
     fi
 }
+alias indent_debug='indent-debug'
 
 # Clean up pip output
 cleanup() {
@@ -111,61 +113,6 @@ function deep-mv (){
   find -H $1 -maxdepth 1 -name '.*' -a \( -type d -o -type f -o -type l \) -exec rm -fr '{}' \;
 }
 
-## Section adapted from https://github.com/heroku/heroku-buildpack-python/blob/master/bin/utils#L56
-## Does some serious copying.
-#deep-cp() {
-#    [ $BUILD_DEBUG -gt 1 ] && VERBOSE="--verbose" || VERBOSE=""
-#    declare source="$1" target="$2"
-#    mkdir -p "$target"
-#
-#  # cp doesn't like being called without source params,
-#  # so make sure they expand to something first.
-#  # subshell to avoid surprising caller with shopts.
-#  (
-#    shopt -s nullglob dotglob
-#    set -- "$source"/!(tmp|.|..)
-#    [[ $# == 0 ]] || cp $VERBOSE -a "$@" "$target"
-#  )
-#}
-#
-## Does some serious deleting.
-#deep-rm() {
-#    [ $BUILD_DEBUG -gt 1 ] && VERBOSE="--verbose" || VERBOSE=""
-#    # subshell to avoid surprising caller with shopts.
-#    (
-#        shopt -s dotglob
-#        rm $VERBOSE -rf "$1"/!(.curlrc|.netrc|tmp|.|..)
-#    )
-#}
-#
-## Does some serious moving.
-#deep-mv() {
-#  deep-cp "$1" "$2"
-#  deep-rm "$1"
-#}
-#
-#sub-env() {
-#
-#  WHITELIST=${2:-''}
-#  BLACKLIST=${3:-'^(GIT_DIR|PYTHONHOME|LD_LIBRARY_PATH|LIBRARY_PATH|PATH)$'}
-#
-#  # Python-specific variables.
-#  export PYHONHOME=$BUILD_DIR/$BUILDCACHE/python
-#  export PYTHONPATH=$BUILD_DIR/
-#
-#  (
-#    if [ -d "$ENV_DIR" ]; then
-#      for e in $(ls $ENV_DIR); do
-#        echo "$e" | grep -E "$WHITELIST" | grep -qvE "$BLACKLIST" &&
-#        export "$e=$(cat $ENV_DIR/$e)"
-#        :
-#      done
-#    fi
-#
-#    $1
-#
-#  )
-#}
 
 # Get things from CONFIG_DIR
 # arg1 = file to check for, cat contents if found
@@ -184,6 +131,32 @@ get-configvar() {
 # Buildpack Commands.
 puts-cmd() {
   echo "     $ $@"
+}
+
+
+function show_files() {
+    do-debug "Contents of $APP_DIR:"
+    ls -Flah $APP_DIR | indent_debug
+    do-debug "Contents of $APP_DIR/conf:"
+    ls -Flah $APP_DIR/conf | indent_debug
+    do-debug "Contents of $APP_DIR/project:"
+    ls -Flah $APP_DIR/project | indent_debug
+    do-debug "Contents of $APP_DIR/app:"
+    ls -Flah $APP_DIR/app | indent_debug
+    do-debug "Contents of $APP_DIR/public:"
+    ls -Flah $APP_DIR/public | indent_debug
+    do-debug "Contents of $APP_DIR/tmp:"
+    ls -Flah $APP_DIR/tmp | indent_debug
+
+
+    do-debug "Contents of $BIN_DIR:"
+    ls -Flah $BIN_DIR | indent_debug
+    do-debug "Contents of $BUILD_DIR:"
+    ls -Flah $BUILD_DIR | indent_debug
+    do-debug "Contents of $CACHE_DIR:"
+    ls -Flah $CACHE_DIR | indent_debug
+    do-debug "Contents of $CONFIG_DIR:"
+    ls -Flah $CONFIG_DIR | indent_debug
 }
 
 do-debug "Ran 'source $_'"
