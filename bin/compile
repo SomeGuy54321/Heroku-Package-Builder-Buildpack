@@ -121,7 +121,7 @@ export MANPATH=$OLD_MANPATH; do-debug "MANPATH reset to '$MANPATH'"
 export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
 
 do-debug "Recursive copying $PACKAGEBUILDER_CACHE to $APP_DIR"
-cp -rf $PACKAGEBUILDER_CACHE $APP_DIR
+cp -rf "$PACKAGEBUILDER_CACHE/." $APP_DIR
 ##########
 
 
@@ -142,13 +142,8 @@ source $BIN_DIR/steps/hooks/post_compile
 
 
 # ### Fin.
-#deep-mv $BUILD_DIR $ORIG_BUILD_DIR
-
-#for d in $(ls -A $PACKAGEBUILDER_CACHE); do
-#    if [[ "$d" != ".linuxbuild" ]]; then
-#        deep-mv $PACKAGEBUILDER_CACHE/$d $APP_DIR
-#    fi
-#done
+deep-mv $BUILD_DIR $ORIG_BUILD_DIR
+#deep-mv $PACKAGEBUILDER_CACHE $APP_DIR
 
 show_files
 
