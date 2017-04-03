@@ -31,10 +31,10 @@ function retry_print() {
 function fail_print() {
     PACKAGE="$1"
     puts-warn "Unable to install $PACKAGE even at $HOMEBREW_MAKE_JOBS job(s)."
-    echo -e "This build will now fail. Sorry about that.\n
-Perhaps consider removing $PACKAGE from your brew-extras.yaml file and retrying.\n
-If that doesn't work then remove this buildpack from your build and let the\n
-current buildpack maintainer know. Copy-paste this buildlog into an email to\n
+    echo "This build will now fail. Sorry about that.
+Perhaps consider removing $PACKAGE from your brew-extras.yaml file and retrying.
+If that doesn't work then remove this buildpack from your build and let the
+current buildpack maintainer know. Copy-paste this buildlog into an email to
 him/her." | indent
 }
 
@@ -100,7 +100,7 @@ function main() {
         CONFIG_VAR="PACKAGE_EXTRAS_config_${package}[@]"
         for script in ${!CONFIG_VAR}; do
             chmod +x $TMP_APP_DIR/$script
-            $TMP_APP_DIR/$script $@
+            $BUILD_DIR/$script $@
         done
     done
 }

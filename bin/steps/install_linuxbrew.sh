@@ -14,7 +14,7 @@ function debug-here() {
 OLD_HOME=$HOME
 export HOME=$BUILD_DIR
 
-if [ ! -x $(which brew) ]; then
+if [ ! -x "$(which brew)" ]; then
     debug-here
     puts-step "Installing Linuxbrew"
     do-debug "Building linuxbrew in $HOME"
@@ -41,6 +41,7 @@ if [ ! -x $(which brew) ]; then
     debug-here
 else
     puts-step "Linuxbrew already installed"
+    do-debug "which brew = $(which brew)"
 fi
 
 
