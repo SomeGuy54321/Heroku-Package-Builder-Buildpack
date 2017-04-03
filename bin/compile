@@ -75,13 +75,7 @@ mkdir -p $CACHE_DIR
 LINUXBREW_DIRS=".linuxbrew .cache"
 CURR_DIR="$PWD"
 
-# debugging
-show_files $BUILD_DIR/.cache
-show_files $BUILD_DIR/.linuxbrew
-show_files $APP_DIR/.cache
-show_files $APP_DIR/.linuxbrew
-show_files $CACHE_DIR/.cache
-show_files $CACHE_DIR/.linuxbrew
+show_linuxbrew_files
 
 # Move the linuxbrew cache to APP_DIR, or optionally reinstall by deleting the cache dirs
 for d in $LINUXBREW_DIRS; do
@@ -122,12 +116,7 @@ done
 rm -rf "$CURR_DIR/.cache"/*
 
 # debugging
-show_files $BUILD_DIR/.cache
-show_files $BUILD_DIR/.linuxbrew
-show_files $APP_DIR/.cache
-show_files $APP_DIR/.linuxbrew
-show_files $CACHE_DIR/.cache
-show_files $CACHE_DIR/.linuxbrew
+show_linuxbrew_files
 ### END Linuxbrew-specific stuff #######################################################################################
 
 
@@ -146,12 +135,7 @@ set-default-env HOMEBREW_NO_ANALYTICS $HOMEBREW_NO_ANALYTICS
 deep-mv $BUILD_DIR $ORIG_BUILD_DIR
 
 # debugging
-show_files $BUILD_DIR/.cache
-show_files $BUILD_DIR/.linuxbrew
-show_files $APP_DIR/.cache
-show_files $APP_DIR/.linuxbrew
-show_files $CACHE_DIR/.cache
-show_files $CACHE_DIR/.linuxbrew
+show_linuxbrew_files
 
 # writing the export file dynamically
 cat <<EOF > $BIN_DIR/../export
