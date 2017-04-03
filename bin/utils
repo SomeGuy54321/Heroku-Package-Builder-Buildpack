@@ -176,7 +176,7 @@ function deep_cp_subdirs(){
     for f in $(ls -A $1); do
 #        find -H $f -maxdepth 0 -name '.*' -a \( -type d -o -type f -o -type l \) -exec cp -a '{}' $2 \;
 #        find -H $f -maxdepth 1 -name '.*' -a \( -type d -o -type f -o -type l \) -exec cp -a '{}' $2 \;
-        cp $VERBOSE -raf $f $2
+        cp $VERBOSE -raf $f $2 | indent
     done
 }
 

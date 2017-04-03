@@ -25,6 +25,7 @@ export PACKAGE_BUILDER_HOMEBREW_VERBOSE=$(get-configvar "$CONFIG_DIR/PACKAGE_BUI
 export PACKAGE_BUILDER_INSTALL_QUIET=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_INSTALL_QUIET" 0)
 export PACKAGE_BUILDER_REINSTALL_LINUXBREW=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_REINSTALL_LINUXBREW" 0)
 
+
 # print all commands to log
 [ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace
 
@@ -49,13 +50,13 @@ APP_DIR='/app'
 PACKAGEBUILDER_CACHE=$CACHE_DIR/packagebuilder_cache
 CACHED_DIRS=".linuxbrew .cache"
 
-    show_files #################################################################
+    #show_files #################################################################
     # try smth
     do-debug "Trying to find .linuxbrew:"
     find / -type d -path '*.linuxbrew*' -print -quit  | indent-debug || true
 
 # Sanitizing environment variables.
-unset GIT_DIR #CONDA_RELDIRPATH_UNDER_BUILDCACHE
+unset GIT_DIR
 
 # Move whole APP_DIR to PACKAGEBUILDER_CACHE (which is in /tmp)
 mkdir -p $PACKAGEBUILDER_CACHE
