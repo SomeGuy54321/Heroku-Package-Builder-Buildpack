@@ -55,6 +55,10 @@ CACHED_DIRS="$BUILDCACHE .linuxbrew"
 export LOCAL_ROOT="$APP_DIR/$BUILDCACHE"
 
 
+
+show_files #################################################################
+
+
 # Sanitizing environment variables.
 unset GIT_DIR #CONDA_RELDIRPATH_UNDER_BUILDCACHE
 
