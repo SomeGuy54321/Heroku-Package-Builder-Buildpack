@@ -15,7 +15,7 @@ if [ ! -x "$(which brew)" ]; then
     echo -e 'y\n' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)" |& indent |& brew_quiet
 
     puts-step "Aggressively optimizing git repo"
-    git --git-repo="$BUILD_DIR/.linuxbrew/.git" gc --aggressive
+    git --git-dir="$BUILD_DIR/.linuxbrew/.git" gc --aggressive
 
     puts-step "Installing GCC"
     brew install gcc |& indent |& brew_quiet
@@ -26,7 +26,7 @@ else
     do-debug "which brew = $(which brew)"
 
     puts-step "Auto-optimizing git repo"
-    git --git-repo="$BUILD_DIR/.linuxbrew/.git" gc --auto
+    git --git-dir="$BUILD_DIR/.linuxbrew/.git" gc --auto
 
     puts-step "Updating Linuxbrew"
     brew update |& indent |& brew_quiet
