@@ -12,7 +12,7 @@ function debug-here() {
 # linuxbrew bases its installation on the HOME variable
 # so TEMPORARILY we set this to the BUILD_DIR
 OLD_HOME=$HOME
-export HOME=$TMP_APP_DIR
+export HOME=$BUILD_DIR
 
 if [ ! -x $(which brew) ]; then
     debug-here

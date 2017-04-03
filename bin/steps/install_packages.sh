@@ -76,7 +76,7 @@ function brew_install() {
 }
 
 function main() {
-    eval $(parse-yaml $HOME/package-extras.yaml "PACKAGE_EXTRAS_")
+    eval $(parse-yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
     for package in ${PACKAGE_EXTRAS_packages[@]}; do
 
         # only one formula allowed
