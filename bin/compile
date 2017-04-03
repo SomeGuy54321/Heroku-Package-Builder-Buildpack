@@ -67,13 +67,11 @@ BUILD_DIR=$APP_DIR
 cd $BUILD_DIR
 
 
-# Get my specific cache
-mkdir -p $CACHE_DIR
-
-
 ### START Linuxbrew-specific stuff #####################################################################################
+# Get my specific cache
 ORIG_CACHE_DIR=$CACHE_DIR
 CACHE_DIR=$CACHE_DIR/packagebuilder_cache
+mkdir -p $CACHE_DIR
 LINUXBREW_DIRS=".linuxbrew .cache"
 CURR_DIR="$PWD"
 
