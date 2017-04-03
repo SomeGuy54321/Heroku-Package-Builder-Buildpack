@@ -57,7 +57,8 @@ function brew_do() {
 
         # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that
         # before giving up
-        elif [ $INSTALL_TRY_NUMBER -eq $(( $JOB_REDUCE_MAX_TRIES + 1 )) ] && [ $HOMEBREW_MAKE_JOBS -neq 1 ]; then
+        local JOB_REDUCE_MAX_TRIES_PLUS1=$(( $JOB_REDUCE_MAX_TRIES + 1 ))
+        elif [ $INSTALL_TRY_NUMBER -eq $JOB_REDUCE_MAX_TRIES_PLUS1 ] && [ $HOMEBREW_MAKE_JOBS -neq 1 ]; then
 
             retry_print $PACKAGE 1
             brew_do $ACTION $PACKAGE $FLAGS
