@@ -29,6 +29,7 @@ BUILDPACK_XTRACE=$(get-configvar "$CONFIG_DIR/BUILDPACK_XTRACE" 0)  # print all 
 export BUILD_DEBUG=$(get-configvar "$CONFIG_DIR/BUILD_DEBUG" 0)  # trigger the specially placed debug messages and verbose outputs
 export PACKAGE_BUILDER_NOBUILDFAIL=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_NOBUILDFAIL" 0)  # dont fail if a package fails to install
 export HOMEBREW_NO_ANALYTICS=$(get-configvar "$CONFIG_DIR/HOMEBREW_NO_ANALYTICS" 0)
+export PACKAGE_BUILDER_HOMEBREW_VERBOSE=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_HOMEBREW_VERBOSE" 0)
 
 # print all commands to log
 [ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace
@@ -92,18 +93,6 @@ for dir in $CACHED_DIRS; do
 done
 
 
-#set +e
-#if [ ! -d "$BUILDCACHE" ]; then
-#    do-debug 'Making local root ~/$BUILDCACHE'
-#    mkdir -p $BUILDCACHE
-#    for d in bin sbin etc share lib include src; do
-#        mkdir -p $BUILDCACHE/$d
-#    done
-#    unset d
-#fi
-#set -e
-
-
 # Make profile.d directory.
 if [ ! -d "$PROFILE_PATH" ]; then
     mkdir -p $(dirname $PROFILE_PATH)
@@ -113,6 +102,14 @@ fi
 # do stuff
 source $BIN_DIR/utils-extra
 source $BIN_DIR/steps/install_linuxbrew.sh
+
+OLD_PATH=$PATH; export PATH="$HOME/.linuxbrew/bin:$PATH"
+OLD_MANPATH=$MANPATH; export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
+OLD_INFOPATH=$INFOPATH; export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
+
+if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi
+# install selected packages
+#debug_heavy
 source $BIN_DIR/steps/install_packages.sh
 ##########
 
