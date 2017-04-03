@@ -64,11 +64,11 @@ function brew_do() {
 
         # else it's failed
         else
-            if [ $PACKAGE_BUILDER_NOBUILDFAIL -eq 0 ]; then
+            if [ $PACKAGE_BUILDER_NOBUILDFAIL -eq 0 ] && [[ "$ACTION" != "uninstall" ]]; then
                 fail_print
                 exit $?
             else
-                puts-warn "Unable to install ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0."
+                puts-warn "Unable to install ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
             fi
         fi
     fi

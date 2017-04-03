@@ -167,10 +167,14 @@ function show_files() {
     ls -Flah $BIN_DIR | indent-debug || true
     do-debug "Contents of $BUILD_DIR:"
     ls -Flah $BUILD_DIR | indent-debug || true
-    do-debug "Contents of $CACHE_DIR:"
-    ls -Flah $CACHE_DIR | indent-debug || true
     do-debug "Contents of $CONFIG_DIR:"
     ls -Flah $CONFIG_DIR | indent-debug || true
+
+
+    do-debug "Contents of $CACHE_DIR:"
+    ls -Flah $CACHE_DIR | indent-debug || true
+    do-debug "Contents of $CACHE_DIR/.sbt_home:"
+    ls -Flah $CACHE_DIR/.sbt_home | indent-debug || true
 }
 
 do-debug "Ran 'source $_'"
