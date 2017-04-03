@@ -150,8 +150,9 @@ function show_files() {
     do-debug "Contents of $PACKAGEBUILDER_CACHE:"
     ls -Flah $PACKAGEBUILDER_CACHE | indent-debug || true
     do-debug "Contents of $PACKAGEBUILDER_CACHE/.linuxbrew:"
-    ls -Flah $PACKAGEBUILDER_CACHE/bin | indent-debug || true
+    ls -Flah $PACKAGEBUILDER_CACHE/.linuxbrew | indent-debug || true
     do-debug "Contents of $PACKAGEBUILDER_CACHE/.cache:"
+    ls -Flah $PACKAGEBUILDER_CACHE/.cache | indent-debug || true
 
 
     do-debug "Contents of $BIN_DIR:"
@@ -166,6 +167,13 @@ function show_files() {
     ls -Flah $CACHE_DIR | indent-debug || true
     do-debug "Contents of $CACHE_DIR/.sbt_home:"
     ls -Flah $CACHE_DIR/.sbt_home | indent-debug || true
+}
+
+
+# Does some serious copying.
+function deep-cp2(){
+  find -H $1 -maxdepth 1 -name '.*' -a \( -type d -o -type f -o -type l \) -exec cp -a '{}' $2 \;
+  cp -r $1/. $2
 }
 
 do-debug "Ran 'source $_'"

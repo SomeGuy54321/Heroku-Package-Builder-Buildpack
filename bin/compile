@@ -121,7 +121,7 @@ export MANPATH=$OLD_MANPATH; do-debug "MANPATH reset to '$MANPATH'"
 export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
 
 do-debug "Recursive copying $PACKAGEBUILDER_CACHE to $APP_DIR"
-cp -rf "$PACKAGEBUILDER_CACHE/." $APP_DIR
+deep-cp2 $PACKAGEBUILDER_CACHE $APP_DIR
 ##########
 
 
