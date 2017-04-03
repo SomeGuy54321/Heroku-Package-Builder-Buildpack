@@ -149,6 +149,8 @@ function show_files() {
     ls -Flah $PACKAGEBUILDER_CACHE | indent-debug || true
     do-debug "Contents of $PACKAGEBUILDER_CACHE/.linuxbrew:"
     ls -Flah $PACKAGEBUILDER_CACHE/.linuxbrew | indent-debug || true
+    do-debug "Contents of $PACKAGEBUILDER_CACHE/.linuxbrew/Cellar/zlib/1.2.11/lib/pkgconfig/zlib.pc:"
+    ls -Flah $PACKAGEBUILDER_CACHE/.linuxbrew/Cellar/zlib/1.2.11/lib/pkgconfig/zlib.pc | indent-debug || true
     do-debug "Contents of $PACKAGEBUILDER_CACHE/.cache:"
     ls -Flah $PACKAGEBUILDER_CACHE/.cache | indent-debug || true
 
@@ -171,9 +173,9 @@ function show_files() {
 # Does some serious copying.
 function deep_cp_subdirs(){
     for f in $(ls -A $1); do
-        find -H $f -maxdepth 0 -name '.*' -a \( -type d -o -type f -o -type l \) -exec cp -a '{}' $2 \;
-        find -H $f -maxdepth 1 -name '.*' -a \( -type d -o -type f -o -type l \) -exec cp -a '{}' $2 \;
-        cp -r --preserve=links -f $f $2
+#        find -H $f -maxdepth 0 -name '.*' -a \( -type d -o -type f -o -type l \) -exec cp -a '{}' $2 \;
+#        find -H $f -maxdepth 1 -name '.*' -a \( -type d -o -type f -o -type l \) -exec cp -a '{}' $2 \;
+        cp -raf $f $2
     done
 }
 
