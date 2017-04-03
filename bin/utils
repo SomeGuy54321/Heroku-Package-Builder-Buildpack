@@ -147,20 +147,11 @@ function show_files() {
     ls -Flah $APP_DIR/tmp | indent-debug || true
 
 
-    do-debug "Contents of $TMP_APP_DIR:"
-    ls -Flah $TMP_APP_DIR | indent-debug || true
-    do-debug "Contents of $TMP_APP_DIR/bin:"
-    ls -Flah $TMP_APP_DIR/bin | indent-debug || true
-    do-debug "Contents of $TMP_APP_DIR/.bundle:"
-    ls -Flah $TMP_APP_DIR/.bundle | indent-debug || true
-    do-debug "Contents of $TMP_APP_DIR/hooks:"
-    ls -Flah $TMP_APP_DIR/hooks | indent-debug || true
-    do-debug "Contents of $TMP_APP_DIR/lib:"
-    ls -Flah $TMP_APP_DIR/lib | indent-debug || true
-    do-debug "Contents of $TMP_APP_DIR/.profile.d:"
-    ls -Flah $TMP_APP_DIR/.profile.d | indent-debug || true
-    do-debug "Contents of $TMP_APP_DIR/vendor:"
-    ls -Flah $TMP_APP_DIR/vendor | indent-debug || true
+    do-debug "Contents of $PACKAGEBUILDER_CACHE:"
+    ls -Flah $PACKAGEBUILDER_CACHE | indent-debug || true
+    do-debug "Contents of $PACKAGEBUILDER_CACHE/.linuxbrew:"
+    ls -Flah $PACKAGEBUILDER_CACHE/bin | indent-debug || true
+    do-debug "Contents of $PACKAGEBUILDER_CACHE/.cache:"
 
 
     do-debug "Contents of $BIN_DIR:"
