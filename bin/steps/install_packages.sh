@@ -39,7 +39,7 @@ him/her." | indent
 }
 
 INSTALL_TRY_NUMBER=0
-function brew-install() {
+function brew_install() {
     set +e  # don't exit if error
 
     PACKAGE="$1"
@@ -55,14 +55,14 @@ function brew-install() {
         if [ $INSTALL_TRY_NUMBER -le $JOB_REDUCE_MAX_TRIES ]; then
 
             retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $JOB_REDUCE_INCREMENT )))
-            brew-install $PACKAGE
+            brew_install $PACKAGE
 
         # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that
         # before giving up
         elif [ $INSTALL_TRY_NUMBER -eq $(( $JOB_REDUCE_MAX_TRIES + 1 )) ] && [ $HOMEBREW_MAKE_JOBS -neq 1 ]; then
 
             retry_print $PACKAGE 1
-            brew-install $PACKAGE
+            brew_install $PACKAGE
 
         # else it's failed
         else
@@ -94,7 +94,7 @@ function main() {
 
         # do the thing
         puts-step "Installing $package"
-        brew-install $FORMULAS $OPTIONS
+        brew_install $FORMULAS $OPTIONS
 
         # multiple scripts can run
         CONFIG_VAR="PACKAGE_EXTRAS_config_${package}[@]"
