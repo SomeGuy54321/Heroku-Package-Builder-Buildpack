@@ -64,3 +64,10 @@ parse-yaml() {
     }' \
     | sed 's/_=/+=/g'
 }
+
+# print a lot of stuff
+function debug_heavy() {
+    local EXTRA="|$1"
+    do-debug "Relevant local variables:"
+    set -o posix && set | sort | grep -E "HOMEBREW|PATH|HOME|APP_DIR$EXTRA" | indent
+}

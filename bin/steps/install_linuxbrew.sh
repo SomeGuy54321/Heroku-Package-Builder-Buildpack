@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 
 DEBUG_HERE=1
-function debug-here() {
-    if [ $DEBUG_HERE -gt 0 ]; then
-        print-env
-        do-debug "Relevant local variables:"
-        set -o posix && set | sort | grep -E 'HOMEBREW|PATH|HOME|APP_DIR' | indent
-    fi
-}
 
 # linuxbrew bases its installation on the HOME variable
 # so TEMPORARILY we set this to the BUILD_DIR
@@ -15,11 +8,11 @@ OLD_HOME=$HOME
 export HOME=$BUILD_DIR
 
 if [ ! -x "$(which brew)" ]; then
-    debug-here
+    debug_heavy
     puts-step "Installing Linuxbrew"
     do-debug "Building linuxbrew in $HOME"
 
-    echo -r 'y\n' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)"
+    echo -r 'y\n' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)" | indent
     OLD_PATH=$PATH
     export PATH="$HOME/.linuxbrew/bin:$PATH"
 
@@ -38,7 +31,7 @@ if [ ! -x "$(which brew)" ]; then
 
     puts-step "Installing GCC"
     brew install gcc | indent
-    debug-here
+    debug_heavy
 else
     puts-step "Linuxbrew already installed"
     do-debug "which brew = $(which brew)"
@@ -46,7 +39,7 @@ fi
 
 
 # install selected packages
-debug-here
+debug_heavy
 source $BIN_DIR/steps/install_packages.sh
 
 

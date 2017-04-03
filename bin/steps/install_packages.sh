@@ -46,7 +46,8 @@ function brew_install() {
     FLAGS="$2"
     export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
 
-    brew install $PACKAGE $FLAGS
+    do-debug "Running 'brew install $PACKAGE $FLAGS'"
+    brew install $PACKAGE $FLAGS | indent
 
     # if the install failed try again
     if [ $? -gt 0 ]; then
@@ -66,17 +67,23 @@ function brew_install() {
 
         # else it's failed
         else
-            fail_print
-            exit $?
+            if [ $PACKAGE_BUILDER_NOBUILDFAIL -eq 0 ]; then
+                fail_print
+                exit $?
+            else
+                puts-warn "Unable to install ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0."
+            fi
         fi
     fi
 
-    reset to exiting if error
+    # reset to exiting if error
     set -e
 }
 
 function main() {
     eval $(parse-yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
+    do-debug "Parsed YAML variables:"
+    debug_heavy "PACKAGE_EXTRAS_"
     for package in ${PACKAGE_EXTRAS_packages[@]}; do
 
         # only one formula allowed

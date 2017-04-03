@@ -47,8 +47,13 @@ YAML Setup
 - The script will be passed the same arguments as the compile script
   - See [bin/compile](https://devcenter.heroku.com/articles/buildpack-api#bin-compile) in the Heroku Buildpack API documentation
 
+CONFIG VARS
+===========
+*PACKAGE_BUILDER_NOBUILDFAIL* (1 or 0) - do not fail the whole build if a single package fails to install
+
 NOTES
 ====
+- If the build process times out before all packages are installed, reduce the number of packages in `package-extras.yaml` until you have a successful build. Then on the next build replace the successful packages with the removed packages. The successfully installed packages should still be available.
 - This package mostly depends on [Linuxbrew](https://github.com/Linuxbrew/brew), which is a fork of  [Homebrew](https://github.com/Homebrew/brew), which collects some anonymized info about your usage. To disable this set the config var `HOMEBREW_NO_ANALYTICS` to `1`.
 
 TODO

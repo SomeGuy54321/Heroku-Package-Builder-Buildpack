@@ -27,10 +27,10 @@ source $BIN_DIR/utils
 export BUILDCACHE=$(get-configvar "$CONFIG_DIR/BUILDCACHE" ".buildcache")
 BUILDPACK_XTRACE=$(get-configvar "$CONFIG_DIR/BUILDPACK_XTRACE" 0)  # print all commands to log
 export BUILD_DEBUG=$(get-configvar "$CONFIG_DIR/BUILD_DEBUG" 0)  # trigger the specially placed debug messages and verbose outputs
-
+export PACKAGE_BUILDER_NOBUILDFAIL=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_NOBUILDFAIL" 0)  # dont fail if a package fails to install
 
 # print all commands to log
-[ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || true && set +o xtrace
+[ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace
 
 
 # check if i got the right PATH form last buildpack
