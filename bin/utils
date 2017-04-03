@@ -17,8 +17,6 @@ function set-default-configvar() {
     else
         export $this_var="$default"
     fi
-
-
 }
 
 function print-env() {

@@ -92,6 +92,9 @@ source $BIN_DIR/steps/hooks/pre_compile
 
 
 ##########
+# reset
+rm -rf $PACKAGEBUILDER_CACHE/.linuxbrew $PACKAGEBUILDER_CACHE/.cache
+
 # do stuff
 source $BIN_DIR/utils-extra
 
