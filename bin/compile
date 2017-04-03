@@ -72,6 +72,11 @@ mkdir -p $CACHE_DIR
 
 
 ### START Linuxbrew-specific stuff #####################################################################################
+ORIG_CACHE_DIR=$CACHE_DIR
+CACHE_DIR=$CACHE_DIR/packagebuilder_cache
+LINUXBREW_DIRS=".linuxbrew .cache"
+CURR_DIR="$PWD"
+
 # debugging
 show_files $BUILD_DIR/.cache
 show_files $BUILD_DIR/.linuxbrew
@@ -79,11 +84,6 @@ show_files $APP_DIR/.cache
 show_files $APP_DIR/.linuxbrew
 show_files $CACHE_DIR/.cache
 show_files $CACHE_DIR/.linuxbrew
-
-ORIG_CACHE_DIR=$CACHE_DIR
-CACHE_DIR=$CACHE_DIR/packagebuilder_cache
-LINUXBREW_DIRS=".linuxbrew .cache"
-CURR_DIR="$PWD"
 
 # Move the linuxbrew cache to APP_DIR, or optionally reinstall by deleting the cache dirs
 for d in $LINUXBREW_DIRS; do
