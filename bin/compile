@@ -6,6 +6,9 @@
 #   - Do stuff in APP_DIR
 #   - Copy some of the APP_DIR stuff to CACHE_DIR
 #   - Move all of APP_DIR to BUILD_DIR
+#
+# Using this commit tag:
+LINUXBREW_COMMIT="d8c8b867b"
 # Usage:
 #     $ bin/compile <build-dir> <cache-dir> <env-path>
 export BUILD_START_TIME=$(date +'%s')
