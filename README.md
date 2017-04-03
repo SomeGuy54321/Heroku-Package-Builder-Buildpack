@@ -21,6 +21,8 @@ options:
 config:
   postgresql:
     - setup_djangodb.sh
+uninstall:
+  - gnutls
 ```
 YAML Setup
 ==========
@@ -46,6 +48,9 @@ YAML Setup
   - make sure the script has a shebang line
 - The script will be passed the same arguments as the compile script
   - See [bin/compile](https://devcenter.heroku.com/articles/buildpack-api#bin-compile) in the Heroku Buildpack API documentation
+#### uninstall
+- OPTIONAL
+- uninstall something
 
 CONFIG VARS
 ===========

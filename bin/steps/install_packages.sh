@@ -36,16 +36,15 @@ current buildpack maintainer know. Copy-paste this buildlog into an email to
 him/her." | indent
 }
 
-INSTALL_TRY_NUMBER=0
-function brew_install() {
+function brew_do() {
     set +e  # don't exit if error
 
-    PACKAGE="$1"
-    FLAGS="$2"
+    ACTION=$1
+    PACKAGE="$2"
+    FLAGS="$3"
     export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
 
-    do-debug "Running 'brew install $PACKAGE $FLAGS'"
-    brew install $PACKAGE $FLAGS | indent #| brew_quiet
+    brew $ACTION $PACKAGE $FLAGS | indent #| brew_quiet
 
     # if the install failed try again
     if [ $? -gt 0 ]; then
@@ -54,14 +53,14 @@ function brew_install() {
         if [ $INSTALL_TRY_NUMBER -le $JOB_REDUCE_MAX_TRIES ]; then
 
             retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $JOB_REDUCE_INCREMENT )))
-            brew_install $PACKAGE
+            brew_do $ACTION $PACKAGE $FLAGS
 
         # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that
         # before giving up
         elif [ $INSTALL_TRY_NUMBER -eq $(( $JOB_REDUCE_MAX_TRIES + 1 )) ] && [ $HOMEBREW_MAKE_JOBS -neq 1 ]; then
 
             retry_print $PACKAGE 1
-            brew_install $PACKAGE
+            brew_do $ACTION $PACKAGE $FLAGS
 
         # else it's failed
         else
@@ -76,6 +75,22 @@ function brew_install() {
 
     # reset to exiting if error
     set -e
+}
+
+function brew_install() {
+    INSTALL_TRY_NUMBER=0
+    PACKAGE="$1"
+    FLAGS="$2"
+    do-debug "Running 'brew install $PACKAGE $FLAGS'"
+    brew_do install "$PACKAGE" "$FLAGS"
+}
+
+function brew_uninstall() {
+    INSTALL_TRY_NUMBER=0
+    PACKAGE="$1"
+    FLAGS="$2"
+    do-debug "Running 'brew uninstall $PACKAGE $FLAGS'"
+    brew_do uninstall "$PACKAGE" "$FLAGS"
 }
 
 function main() {
@@ -107,7 +122,14 @@ function main() {
             chmod +x $TMP_APP_DIR/$script
             $BUILD_DIR/$script $@
         done
+
     done
+
+    # uninstall things
+    for upackage in ${PACKAGE_EXTRAS_uninstall[@]}; do
+        brew_uninstall $upackage
+    done
+
     puts-step "Running brew cleanup"
     brew cleanup | indent
 }

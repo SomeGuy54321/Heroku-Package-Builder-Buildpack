@@ -51,9 +51,8 @@ export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
 # Directory Hacks for path consistiency.
 APP_DIR='/app'
 TMP_APP_DIR=$CACHE_DIR/tmp_app_dir
-CACHED_DIRS="$BUILDCACHE .linuxbrew"
+CACHED_DIRS="$BUILDCACHE .linuxbrew .cache"
 export LOCAL_ROOT="$APP_DIR/$BUILDCACHE"
-
 
 
 show_files #################################################################
@@ -128,7 +127,6 @@ show_linuxbrew
 
 source $BIN_DIR/steps/install_linuxbrew.sh
 
-OLD_PATH=$PATH; export PATH="$HOME/.linuxbrew/bin:$PATH"
 OLD_MANPATH=$MANPATH; export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
 OLD_INFOPATH=$INFOPATH; export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
 
@@ -143,6 +141,10 @@ export HOME=$OLD_HOME
 do-debug "HOME reset to '$HOME'"
 export PATH=$OLD_PATH
 do-debug "PATH reset to '$PATH'"
+export MANPATH=$OLD_MANPATH
+do-debug "MANPATH reset to '$MANPATH'"
+export PATH=$OLD_INFOPATH
+do-debug "INFOPATH reset to '$INFOPATH'"
 
 ##########
 
