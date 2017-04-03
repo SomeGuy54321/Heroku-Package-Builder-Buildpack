@@ -21,12 +21,12 @@ if [ ! -x "$(which brew)" ]; then
     echo -e 'y\n' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)" | indent
 
     puts-step "Installing GCC"
-    brew install gcc | indent
+    brew install gcc | indent | brew_quiet
 else
     puts-step "Linuxbrew already installed"
     do-debug "which brew = $(which brew)"
     puts-step "Updating Linuxbrew"
-    brew update | indent
+    brew update | indent #| brew_quiet
 fi
 
 # reset to default locations

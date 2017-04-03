@@ -30,6 +30,8 @@ export BUILD_DEBUG=$(get-configvar "$CONFIG_DIR/BUILD_DEBUG" 0)  # trigger the s
 export PACKAGE_BUILDER_NOBUILDFAIL=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_NOBUILDFAIL" 0)  # dont fail if a package fails to install
 export HOMEBREW_NO_ANALYTICS=$(get-configvar "$CONFIG_DIR/HOMEBREW_NO_ANALYTICS" 0)
 export PACKAGE_BUILDER_HOMEBREW_VERBOSE=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_HOMEBREW_VERBOSE" 0)
+export PACKAGE_BUILDER_INSTALL_QUIET=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_INSTALL_QUIET" 0)
+
 
 # print all commands to log
 [ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace
@@ -52,7 +54,7 @@ export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
 # Directory Hacks for path consistiency.
 APP_DIR='/app'
 TMP_APP_DIR=$CACHE_DIR/tmp_app_dir
-CACHED_DIRS="$BUILDCACHE .ssh"
+CACHED_DIRS="$BUILDCACHE .linuxbrew"
 export LOCAL_ROOT="$APP_DIR/$BUILDCACHE"
 
 

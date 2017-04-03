@@ -51,6 +51,7 @@ CONFIG VARS
 ===========
 *PACKAGE_BUILDER_NOBUILDFAIL* (1 or 0) - do not fail the whole build if a single package fails to install
 *PACKAGE_BUILDER_HOMEBREW_VERBOSE* (1 or 0) - if =1, print all make output to build log
+*PACKAGE_BUILDER_INSTALL_QUIET* (1 or 0) - remove excessive install output
 
 NOTES
 ====
