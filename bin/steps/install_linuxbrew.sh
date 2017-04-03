@@ -16,6 +16,8 @@ export PATH="$HOME/.linuxbrew/bin:$PATH"
 do-debug "PATH before checking if we install linuxbrew: '$PATH'"
 do-debug "Contents of $HOME:"
 ls -Flah $HOME | indent-debug
+do-debug "Contents of $HOME/$HOME:"
+ls -Flah $HOME/$HOME | indent-debug
 do-debug "Contents of $HOME/.linuxbrew:"
 ls -Flah $HOME/.linuxbrew | indent-debug
 do-debug "Contents of $HOME/.linuxbrew/bin:"
