@@ -147,17 +147,18 @@ function deep_cp_subdirs(){
 
 # dynamically export configvars
 function export_configvar() {
-    local VAR="$1"
-    local DEFAULT="$2"
-    local SET_TO="$(cat ${CONFIG_DIR}/${VAR})" || true && SET_TO="$DEFAULT"
+    VAR="$1"
+    DEFAULT="$2"
+    SET_TO="$(cat ${CONFIG_DIR}/${VAR})" || SET_TO="$DEFAULT"
     do-debug "Setting $VAR to \"$DEFAULT\""
-    export "$VAR"="$SET_TO" || true && puts-warn "Unable to set configvar $VAR to \"$SET_TO\""
+    export "$VAR"="$SET_TO" || puts-warn "Unable to set configvar $VAR to \"$SET_TO\""
+    unset SET_TO DEFAULT VAR
 }
 
 function unexport_configvar() {
-    local VAR="$1"
+    VAR="$1"
     do-debug "Unsetting $VAR"
-    unset ${VAR}
+    unset ${VAR}; unset VAR
 }
 
 function export_all_configvars() {

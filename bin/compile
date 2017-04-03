@@ -106,9 +106,6 @@ export PATH=$OLD_PATH; do-debug "PATH reset to '$PATH'"
 export MANPATH=$OLD_MANPATH; do-debug "MANPATH reset to '$MANPATH'"
 export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
 
-do-debug "Recursive copying $PACKAGEBUILDER_CACHE to $APP_DIR"
-deep_cp_subdirs $PACKAGEBUILDER_CACHE $APP_DIR
-
 # Copy the new linuxbrew directories to CACHE_DIR
 for d in $LINUXBREW_DIRS; do
     do-debug "Copying $d to $PWD"
