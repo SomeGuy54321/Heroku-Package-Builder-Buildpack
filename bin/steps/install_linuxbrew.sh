@@ -13,6 +13,13 @@ OLD_HOME=$HOME
 export HOME=$BUILD_DIR
 OLD_PATH=$PATH
 export PATH="$HOME/.linuxbrew/bin:$PATH"
+do-debug "PATH before checking if we install linuxbrew: '$PATH'"
+do-debug "Contents of $HOME/.linuxbrew:"
+ls -Flah $HOME/.linuxbrew | indent-debug
+do-debug "Contents of $HOME/.linuxbrew/bin:"
+ls -Flah $HOME/.linuxbrew/bin | indent-debug
+do-debug "Contents of $HOME/.linuxbrew/Cellar:"
+ls -Flah $HOME/.linuxbrew/Cellar | indent-debug
 
 if [ ! -x "$(which brew)" ]; then
     puts-step "Installing Linuxbrew"
@@ -21,7 +28,7 @@ if [ ! -x "$(which brew)" ]; then
     echo -e 'y\n' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)" | indent
 
     puts-step "Installing GCC"
-    brew install gcc | indent | brew_quiet
+    brew install gcc | indent #| brew_quiet
 else
     puts-step "Linuxbrew already installed"
     do-debug "which brew = $(which brew)"
