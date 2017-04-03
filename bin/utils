@@ -101,7 +101,6 @@ function export_env_dir() {
 function deep-cp (){
   find -H $1 -maxdepth 1 -name '.*' -a \( -type d -o -type f -o -type l \) -exec cp -a '{}' $2 \;
   cp -r $1/!(tmp) $2
-  # echo copying $1 to $2
 }
 
 # Does some serious moving.
@@ -146,6 +145,8 @@ function show_files() {
     ls -Flah $APP_DIR/public | indent-debug || true
     do-debug "Contents of $APP_DIR/tmp:"
     ls -Flah $APP_DIR/tmp | indent-debug || true
+    do-debug "Contents of $TMP_APP_DIR:"
+    ls -Flah $TMP_APP_DIR | indent-debug || true
 
 
     do-debug "Contents of $BIN_DIR:"
