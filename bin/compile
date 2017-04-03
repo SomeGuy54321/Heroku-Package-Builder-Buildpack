@@ -113,15 +113,12 @@ fi
 # do stuff
 source $BIN_DIR/utils-extra
 
-
 # linuxbrew bases its installation on the HOME variable
 # so TEMPORARILY we set this to the BUILD_DIR
-OLD_HOME=$HOME
-export HOME=$TMP_APP_DIR
-OLD_PATH=$PATH
-export PATH="$HOME/.linuxbrew/bin:$PATH"
-do-debug "PATH before checking if we install linuxbrew: '$PATH'"
+OLD_HOME=$HOME; export HOME=$BUILD_DIR
+OLD_PATH=$PATH; export PATH="$HOME/.linuxbrew/bin:$PATH"
 
+do-debug "PATH before checking if we install linuxbrew: '$PATH'"
 show_files
 show_linuxbrew
 
@@ -129,23 +126,17 @@ source $BIN_DIR/steps/install_linuxbrew.sh
 
 OLD_MANPATH=$MANPATH; export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
 OLD_INFOPATH=$INFOPATH; export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
-
 if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi
+
 # install selected packages
 #debug_heavy
 source $BIN_DIR/steps/install_packages.sh
 
-
 # reset to default locations
-export HOME=$OLD_HOME
-do-debug "HOME reset to '$HOME'"
-export PATH=$OLD_PATH
-do-debug "PATH reset to '$PATH'"
-export MANPATH=$OLD_MANPATH
-do-debug "MANPATH reset to '$MANPATH'"
-export PATH=$OLD_INFOPATH
-do-debug "INFOPATH reset to '$INFOPATH'"
-
+export HOME=$OLD_HOME; do-debug "HOME reset to '$HOME'"
+export PATH=$OLD_PATH; do-debug "PATH reset to '$PATH'"
+export MANPATH=$OLD_MANPATH; do-debug "MANPATH reset to '$MANPATH'"
+export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
 ##########
 
 
