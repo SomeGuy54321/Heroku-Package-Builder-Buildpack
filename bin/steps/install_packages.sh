@@ -23,7 +23,7 @@ function retry_print() {
     NUM_JOBS=$2
     puts-warn "Installation of $PACKAGE failed using $HOMEBREW_MAKE_JOBS processor cores"
     export HOMEBREW_MAKE_JOBS=$NUM_JOBS
-    echo "Retrying installation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores" | indent
+    echo "Retrying installation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores" |& indent
 }
 
 function fail_print() {
@@ -33,7 +33,7 @@ function fail_print() {
 Perhaps consider removing $PACKAGE from your brew-extras.yaml file and retrying.
 If that doesn't work then remove this buildpack from your build and let the
 current buildpack maintainer know. Copy-paste this buildlog into an email to
-him/her." | indent
+him/her." |& indent
 }
 
 function brew_do() {
@@ -44,7 +44,7 @@ function brew_do() {
     FLAGS="$3"
     export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
 
-    brew $ACTION $PACKAGE $FLAGS | indent | brew_quiet
+    brew $ACTION $PACKAGE $FLAGS |& indent |& brew_quiet
 
     # if the install failed try again
     if [ $? -gt 0 ]; then
@@ -130,7 +130,7 @@ function main() {
     done
 
     puts-step "Running brew cleanup"
-    brew cleanup | indent | brew_quiet
+    brew cleanup |& indent |& brew_quiet
 }
 
 main

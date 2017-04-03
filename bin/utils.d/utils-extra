@@ -69,7 +69,7 @@ function parse_yaml() {
 function debug_heavy() {
     local EXTRA="|$1"
     do-debug "Relevant local variables:"
-    set -o posix && set | sort | grep -E "HOMEBREW|PATH|HOME|APP_DIR|PACKAGE_EXTRAS" | indent
+    set -o posix && set | sort | grep -E "HOMEBREW|PATH|HOME|APP_DIR|PACKAGE_EXTRAS" |& indent
 }
 
 # makes the brew output not show lines starting with '  ==>'
