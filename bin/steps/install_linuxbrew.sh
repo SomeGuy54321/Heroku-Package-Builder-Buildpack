@@ -15,36 +15,8 @@ OLD_PATH=$PATH
 export PATH="$HOME/.linuxbrew/bin:$PATH"
 do-debug "PATH before checking if we install linuxbrew: '$PATH'"
 
-do-debug "Contents of $HOME:"
-ls -Flah $HOME | indent-debug
-do-debug "Contents of $HOME/conf:"
-ls -Flah $HOME/conf | indent-debug
-do-debug "Contents of $HOME/project:"
-ls -Flah $HOME/project | indent-debug
-do-debug "Contents of $HOME/app:"
-ls -Flah $HOME/app | indent-debug
-do-debug "Contents of $HOME/public:"
-ls -Flah $HOME/public | indent-debug
-do-debug "Contents of $HOME/tmp:"
-ls -Flah $HOME/tmp | indent-debug
-
-
-do-debug "Contents of $BIN_DIR:"
-ls -Flah $BIN_DIR | indent-debug
-do-debug "Contents of $BUILD_DIR:"
-ls -Flah $BUILD_DIR | indent-debug
-do-debug "Contents of $CACHE_DIR:"
-ls -Flah $CACHE_DIR | indent-debug
-do-debug "Contents of $CONFIG_DIR:"
-ls -Flah $CONFIG_DIR | indent-debug
-
-
-do-debug "Contents of $HOME/.linuxbrew:"
-ls -Flah $HOME/.linuxbrew | indent-debug
-do-debug "Contents of $HOME/.linuxbrew/bin:"
-ls -Flah $HOME/.linuxbrew/bin | indent-debug
-do-debug "Contents of $HOME/.linuxbrew/Cellar:"
-ls -Flah $HOME/.linuxbrew/Cellar | indent-debug
+show_files
+show_linuxbrew
 
 if [ ! -x "$(which brew)" ]; then
     puts-step "Installing Linuxbrew"

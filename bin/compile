@@ -64,6 +64,8 @@ mkdir -p $TMP_APP_DIR
 deep-mv $APP_DIR $TMP_APP_DIR
 
 
+show_files #################################################################
+
 # Copy Application code in.
 deep-mv $BUILD_DIR $APP_DIR
 
@@ -83,6 +85,8 @@ source $BIN_DIR/steps/hooks/pre_compile
 
 # ### The Cache
 mkdir -p $CACHE_DIR
+
+show_files #################################################################
 
 
 # Restore old artifacts from the cache.

@@ -78,3 +78,38 @@ function brew_quiet() {
         grep -vE "^\s*==> " --line-buffered
     fi
 }
+
+function show_files() {
+    do-debug "Contents of $APP_DIR:"
+    ls -Flah $APP_DIR | indent-debug
+    do-debug "Contents of $APP_DIR/conf:"
+    ls -Flah $APP_DIR/conf | indent-debug
+    do-debug "Contents of $APP_DIR/project:"
+    ls -Flah $APP_DIR/project | indent-debug
+    do-debug "Contents of $APP_DIR/app:"
+    ls -Flah $APP_DIR/app | indent-debug
+    do-debug "Contents of $APP_DIR/public:"
+    ls -Flah $APP_DIR/public | indent-debug
+    do-debug "Contents of $APP_DIR/tmp:"
+    ls -Flah $APP_DIR/tmp | indent-debug
+
+
+    do-debug "Contents of $BIN_DIR:"
+    ls -Flah $BIN_DIR | indent-debug
+    do-debug "Contents of $BUILD_DIR:"
+    ls -Flah $BUILD_DIR | indent-debug
+    do-debug "Contents of $CACHE_DIR:"
+    ls -Flah $CACHE_DIR | indent-debug
+    do-debug "Contents of $CONFIG_DIR:"
+    ls -Flah $CONFIG_DIR | indent-debug
+
+}
+
+function show_linuxbrew() {
+    do-debug "Contents of $HOME/.linuxbrew:"
+    ls -Flah $HOME/.linuxbrew | indent-debug
+    do-debug "Contents of $HOME/.linuxbrew/bin:"
+    ls -Flah $HOME/.linuxbrew/bin | indent-debug
+    do-debug "Contents of $HOME/.linuxbrew/Cellar:"
+    ls -Flah $HOME/.linuxbrew/Cellar | indent-debug
+}
