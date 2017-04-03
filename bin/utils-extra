@@ -5,8 +5,8 @@
 # which is based on https://gist.github.com/pkuczynski/8665367
 ## works for arrays of hashes, as long as the hashes do not have arrays
 ## Gist comment: 'this one does not handle string with doublequotes inside'
-### SYNTAX: parse-yaml <yaml_file> <prefix_of_variables>
-### USAGE: eval $(parse-yaml file.yaml "YAMLFILE_"
+### SYNTAX: parse_yaml <yaml_file> <prefix_of_variables>
+### USAGE: eval $(parse_yaml file.yaml "YAMLFILE_"
 ### EXAMPLE:
 ###     file.yaml =
 ###         development:
@@ -26,7 +26,7 @@
 ###             -
 ###               name: umbrella
 ###               role: developer
-### DO: eval $(parse-yaml file.yaml "development_")
+### DO: eval $(parse_yaml file.yaml "development_")
 ### OUTPUT:
 ###     development_adapter=("mysql2")
 ###     development_encoding=("utf8")
@@ -41,7 +41,7 @@
 ###     development_users__role+=("developer")
 ### > echo ${development_roles[@]}
 ###   admin developer guest
-parse-yaml() {
+function parse_yaml() {
     local prefix=$2
     local s
     local w

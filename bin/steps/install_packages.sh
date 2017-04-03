@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-
-
 # this can cause forking issues, if it does then
 # gradually reduce the jobs number
 export HOMEBREW_MAKE_JOBS=$(grep -c ^processor /proc/cpuinfo)
@@ -81,7 +79,7 @@ function brew_install() {
 }
 
 function main() {
-    eval $(parse-yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
+    eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
     do-debug "Parsed YAML variables:"
     debug_heavy "PACKAGE_EXTRAS_"
     for package in ${PACKAGE_EXTRAS_packages[@]}; do

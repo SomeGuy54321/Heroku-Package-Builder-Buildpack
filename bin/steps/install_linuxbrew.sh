@@ -19,7 +19,7 @@ OLD_INFOPATH=$INFOPATH
 export INFOPATH="$HOME/.linuxbrew/share/info:\$INFOPATH"
 
 if [ ! -x "$(which brew)" ]; then
-    debug_heavy
+    #debug_heavy
     puts-step "Installing Linuxbrew"
     do-debug "Building linuxbrew in $HOME"
 
@@ -27,7 +27,7 @@ if [ ! -x "$(which brew)" ]; then
 
     puts-step "Installing GCC"
     brew install gcc | indent
-    debug_heavy
+    #debug_heavy
 
 else
     puts-step "Linuxbrew already installed"
@@ -36,9 +36,9 @@ else
     brew update | indent
 fi
 
-
+if [ $BUILD_DEBUG -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi
 # install selected packages
-debug_heavy
+#debug_heavy
 source $BIN_DIR/steps/install_packages.sh
 
 

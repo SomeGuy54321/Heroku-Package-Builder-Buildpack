@@ -46,13 +46,6 @@ export EXPORT_PATH="$(cd $(dirname $BIN_DIR/../export); pwd)"
 # use epoch date to hopefully control the order
 # in which the profile.d scripts are executed
 export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
-#PATH_CHECK=$(echo "$PATH" | grep "$BUILDCACHE" --color=never 2>/dev/null)
-#if [ ! "$PATH_CHECK" ]; then
-#    puts-warn "PATH did not contain ${BUILDCACHE}. Building PATH vars from scratch."
-#    # only add things to path which are created
-#    # here, extras can be added in .profile
-#    export PATH="/app/$BUILDCACHE/$CONDA_RELDIRPATH_UNDER_BUILDCACHE/bin:/app/$BUILDCACHE/bin:/app/$BUILDCACHE/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
-#fi
 
 
 # Directory Hacks for path consistiency.
