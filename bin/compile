@@ -17,7 +17,7 @@ source $BIN_DIR/utils
 
 
 # get things from CONFIG_DIR
-export BUILDCACHE=$(get-configvar "$CONFIG_DIR/BUILDCACHE" ".buildcache")
+export BUILDCACHE=$(get-configvar "$CONFIG_DIR/BUILDCACHE" ".heroku")
 BUILDPACK_XTRACE=$(get-configvar "$CONFIG_DIR/BUILDPACK_XTRACE" 0)  # print all commands to log
 export BUILD_DEBUG=$(get-configvar "$CONFIG_DIR/BUILD_DEBUG" 0)  # trigger the specially placed debug messages and verbose outputs
 export PACKAGE_BUILDER_NOBUILDFAIL=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDER_NOBUILDFAIL" 0)  # dont fail if a package fails to install
@@ -32,8 +32,12 @@ export PACKAGE_BUILDER_INSTALL_QUIET=$(get-configvar "$CONFIG_DIR/PACKAGE_BUILDE
 
 # check if i got the right PATH form last buildpack
 # assume it contained the same BUILDCACHE, if not rebuild it
-do-debug "PATH when starting: $PATH"
-do-debug "PREV_BUILDPACK_PATH when starting: $PREV_BUILDPACK_PATH"
+do-debug "PATH when starting: '$PATH'"
+do-debug "PREV_BUILDPACK_PATH when starting: '$PREV_BUILDPACK_PATH'"
+do-debug "BIN_DIR when starting: '$BIN_DIR'"
+do-debug "BUILD_DIR when starting: '$BUILD_DIR'"
+do-debug "CACHE_DIR when starting: '$CACHE_DIR'"
+do-debug "CONFIG_DIR when starting: '$CONFIG_DIR'"
 
 
 # Paths.
