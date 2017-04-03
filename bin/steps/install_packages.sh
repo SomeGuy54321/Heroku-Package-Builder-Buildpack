@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 
+
 # this can cause forking issues, if it does then
 # gradually reduce the jobs number
 export HOMEBREW_MAKE_JOBS=$(grep -c ^processor /proc/cpuinfo)
@@ -19,7 +20,7 @@ function max() {
     python -c "print(max($1,$2))"
 }
 
-function retry-print() {
+function retry_print() {
     PACKAGE="$1"
     NUM_JOBS=$2
     puts-warn "Installation of $PACKAGE failed using $HOMEBREW_MAKE_JOBS processor cores"
@@ -27,7 +28,7 @@ function retry-print() {
     echo "Retrying installation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores" | indent
 }
 
-function fail-print() {
+function fail_print() {
     PACKAGE="$1"
     puts-warn "Unable to install $PACKAGE even at $HOMEBREW_MAKE_JOBS job(s)."
     echo -e "This build will now fail. Sorry about that.\n
@@ -53,19 +54,19 @@ function brew-install() {
         # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
         if [ $INSTALL_TRY_NUMBER -le $JOB_REDUCE_MAX_TRIES ]; then
 
-            retry-print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $JOB_REDUCE_INCREMENT )))
+            retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $JOB_REDUCE_INCREMENT )))
             brew-install $PACKAGE
 
         # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that
         # before giving up
         elif [ $INSTALL_TRY_NUMBER -eq $(( $JOB_REDUCE_MAX_TRIES + 1 )) ] && [ $HOMEBREW_MAKE_JOBS -neq 1 ]; then
 
-            retry-print $PACKAGE 1
+            retry_print $PACKAGE 1
             brew-install $PACKAGE
 
         # else it's failed
         else
-            fail-print
+            fail_print
             exit $?
         fi
     fi
