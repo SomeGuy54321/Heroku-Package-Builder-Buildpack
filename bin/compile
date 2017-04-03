@@ -76,34 +76,34 @@ mkdir -p $CACHE_DIR
 LINUXBREW_DIRS=".linuxbrew .cache"
 CURR_DIR="$PWD"
 
-show_linuxbrew_files
+# show_linuxbrew_files
 
 # Move the linuxbrew cache to APP_DIR, or optionally reinstall by deleting the cache dirs
 do-debug "PACKAGE_BUILDER_REINSTALL_LINUXBREW=\"$PACKAGE_BUILDER_REINSTALL_LINUXBREW\""
-show_files "$PWD/"
+# show_files "$PWD/"
 for d in $LINUXBREW_DIRS; do
 
     if [ $PACKAGE_BUILDER_REINSTALL_LINUXBREW -gt 0 ]; then
 
         do-debug "Deleting cache $d"
         rm -rf $CACHE_DIR/$d || true
-        show_files "$CACHE_DIR/"
+        # show_files "$CACHE_DIR/"
 
     else
 
         do-debug "Moving $CACHE_DIR/$d to $CURR_DIR"
         cp -af $CACHE_DIR/$d $PWD/ || true
-        show_files $PWD/$d
+        # show_files $PWD/$d
 
         do-debug "Deleting old cache $CACHE_DIR/$d"
         rm -rf $CACHE_DIR/$d || true
-        show_files "$CACHE_DIR/"
+        # show_files "$CACHE_DIR/"
 
     fi
 done
-show_files "$PWD/"
+# show_files "$PWD/"
 
-show_linuxbrew_files
+# show_linuxbrew_files
 
 # linuxbrew bases its installation on the HOME variable so temporarily we set this to the BUILD_DIR
 OLD_HOME=$HOME; export HOME=$BUILD_DIR
@@ -131,7 +131,7 @@ done
 rm -rf "$CURR_DIR/.cache"/*
 
 # debugging
-show_linuxbrew_files
+# show_linuxbrew_files
 ### END Linuxbrew-specific stuff #######################################################################################
 
 
@@ -150,7 +150,7 @@ set-default-env HOMEBREW_NO_ANALYTICS $HOMEBREW_NO_ANALYTICS
 deep-mv $BUILD_DIR $ORIG_BUILD_DIR
 
 # debugging
-show_linuxbrew_files
+# show_linuxbrew_files
 
 # writing the export file dynamically
 cat <<EOF > $BIN_DIR/../export
