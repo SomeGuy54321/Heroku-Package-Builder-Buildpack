@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-TARFLAGS='--use-compress-program=lz4 --sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore'
+TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --use-compress-program='xz --threads=0 --extreme -v' "
 
 function decompress_to_builddir() {
     local INDIR="$1"
@@ -22,11 +22,11 @@ function compress_to_cache() {
     local BASENAME=$(basename "$INDIR")
     local DIRNAME=$(cd $(dirname "$INDIR"); pwd)
     local FULL_INDIR="$DIRNAME/$BASENAME"
-    local TARFLAGS=" --verify $TARFLAGS"  # --absolute-names
+    local TARFLAGS=" --absolute-names $TARFLAGS"
 
-    do-debug "Compressing ${FULL_INDIR} to ${CACHE_DIR}/${BASENAME}.tar.lz4"
+    do-debug "Compressing ${FULL_INDIR} to ${CACHE_DIR}/${BASENAME}.tar.xz"
     tar --create               \
-        --file ${CACHE_DIR}/${BASENAME}.tar.lz4 \
+        --file ${CACHE_DIR}/${BASENAME}.tar.xz \
         $TARFLAGS \
         ${FULL_INDIR} \
     |& indent

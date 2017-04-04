@@ -89,15 +89,15 @@ for d in $LINUXBREW_DIRS; do
 
     if [ $PACKAGE_BUILDER_REINSTALL_LINUXBREW -gt 0 ]; then
 
-        do-debug "Deleting cache $d and ${d}.tar.lz4"
-        rm -rf $CACHE_DIR/$d $CACHE_DIR/${d}.tar.lz4 || true
+        do-debug "Deleting cache $d and ${d}.tar.xz"
+        rm -rf $CACHE_DIR/$d $CACHE_DIR/${d}.tar.xz || true
         # show_files "$CACHE_DIR/"
 
     else
 
 #        do-debug "Moving $CACHE_DIR/$d to $CURR_DIR"
 #        cp -af $CACHE_DIR/$d $PWD/ || true
-        decompress_to_builddir $CACHE_DIR/${d}.tar.lz4
+        decompress_to_builddir $CACHE_DIR/${d}.tar.xz
         show_files $PWD/$d
 
 #        do-debug "Deleting old cache $CACHE_DIR/$d"
