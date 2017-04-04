@@ -14,10 +14,6 @@ JOB_REDUCE_INCREMENT=2
 # just reduce to 1 job immediately
 JOB_REDUCE_MAX_TRIES=4
 
-function max() {
-    python -c "print(max($1,$2))"
-}
-
 function retry_print() {
     PACKAGE="$1"
     NUM_JOBS=$2
@@ -98,36 +94,57 @@ function main() {
     #debug_heavy "PACKAGE_EXTRAS_"
     for package in ${PACKAGE_EXTRAS_packages[@]}; do
 
-        # only one formula allowed
-        FORMULAS_VAR="PACKAGE_EXTRAS_formulas_${package}"
-        FORMULAS="${!FORMULAS_VAR}"
-        if [ ${#FORMULAS} -eq 0 ]; then
-            FORMULAS=$package;
+        if [ $(time_remaining) -gt 0 ]; then
+
+            # only one formula allowed
+            FORMULAS_VAR="PACKAGE_EXTRAS_formulas_${package}"
+            FORMULAS="${!FORMULAS_VAR}"
+            if [ ${#FORMULAS} -eq 0 ]; then
+                FORMULAS=$package;
+            fi
+
+            # multiple options flags allowed so add [@]
+            OPTIONS_VAR="PACKAGE_EXTRAS_options_${package}[@]"
+            for opt in ${!OPTIONS_VAR}; do
+                OPTIONS="$OPTIONS --${opt}"
+            done
+
+            # do the thing
+            puts-step "Installing $package"
+            brew_install $FORMULAS $OPTIONS
+
+            # multiple scripts can run
+            CONFIG_VAR="PACKAGE_EXTRAS_config_${package}[@]"
+            for script in ${!CONFIG_VAR}; do
+                chmod +x $TMP_APP_DIR/$script
+                $BUILD_DIR/$script $@
+            done
+
+        else
+            REMAINING_PACKAGES="$REMAINING_PACKAGES\n- $package"
         fi
-
-        # multiple options flags allowed so add [@]
-        OPTIONS_VAR="PACKAGE_EXTRAS_options_${package}[@]"
-        for opt in ${!OPTIONS_VAR}; do
-            OPTIONS="$OPTIONS --${opt}"
-        done
-
-        # do the thing
-        puts-step "Installing $package"
-        brew_install $FORMULAS $OPTIONS
-
-        # multiple scripts can run
-        CONFIG_VAR="PACKAGE_EXTRAS_config_${package}[@]"
-        for script in ${!CONFIG_VAR}; do
-            chmod +x $TMP_APP_DIR/$script
-            $BUILD_DIR/$script $@
-        done
-
     done
+
+    if [ ${#REMAINING_PACKAGES} -gt 0 ]; then
+        puts-warn "The following packages did not install in time:"
+        echo $REMAINING_PACKAGES |& indent
+        puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
+    fi
 
     # uninstall things
     for upackage in ${PACKAGE_EXTRAS_uninstall[@]}; do
-        brew_uninstall $upackage
+        if [ $(time_remaining) -gt 0 ]; then
+            brew_uninstall $upackage
+        else
+            REMAINING_UNINSTALLS="$REMAINING_UNINSTALLS\n- $upackage"
+        fi
     done
+
+    if [ ${#REMAINING_UNINSTALLS} -gt 0 ]; then
+        puts-warn "The following packages did not uninstall in time:"
+        echo $REMAINING_UNINSTALLS |& indent
+        puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
+    fi
 
     puts-step "Running brew cleanup"
     brew cleanup |& indent |& brew_quiet

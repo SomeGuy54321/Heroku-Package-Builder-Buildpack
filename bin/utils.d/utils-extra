@@ -116,3 +116,15 @@ function git_commit_check() {
 #    puts-step "Updating Linuxbrew"
 #    brew update |& indent |& brew_quiet
 }
+
+function max() {
+    python -c "print(max($1,$2))"
+}
+
+function min() {
+    python -c "print(min($1,$2))"
+}
+
+function time_remaining() {
+    echo $(( $BUILD_MAX_RUNTIME - $(date +'%s') ))
+}

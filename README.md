@@ -61,13 +61,13 @@ __*PACKAGE_BUILDER_HOMEBREW_VERBOSE*__ (1 or 0)<br>
 If =1, print all make output to build log
 
 __*PACKAGE_BUILDER_INSTALL_QUIET*__ (1 or 0)<br>
-Remove excessive install output (not working)
+Remove excessive install output
 
 __*PACKAGE_BUILDER_REINSTALL_LINUXBREW*__ (1 or 0)<br>
 Removes all packages installed before and starts anew
 
 __*PACKAGE_BUILDER_MAX_BUILDTIME*__ (time in minutes)<br>
-Max time to take building (not exact) (not working)
+Max time to take building (not exact)
 
 
 NOTES

@@ -42,7 +42,8 @@ do-debug "CONFIG_DIR when starting: '$CONFIG_DIR'"
 
 
 # get things from CONFIG_DIR
-export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 15
+export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 14
+export PACKAGE_BUILDER_MAX_BUILDTIME=$(min $PACKAGE_BUILDER_MAX_BUILDTIME 14)
 export_configvar BUILDCACHE ".heroku"
 export_configvar PACKAGE_BUILDER_NOBUILDFAIL 0  # dont fail if a package fails to install
 export_configvar HOMEBREW_NO_ANALYTICS 0
@@ -59,9 +60,12 @@ export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
 if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
 export_configvar PACKAGE_BUILDER_INSTALL_QUIET 0
 
+
 # setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
 # do something with this someday
-export BUILD_MAX_RUNTIME="$(($(date +'%s')+($PACKAGE_BUILDER_MAX_BUILDTIME * 60)))" || export BUILD_MAX_RUNTIME="$(($(date +'%s')+(15 * 60)))"
+PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS=$(( $PACKAGE_BUILDER_MAX_BUILDTIME * 60 ))
+CURRENT_SECONDS=$(date +'%s')
+export BUILD_MAX_RUNTIME=$(($PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS + $CURRENT_SECONDS))
 
 
 # Move all code from BUILD_DIR to APP_DIR, make APP_DIR the new BUILD_DIR, and enter the new BUILD_DIR
