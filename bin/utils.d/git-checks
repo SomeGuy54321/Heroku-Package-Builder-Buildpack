@@ -30,8 +30,9 @@ function git_remedy_linuxbuild() {
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" stash clear |& indent-debug
     ;;
     3)
-        do-debug "Deleting .git/refs --> git remote set-url --> git checkout -f master --> git fetch --> git pull origin master"
+        do-debug "Deleting .git/refs --> git init --> git remote set-url --> git checkout -f master --> git fetch --> git pull origin master"
         rm -rf "$BUILD_DIR/.linuxbrew/.git/refs"
+        git --git-dir="$BUILD_DIR/.linuxbrew/.git" init |& indent-debug
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" remote set-url origin https://github.com/Linuxbrew/brew.git |& indent-debug
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" checkout -f master |& indent-debug
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" fetch |& indent-debug
