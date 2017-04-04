@@ -3,13 +3,13 @@
 
 function git_reset_linuxbrew() {
     puts-step "Updating git repo"
-    git --git-dir="$BUILD_DIR/.linuxbrew/.git" reset --hard $LINUXBREW_COMMIT |& indent |& brew_quiet
+    git --git-dir="$REPO" reset --hard $LINUXBREW_COMMIT |& indent |& brew_quiet
 }
 
 
 function git_gc_linuxbrew() {
     puts-step "Auto-optimizing git repo"
-    git --git-dir="$BUILD_DIR/.linuxbrew/.git" gc --auto |& indent |& brew_quiet
+    git --git-dir="$REPO" gc --auto |& indent |& brew_quiet
 }
 
 
@@ -18,31 +18,35 @@ function git_remedy_linuxbuild() {
     case $REMEDY_NUM in
     0)
         do-debug "Running 'git init'"
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" init |& indent-debug
+        git --git-dir="$REPO" init |& indent-debug
         return 1
     ;;
     1)
         do-debug "Running 'git add origin'"
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" add origin https://github.com/Linuxbrew/brew.git |& indent-debug
+        git --git-dir="$REPO" add origin https://github.com/Linuxbrew/brew.git |& indent-debug
         return 1
     ;;
     2)
         do-debug "Running checkout -f master --> git stash clear"
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" checkout -f master |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" stash clear |& indent-debug
+        git --git-dir="$REPO" checkout -f master |& indent-debug
+        git --git-dir="$REPO" stash clear |& indent-debug
+        git --git-dir="$REPO" stash |& indent-debug
+        git --git-dir="$REPO" clean -d -f |& indent-debug
         return 1
     ;;
     3)
         do-debug "Deleting .git/refs --> git init --> git remote set-url --> git checkout -f master --> git fetch --> git pull origin master"
-        rm -rf "$BUILD_DIR/.linuxbrew/.git/refs"
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" init |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" remote set-url origin https://github.com/Linuxbrew/brew.git |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" fetch --all |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" checkout -f master |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" stash clear |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" update-index --really-refresh |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" reset --hard |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" pull --rebase=true origin master |& indent-debug
+        rm -rf "$REPO/refs"
+        git --git-dir="$REPO" init |& indent-debug
+        git --git-dir="$REPO" remote set-url origin https://github.com/Linuxbrew/brew.git |& indent-debug
+        git --git-dir="$REPO" fetch --all |& indent-debug
+        git --git-dir="$REPO" checkout -f master |& indent-debug
+        git --git-dir="$REPO" stash clear |& indent-debug
+        git --git-dir="$REPO" stash |& indent-debug
+        git --git-dir="$REPO" clean -d -f |& indent-debug
+        git --git-dir="$REPO" update-index --really-refresh |& indent-debug
+        git --git-dir="$REPO" reset --hard |& indent-debug
+        git --git-dir="$REPO" pull --rebase=true origin master |& indent-debug
         return 1
     ;;
     *)
@@ -56,11 +60,12 @@ function git_remedy_linuxbuild() {
 
 function git_commit_check() {
     set +e
+    REPO="$1"
     export KEEP_TRYING=1
     export REMEDY_NUM_GC=0
     export REMEDY_NUM_RESET=0
-    #LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1)"
-    LINUXBREW_CURRENT_COMMIT="$(git rev-parse --verify HEAD)"
+    #LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$REPO" show --oneline -s | cut -d' ' -f1)"
+    LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$REPO" rev-parse --verify HEAD)"
     if [[ "$LINUXBREW_CURRENT_COMMIT" != "$LINUXBREW_COMMIT" ]]; then
         while [ $KEEP_TRYING -gt 0 ]; do
 
@@ -76,4 +81,15 @@ function git_commit_check() {
     fi
     unset KEEP_TRYING REMEDY_NUM_GC REMEDY_NUM_RESET
     set -e
+}
+
+function git_checks_linuxbrew() {
+    ORIG_PWD="$PWD"
+    cd "$1"
+    OLD_IFS=$IFS
+    for repo in $(find . -type d -name '.git' -exec ls -d $PWD/{} \;); do
+        git_commit_check $repo
+    done
+    IFS=$OLD_IFS
+    cd "$ORIG_PWD"
 }
