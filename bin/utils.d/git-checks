@@ -85,7 +85,6 @@ function git_commit_check() {
 
 function git_checks_linuxbrew() {
     ORIG_PWD="$PWD"
-    cd "$1"
     OLD_IFS=$IFS
     for repo in $(find . -type d -name '.git' -exec ls -d $PWD/{} \;); do
         repo="$(cd $repo; pwd)"
