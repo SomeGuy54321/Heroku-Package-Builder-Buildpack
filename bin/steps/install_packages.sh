@@ -116,7 +116,7 @@ function main() {
             # multiple scripts can run
             CONFIG_VAR="PACKAGE_EXTRAS_config_${package}[@]"
             for script in ${!CONFIG_VAR}; do
-                chmod +x $TMP_APP_DIR/$script
+                chmod +x $BUILD_DIR/$script
                 $BUILD_DIR/$script $@
             done
 
