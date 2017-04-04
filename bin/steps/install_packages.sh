@@ -19,7 +19,7 @@ function retry_print() {
     NUM_JOBS=$2
     puts-warn "Installation of $PACKAGE failed using $HOMEBREW_MAKE_JOBS processor cores"
     export HOMEBREW_MAKE_JOBS=$NUM_JOBS
-    echo "Retrying installation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores" |& indent
+    puts-step "Retrying installation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores" |& indent
 }
 
 function fail_print() {
@@ -60,7 +60,7 @@ function brew_do() {
         # else it's failed
         else
             if [ $PACKAGE_BUILDER_NOBUILDFAIL -eq 0 ] && [[ "$ACTION" != "uninstall" ]]; then
-                fail_print
+                fail_print $PACKAGE
                 exit $?
             else
                 puts-warn "Unable to install ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
