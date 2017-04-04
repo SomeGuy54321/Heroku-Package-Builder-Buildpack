@@ -12,8 +12,8 @@ if [ ! -x "$(which brew)" ]; then
     puts-step "Installing GCC"
     brew install gcc |& indent |& brew_quiet
 
-    puts-step "Installing lz4"
-    brew install lz4 |& indent |& brew_quiet
+#    puts-step "Installing lz4"
+#    brew install lz4 |& indent |& brew_quiet
 
 else
 
