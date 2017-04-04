@@ -35,8 +35,8 @@ function git_remedy_linuxbuild() {
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" init |& indent-debug
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" remote set-url origin https://github.com/Linuxbrew/brew.git |& indent-debug
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" checkout -f master |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" fetch |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" pull origin master |& indent-debug
+        git --git-dir="$BUILD_DIR/.linuxbrew/.git" fetch --all |& indent-debug
+        git --git-dir="$BUILD_DIR/.linuxbrew/.git" pull --rebase=true origin master |& indent-debug
     ;;
     *)
         puts-warn "Unable to run regular git checks. This build will probably fail."
@@ -50,8 +50,8 @@ function git_remedy_linuxbuild() {
 function git_commit_check() {
     set +e
     export KEEP_TRYING=1
-    REMEDY_NUM_GC=0
-    REMEDY_NUM_RESET=0
+    export REMEDY_NUM_GC=0
+    export REMEDY_NUM_RESET=0
     #LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1)"
     LINUXBREW_CURRENT_COMMIT="$(git rev-parse --verify HEAD)"
     if [[ "$LINUXBREW_CURRENT_COMMIT" != "$LINUXBREW_COMMIT" ]]; then
