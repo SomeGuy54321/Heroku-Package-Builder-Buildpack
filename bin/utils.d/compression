@@ -6,7 +6,7 @@ function decompress_to_builddir() {
     local INDIR="$1"
     local BASENAME=$(basename "$INDIR")
     local DIRNAME=$(cd $(dirname "$INDIR"); pwd)
-    local FULL_INDIR="$DIRNAME/$INDIR"
+    local FULL_INDIR="$DIRNAME/$BASENAME"
     local TARFLAGS="--remove-files --overwrite $TARFLAGS"
 
     do-debug "Decompressing ${FULL_INDIR} into ${BUILD_DIR}"
@@ -21,7 +21,7 @@ function compress_to_cache() {
     local INDIR="$1"
     local BASENAME=$(basename "$INDIR")
     local DIRNAME=$(cd $(dirname "$INDIR"); pwd)
-    local FULL_INDIR="$DIRNAME/$INDIR"
+    local FULL_INDIR="$DIRNAME/$BASENAME"
     local TARFLAGS=" --verify $TARFLAGS"  # --absolute-names
 
     do-debug "Compressing ${FULL_INDIR} to ${CACHE_DIR}/${BASENAME}.tar.lz4"
