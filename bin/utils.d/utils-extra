@@ -106,8 +106,8 @@ function git_commit_check() {
 
     KEEP_TRYING=1
     REMEDY_NUM=0
+    LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1)"
     while [ $KEEP_TRYING -gt 0 ]; do
-        LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1)"
         if [[ "$LINUXBREW_CURRENT_COMMIT" != "$LINUXBREW_COMMIT" ]]; then
 
             puts-step "Updating git repo"
@@ -121,25 +121,21 @@ function git_commit_check() {
         if [ $? -gt 0 ]; then
             REMEDY_NUM=$(( $REMEDY_NUM + 1 ))
             case $REMEDY_NUM in
-            1)
-                git --git-dir="$BUILD_DIR/.linuxbrew/.git" init
+            1) git --git-dir="$BUILD_DIR/.linuxbrew/.git" init
             ;;
-            2)
-                git --git-dir="$BUILD_DIR/.linuxbrew/.git" add origin https://github.com/Linuxbrew/brew.git
+            2) git --git-dir="$BUILD_DIR/.linuxbrew/.git" add origin https://github.com/Linuxbrew/brew.git
             ;;
-            3)
-                git --git-dir="$BUILD_DIR/.linuxbrew/.git" checkout -f master
-                git --git-dir="$BUILD_DIR/.linuxbrew/.git" stash clear
+            3) git --git-dir="$BUILD_DIR/.linuxbrew/.git" checkout -f master
+               git --git-dir="$BUILD_DIR/.linuxbrew/.git" stash clear
             ;;
-            4)
-                rm -rf "$BUILD_DIR/.linuxbrew/.git/refs"
-                git --git-dir="$BUILD_DIR/.linuxbrew/.git" remote set-url origin https://github.com/Linuxbrew/brew.git
-                git --git-dir="$BUILD_DIR/.linuxbrew/.git" git fetch
-                git --git-dir="$BUILD_DIR/.linuxbrew/.git" git pull origin master
+            4) rm -rf "$BUILD_DIR/.linuxbrew/.git/refs"
+               git --git-dir="$BUILD_DIR/.linuxbrew/.git" remote set-url origin https://github.com/Linuxbrew/brew.git
+               git --git-dir="$BUILD_DIR/.linuxbrew/.git" git fetch
+               git --git-dir="$BUILD_DIR/.linuxbrew/.git" git pull origin master
             ;;
-            *)
-                puts-warn "Unable to run regular git checks. This build will probably fail."
-                break
+            *) puts-warn "Unable to run regular git checks. This build will probably fail."
+               KEEP_TRYING=0
+               break
             ;;
             esac
         fi
