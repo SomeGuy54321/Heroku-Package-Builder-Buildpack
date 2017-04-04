@@ -88,6 +88,8 @@ function git_checks_linuxbrew() {
     cd "$1"
     OLD_IFS=$IFS
     for repo in $(find . -type d -name '.git' -exec ls -d $PWD/{} \;); do
+        repo="$(cd $repo; pwd)"
+        do-debug "Fixing '$repo'"
         git_commit_check $repo
     done
     IFS=$OLD_IFS
