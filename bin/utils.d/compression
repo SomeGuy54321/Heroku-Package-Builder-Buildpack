@@ -13,7 +13,8 @@ function decompress_to_builddir() {
     tar --extract               \
         --file ${FULL_INDIR} \
         $TARFLAGS \
-        --directory=${BUILD_DIR}
+        --directory=${BUILD_DIR} \
+    |& indent
 }
 
 function compress_to_cache() {
@@ -25,8 +26,8 @@ function compress_to_cache() {
 
     do-debug "Compressing ${FULL_INDIR} to ${CACHE_DIR}/${BASENAME}.tar.lz4"
     tar --compress               \
-        --file ${BASENAME}.tar.lz4 \
-        --directory=${CACHE_DIR} \
+        --file ${CACHE_DIR}/${BASENAME}.tar.lz4 \
         $TARFLAGS \
-        ${FULL_INDIR}
+        ${FULL_INDIR} \
+    |& indent
 }

@@ -131,6 +131,7 @@ for d in $LINUXBREW_DIRS; do
 #    do-debug "Copying $d to $PWD"
 #    cp -af "$d" "$CACHE_DIR"  # if it fails here then the build should fail
     compress_to_cache "$d"
+    show_files "$PWD/"
 done
 
 # empty the local .cache to save space
