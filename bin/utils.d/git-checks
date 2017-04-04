@@ -23,7 +23,9 @@ function git_remedy_linuxbuild() {
     ;;
     1)
         do-debug "Running 'git add origin'"
+        git --git-dir="$REPO" init |& indent-debug
         git --git-dir="$REPO" add origin https://github.com/Linuxbrew/brew.git |& indent-debug
+        git --git-dir="$REPO" pull --autostash origin master |& indent-debug
         return 1
     ;;
     2)
@@ -31,7 +33,7 @@ function git_remedy_linuxbuild() {
         git --git-dir="$REPO" checkout -f master |& indent-debug
         git --git-dir="$REPO" stash clear |& indent-debug
         git --git-dir="$REPO" stash |& indent-debug
-        git --git-dir="$REPO" clean -d -f |& indent-debug
+        #git --git-dir="$REPO" clean -d -f |& indent-debug
         return 1
     ;;
     3)
@@ -46,7 +48,7 @@ function git_remedy_linuxbuild() {
         git --git-dir="$REPO" clean -d -f |& indent-debug
         git --git-dir="$REPO" update-index --really-refresh |& indent-debug
         git --git-dir="$REPO" reset --hard |& indent-debug
-        git --git-dir="$REPO" pull --rebase=true origin master |& indent-debug
+        git --git-dir="$REPO" pull --rebase=true --autostash origin master |& indent-debug
         return 1
     ;;
     *)
@@ -86,7 +88,7 @@ function git_commit_check() {
 
 function brew_doctor_recommends() {
     ORIG_PWD="$PWD"
-    cd /app/.linuxbrew/Library && git stash && git clean -d -f
+    git --git-dir=/app/.linuxbrew/Library/.git stash && git --git-dir=/app/.linuxbrew/Library/.git clean -d -f
     cd "$ORIG_PWD"
 }
 
