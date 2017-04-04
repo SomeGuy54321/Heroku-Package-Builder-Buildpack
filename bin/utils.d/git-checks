@@ -100,7 +100,7 @@ function git_checks_linuxbrew() {
         git_commit_check $repo
     done
 
-    brew_doctor_recommends
+    #brew_doctor_recommends
 
     IFS=$OLD_IFS
     cd "$ORIG_PWD"
