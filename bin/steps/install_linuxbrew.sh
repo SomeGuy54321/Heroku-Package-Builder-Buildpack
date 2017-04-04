@@ -24,7 +24,7 @@ else
 fi
 
 do-debug "brew config:"
-brew config |& indent-debug
+brew config |& indent-debug || true
 
 do-debug "brew doctor:"
-brew doctor |& indent-debug
+brew doctor |& indent-debug || true
