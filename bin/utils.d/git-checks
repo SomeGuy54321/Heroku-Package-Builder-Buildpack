@@ -13,42 +13,49 @@ function git_gc_linuxbrew() {
 }
 
 
+function git_remedy_linuxbuild() {
+    REMEDY_NUM=$1
+    case $REMEDY_NUM in
+    0) git --git-dir="$BUILD_DIR/.linuxbrew/.git" init
+    ;;
+    1) git --git-dir="$BUILD_DIR/.linuxbrew/.git" add origin https://github.com/Linuxbrew/brew.git
+    ;;
+    2) git --git-dir="$BUILD_DIR/.linuxbrew/.git" checkout -f master
+       git --git-dir="$BUILD_DIR/.linuxbrew/.git" stash clear
+    ;;
+    3) rm -rf "$BUILD_DIR/.linuxbrew/.git/refs"
+       git --git-dir="$BUILD_DIR/.linuxbrew/.git" remote set-url origin https://github.com/Linuxbrew/brew.git
+       git --git-dir="$BUILD_DIR/.linuxbrew/.git" git fetch
+       git --git-dir="$BUILD_DIR/.linuxbrew/.git" git pull origin master
+    ;;
+    *) puts-warn "Unable to run regular git checks. This build will probably fail."
+        export KEEP_TRYING=0
+       return 0
+    ;;
+    esac
+}
+
+
 function git_commit_check() {
     set +e
-
-    KEEP_TRYING=1
-    REMEDY_NUM=0
+    export KEEP_TRYING=1
+    REMEDY_NUM_GC=0
+    REMEDY_NUM_RESET=0
     #LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1)"
     LINUXBREW_CURRENT_COMMIT="$(git rev-parse --verify HEAD)"
     if [[ "$LINUXBREW_CURRENT_COMMIT" != "$LINUXBREW_COMMIT" ]]; then
         while [ $KEEP_TRYING -gt 0 ]; do
 
             git_reset_linuxbrew
-            git_gc_linuxbrew
+            if [ $? -gt 0 ]; then git_remedy_linuxbuild $REMEDY_NUM_RESET; fi
+            REMEDY_NUM_RESET=$(( $REMEDY_NUM_RESET + 1 ))
 
-            if [ $? -gt 0 ]; then
-                REMEDY_NUM=$(( $REMEDY_NUM + 1 ))
-                case $REMEDY_NUM in
-                1) git --git-dir="$BUILD_DIR/.linuxbrew/.git" init
-                ;;
-                2) git --git-dir="$BUILD_DIR/.linuxbrew/.git" add origin https://github.com/Linuxbrew/brew.git
-                ;;
-                3) git --git-dir="$BUILD_DIR/.linuxbrew/.git" checkout -f master
-                   git --git-dir="$BUILD_DIR/.linuxbrew/.git" stash clear
-                ;;
-                4) rm -rf "$BUILD_DIR/.linuxbrew/.git/refs"
-                   git --git-dir="$BUILD_DIR/.linuxbrew/.git" remote set-url origin https://github.com/Linuxbrew/brew.git
-                   git --git-dir="$BUILD_DIR/.linuxbrew/.git" git fetch
-                   git --git-dir="$BUILD_DIR/.linuxbrew/.git" git pull origin master
-                ;;
-                *) puts-warn "Unable to run regular git checks. This build will probably fail."
-                   KEEP_TRYING=0
-                   break
-                ;;
-                esac
-            fi
+            git_gc_linuxbrew
+            if [ $? -gt 0 ]; then git_remedy_linuxbuild $REMEDY_NUM_GC; fi
+            REMEDY_NUM_GC=$(( $REMEDY_NUM_GC + 1 ))
+
         done
     fi
-    unset KEEP_TRYING REMEDY_NUM
+    unset KEEP_TRYING REMEDY_NUM_GC REMEDY_NUM_RESET
     set -e
 }
