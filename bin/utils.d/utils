@@ -136,15 +136,6 @@ function show_files() {
     ls -Flah "${VAR}" |& indent-debug || true
 }
 
-function show_linuxbrew_files() {
-    show_files $BUILD_DIR/.cache
-    show_files $BUILD_DIR/.linuxbrew
-    show_files $APP_DIR/.cache
-    show_files $APP_DIR/.linuxbrew
-    show_files $CACHE_DIR/.cache
-    show_files $CACHE_DIR/.linuxbrew
-}
-
 # Does some serious copying.
 function deep_cp_subdirs(){
     for f in $(ls -A $1); do

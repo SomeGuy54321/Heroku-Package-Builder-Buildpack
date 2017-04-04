@@ -133,7 +133,7 @@ do-debug "Emptying $CURR_DIR/.cache"
 rm -rf "$CURR_DIR/.cache"/*
 
 # debugging
-show_linuxbrew_files
+#show_linuxbrew_files
 
 # reset to default locations
 export HOME=$OLD_HOME; do-debug "HOME reset to '$HOME'"

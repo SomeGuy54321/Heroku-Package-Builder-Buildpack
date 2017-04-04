@@ -22,3 +22,9 @@ else
     git_commit_check
 
 fi
+
+do-debug "brew config:"
+brew config |& indent-debug
+
+do-debug "brew doctor:"
+brew doctor |& indent-debug

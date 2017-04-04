@@ -91,6 +91,16 @@ function show_linuxbrew() {
     ls -Flah $HOME/.linuxbrew/Cellar | indent-debug || true
 }
 
+function show_linuxbrew_files() {
+    show_files $BUILD_DIR/.cache
+    show_files $BUILD_DIR/.linuxbrew
+    show_files $APP_DIR/.cache
+    show_files $APP_DIR/.linuxbrew
+    show_files $CACHE_DIR/.cache
+    show_files $CACHE_DIR/.linuxbrew
+    show_linuxbrew
+}
+
 function git_commit_check() {
 
     LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1)"
@@ -99,8 +109,8 @@ function git_commit_check() {
         puts-step "Updating git repo"
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" reset --hard $LINUXBREW_COMMIT |& indent |& brew_quiet
 
-        puts-step "Aggressively optimizing git repo"
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" gc --aggressive |& indent |& brew_quiet
+        puts-step "Auto-optimizing git repo"
+        git --git-dir="$BUILD_DIR/.linuxbrew/.git" gc --auto |& indent |& brew_quiet
 
     fi
 #    puts-step "Updating Linuxbrew"
