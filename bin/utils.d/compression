@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --use-compress-program='xz --threads=0 --extreme -v' "
+TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --use-compress-program='xz -evT0' "
 
 function decompress_to_builddir() {
     local INDIR="$1"
