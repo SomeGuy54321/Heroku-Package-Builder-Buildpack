@@ -83,6 +83,14 @@ function git_commit_check() {
     set -e
 }
 
+
+function brew_doctor_recommends() {
+    ORIG_PWD="$PWD"
+    cd /app/.linuxbrew/Library && git stash && git clean -d -f
+    cd "$ORIG_PWD"
+}
+
+
 function git_checks_linuxbrew() {
     ORIG_PWD="$PWD"
     OLD_IFS=$IFS
@@ -91,6 +99,9 @@ function git_checks_linuxbrew() {
         do-debug "Fixing '$repo'"
         git_commit_check $repo
     done
+
+    brew_doctor_recommends
+
     IFS=$OLD_IFS
     cd "$ORIG_PWD"
 }
