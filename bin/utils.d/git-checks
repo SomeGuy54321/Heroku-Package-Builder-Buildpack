@@ -3,13 +3,13 @@
 
 function git_reset_linuxbrew() {
     puts-step "Updating git repo"
-    git --git-dir="$REPO" reset --hard $LINUXBREW_COMMIT |& indent |& brew_quiet
+    git --git-dir="$REPO" reset --hard $LINUXBREW_COMMIT |& indent #|& brew_quiet
 }
 
 
 function git_gc_linuxbrew() {
     puts-step "Auto-optimizing git repo"
-    git --git-dir="$REPO" gc --auto |& indent |& brew_quiet
+    git --git-dir="$REPO" gc --auto |& indent #|& brew_quiet
 }
 
 
@@ -67,16 +67,23 @@ function git_commit_check() {
     export REMEDY_NUM_GC=0
     export REMEDY_NUM_RESET=0
     #LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$REPO" show --oneline -s | cut -d' ' -f1)"
-    LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$REPO" rev-parse --verify HEAD)"
+    LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$REPO" rev-parse --verify HEAD)" |& indent-debug
     if [[ "$LINUXBREW_CURRENT_COMMIT" != "$LINUXBREW_COMMIT" ]]; then
         while [ $KEEP_TRYING -gt 0 ]; do
 
             git_reset_linuxbrew
-            [ $? -gt 0 ] && git_remedy_linuxbuild $REMEDY_NUM_RESET; export KEEP_TRYING=$?  # receives the value from function's return
+            if [ $? -gt 0 ]; then
+                git_remedy_linuxbuild $REMEDY_NUM_RESET
+                export KEEP_TRYING=$?  # receives the value from function's return
+            fi
             REMEDY_NUM_RESET=$(( $REMEDY_NUM_RESET + 1 ))
 
             git_gc_linuxbrew
-            [ $? -gt 0 ] && echo $?; git_remedy_linuxbuild $REMEDY_NUM_GC; export KEEP_TRYING=$?
+            if [ $? -gt 0 ]; then
+                echo $?
+                git_remedy_linuxbuild $REMEDY_NUM_GC
+                export KEEP_TRYING=$?
+            fi
             REMEDY_NUM_GC=$(( $REMEDY_NUM_GC + 1 ))
 
         done
@@ -88,7 +95,8 @@ function git_commit_check() {
 
 function brew_doctor_recommends() {
     ORIG_PWD="$PWD"
-    git --git-dir=/app/.linuxbrew/Library/.git stash && git --git-dir=/app/.linuxbrew/Library/.git clean -d -f
+    git --git-dir=/app/.linuxbrew/Library/.git stash |& indent \
+    && git --git-dir=/app/.linuxbrew/Library/.git clean -d -f |& indent
     cd "$ORIG_PWD"
 }
 

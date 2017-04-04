@@ -35,6 +35,8 @@ alias do_debug='do-debug'
 
 # Syntax sugar.
 indent() {
+    # consider different annotations for stdout and stderr
+    # http://stackoverflow.com/a/9113604/4106215
     RE="s/^/       /"
     sed $SED_FLAG "$RE"
 }

@@ -88,9 +88,20 @@ function brew_uninstall() {
     brew_do uninstall "$PACKAGE" "$FLAGS"
 }
 
+function run_user_script() {
+    SCRIPT="$1"
+    puts-step "Running '"$(basename "$SCRIPT")"'"
+    chmod +x "$SCRIPT" |& indent
+    # the traced output is sent to stderr, |& redirects stderr to stdout
+    bash -o xtrace "$SCRIPT" |& indent | indent
+    puts-step "Finished '"$(basename "$SCRIPT")"'"
+}
+
 function main() {
+
+    puts-step "Parsing package-extras.yaml"
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
-    do-debug "Parsed YAML variables:"
+    #do-debug "Parsed YAML variables:"
     #debug_heavy "PACKAGE_EXTRAS_"
     for package in ${PACKAGE_EXTRAS_packages[@]}; do
 
@@ -99,9 +110,7 @@ function main() {
             # only one formula allowed
             FORMULAS_VAR="PACKAGE_EXTRAS_formulas_${package}"
             FORMULAS="${!FORMULAS_VAR}"
-            if [ ${#FORMULAS} -eq 0 ]; then
-                FORMULAS=$package;
-            fi
+            [ ${#FORMULAS} -eq 0 ] && FORMULAS=$package || true
 
             # multiple options flags allowed so add [@]
             OPTIONS_VAR="PACKAGE_EXTRAS_options_${package}[@]"
@@ -116,10 +125,8 @@ function main() {
             # multiple scripts can run
             CONFIG_VAR="PACKAGE_EXTRAS_config_${package}[@]"
             for script in ${!CONFIG_VAR}; do
-                chmod +x $BUILD_DIR/$script
-                $BUILD_DIR/$script $@
+                run_user_script "$BUILD_DIR/$script"
             done
-
         else
             REMAINING_PACKAGES="$REMAINING_PACKAGES\n- $package"
         fi
@@ -127,7 +134,7 @@ function main() {
 
     if [ ${#REMAINING_PACKAGES} -gt 0 ]; then
         puts-warn "The following packages did not install in time:"
-        echo $REMAINING_PACKAGES |& indent
+        echo -e $REMAINING_PACKAGES |& indent
         puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
     fi
 
@@ -142,7 +149,7 @@ function main() {
 
     if [ ${#REMAINING_UNINSTALLS} -gt 0 ]; then
         puts-warn "The following packages did not uninstall in time:"
-        echo $REMAINING_UNINSTALLS |& indent
+        echo -e $REMAINING_UNINSTALLS |& indent
         puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
     fi
 
