@@ -65,11 +65,11 @@ function git_commit_check() {
         while [ $KEEP_TRYING -gt 0 ]; do
 
             git_reset_linuxbrew
-            [ $? -gt 0 ] && git_remedy_linuxbuild $REMEDY_NUM_RESET; KEEP_TRYING=$?  # receives the value from function's return
+            [ $? -gt 0 ] && git_remedy_linuxbuild $REMEDY_NUM_RESET; export KEEP_TRYING=$?  # receives the value from function's return
             REMEDY_NUM_RESET=$(( $REMEDY_NUM_RESET + 1 ))
 
             git_gc_linuxbrew
-            [ $? -gt 0 ] && git_remedy_linuxbuild $REMEDY_NUM_GC; KEEP_TRYING=$?
+            [ $? -gt 0 ] && echo $?; git_remedy_linuxbuild $REMEDY_NUM_GC; export KEEP_TRYING=$?
             REMEDY_NUM_GC=$(( $REMEDY_NUM_GC + 1 ))
 
         done
