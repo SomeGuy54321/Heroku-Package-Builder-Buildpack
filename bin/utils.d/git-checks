@@ -34,8 +34,11 @@ function git_remedy_linuxbuild() {
         rm -rf "$BUILD_DIR/.linuxbrew/.git/refs"
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" init |& indent-debug
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" remote set-url origin https://github.com/Linuxbrew/brew.git |& indent-debug
-        git --git-dir="$BUILD_DIR/.linuxbrew/.git" checkout -f master |& indent-debug
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" fetch --all |& indent-debug
+        git --git-dir="$BUILD_DIR/.linuxbrew/.git" checkout -f master |& indent-debug
+        git --git-dir="$BUILD_DIR/.linuxbrew/.git" stash clear |& indent-debug
+        git --git-dir="$BUILD_DIR/.linuxbrew/.git" update-index --really-refresh |& indent-debug
+        git --git-dir="$BUILD_DIR/.linuxbrew/.git" reset --hard |& indent-debug
         git --git-dir="$BUILD_DIR/.linuxbrew/.git" pull --rebase=true origin master |& indent-debug
     ;;
     *)
