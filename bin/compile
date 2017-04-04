@@ -9,7 +9,9 @@ set -eo pipefail
 #   - Move all of APP_DIR to BUILD_DIR
 #
 # Using this commit tag:
-export LINUXBREW_COMMIT="d8c8b867b"  # git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1
+# git rev-parse --verify HEAD  -->  9e37f8101af862ed2a0d7e28c734318668d927f5
+# git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1
+export LINUXBREW_COMMIT="d8c8b867b"
 #
 # Start time:
 export BUILD_START_TIME=$(date +'%s')
