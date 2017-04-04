@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --use-compress-program='xz -evT0' "
+TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore "
+COMPRESS_PROGRAM="xz --extreme --verbose --threads=0"
 
 function decompress_to_builddir() {
     local INDIR="$1"
@@ -13,6 +14,7 @@ function decompress_to_builddir() {
     tar --extract               \
         --file ${FULL_INDIR} \
         $TARFLAGS \
+        --use-compress-program="$COMPRESS_PROGRAM" \
         --directory=${BUILD_DIR} \
     |& indent
 }
@@ -28,6 +30,7 @@ function compress_to_cache() {
     tar --create               \
         --file ${CACHE_DIR}/${BASENAME}.tar.xz \
         $TARFLAGS \
+        --use-compress-program="$COMPRESS_PROGRAM" \
         ${FULL_INDIR} \
     |& indent
 }
