@@ -120,12 +120,6 @@ do-debug "PATH before checking if we install linuxbrew: '$PATH'"
 source $BIN_DIR/steps/install_linuxbrew.sh
 source $BIN_DIR/steps/install_packages.sh
 
-# reset to default locations
-export HOME=$OLD_HOME; do-debug "HOME reset to '$HOME'"
-export PATH=$OLD_PATH; do-debug "PATH reset to '$PATH'"
-export MANPATH=$OLD_MANPATH; do-debug "MANPATH reset to '$MANPATH'"
-export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
-
 # Copy the new linuxbrew directories to CACHE_DIR
 for d in $LINUXBREW_DIRS; do
 #    do-debug "Copying $d to $PWD"
@@ -139,6 +133,12 @@ rm -rf "$CURR_DIR/.cache"/*
 
 # debugging
 # show_linuxbrew_files
+
+# reset to default locations
+export HOME=$OLD_HOME; do-debug "HOME reset to '$HOME'"
+export PATH=$OLD_PATH; do-debug "PATH reset to '$PATH'"
+export MANPATH=$OLD_MANPATH; do-debug "MANPATH reset to '$MANPATH'"
+export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
 ### END Linuxbrew-specific stuff #######################################################################################
 
 

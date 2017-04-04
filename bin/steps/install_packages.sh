@@ -95,7 +95,7 @@ function brew_uninstall() {
 function main() {
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
     do-debug "Parsed YAML variables:"
-    debug_heavy "PACKAGE_EXTRAS_"
+    #debug_heavy "PACKAGE_EXTRAS_"
     for package in ${PACKAGE_EXTRAS_packages[@]}; do
 
         # only one formula allowed
