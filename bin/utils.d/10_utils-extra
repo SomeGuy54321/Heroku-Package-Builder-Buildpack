@@ -73,7 +73,7 @@ function debug_heavy() {
 }
 
 function min() {
-    A=$1; B=$2; #ABSMIN=$3;
+    A=${1:-1}; B=${2:-1}; #ABSMIN=$3;
     A=${A/ /}; B=${B/ /};
     A=$(($A * 1)); B=$(($B * 1));
 #    if [ ! ${#ABSMIN} -gt 0 ] || [ ! $(( $ABSMIN + 0 )) -eq $ABSMIN ]; then ABSMIN=1; fi
@@ -83,7 +83,7 @@ function min() {
 }
 
 function max() {
-    A=$1; B=$2; #ABSMIN=$3;
+    A=${1:-1}; B=${2:-1}; #ABSMIN=$3;
     A=${A/ /}; B=${B/ /};
     A=$(($A * 1)); B=$(($B * 1));
 #    if [ ! ${#ABSMIN} -gt 0 ] || [ ! $(( $ABSMIN + 0 )) -eq $ABSMIN ]; then ABSMIN=1; fi
