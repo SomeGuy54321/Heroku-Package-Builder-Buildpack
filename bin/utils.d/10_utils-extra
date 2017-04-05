@@ -95,3 +95,84 @@ function max() {
 function time_remaining() {
     echo $(( $BUILD_MAX_RUNTIME - $(date +'%s') ))
 }
+
+
+
+# Get things from CONFIG_DIR
+# arg1 = file to check for, cat contents if found
+# arg2 = what to echo if file not found
+get-configvar() {
+    # get things from CONFIG_DIR
+    CHECK_FOR="$1"
+    DEFAULT="$2"
+    if [ -f "$CHECK_FOR" ]; then
+        cat "$CHECK_FOR" | head -n1 2>/dev/null
+    else
+        echo "$DEFAULT"
+    fi
+}
+
+function unexport_configvar() {
+    VAR="$1"
+    do-debug "Unsetting $VAR"
+    unset ${VAR}; unset VAR
+}
+
+# https://devcenter.heroku.com/articles/buildpack-api#bin-compile-summary
+function export_env_dir() {
+  env_dir=$1
+  whitelist_regex=${2:-''}
+  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
+}
+
+# export_all_configvars & export_configvar are modified versions of Heroku's export_env_dir
+
+function export_configvar() {
+    set +e  # don't exit if error
+    local VAR=$1
+    local DEFAULT=$2
+    export "$VAR=$(cat $CONFIG_DIR/$VAR)" |& indent-debug
+      :
+    export "$VAR=${!VAR:-$DEFAULT}" |& indent-debug
+      :
+    do-debug "$VAR=${!VAR}"
+#    local ISAV=$(ls -A ${CONFIG_DIR} | grep --count "$VAR")
+#    if [ $ISAV -gt 0 ]; then
+#        SET_TO=$(cat ${CONFIG_DIR}/${VAR} | head -n1) |& indent-debug #|| SET_TO="$DEFAULT"
+#    else
+#        SET_TO=$DEFAULT
+#    fi
+#    export "$VAR=$SET_TO" #|| puts-warn "Unable to set configvar $VAR to \"$SET_TO\""
+    set -e  # exit if error
+}
+
+function export_all_configvars() {
+#    for f in $(ls -A ${CONFIG_DIR}); do
+#        export_configvar ${f}
+#    done
+#    unset f
+  env_dir=$1
+  whitelist_regex=${2:-''}
+  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
+}
+
+function unexport_all_configvars() {
+    for f in $(ls -A ${CONFIG_DIR}); do
+        unexport_configvar ${f}
+    done
+    unset f
+}
