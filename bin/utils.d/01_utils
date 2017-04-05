@@ -157,7 +157,7 @@ function export_configvar() {
     else
         SET_TO=$DEFAULT
     fi
-    eval export "$VAR=\"$SET_TO\"" #|| puts-warn "Unable to set configvar $VAR to \"$SET_TO\""
+    eval "export $VAR=\"$SET_TO\"" #|| puts-warn "Unable to set configvar $VAR to \"$SET_TO\""
     #set -e  # exit if error
 }
 
