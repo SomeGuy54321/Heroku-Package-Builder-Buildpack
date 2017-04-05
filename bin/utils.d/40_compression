@@ -82,13 +82,14 @@ function compress_do() {
 
 function decompress_to_builddir() {
     local TARFLAGS="--remove-files --overwrite $TARFLAGS"
-    local COMPRESS_PROGRAM="COMPRESS_PROGRAM -$(compression_level_chooser)"
+    local COMPRESS_PROGRAM="$COMPRESS_PROGRAM -$(compression_level_chooser)"
     compress_do extract "$1" "$TARFLAGS" "$COMPRESS_PROGRAM" $COMPRESSION_MAX_TRIES
 }
 
 function compress_to_cache() {
     local TARFLAGS=" $TARFLAGS"
-    compress_do create "$1" "$TARFLAGS" "$COMPRESS_PROGRAM -$(compression_level_chooser)" $COMPRESSION_MAX_TRIES
+    local COMPRESS_PROGRAM="$COMPRESS_PROGRAM -$(compression_level_chooser)"
+    compress_do create "$1" "$TARFLAGS" "$COMPRESS_PROGRAM" $COMPRESSION_MAX_TRIES
 }
 
 #function decompress_to_builddir() {

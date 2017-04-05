@@ -111,9 +111,10 @@ function debug_heavy() {
 }
 
 function min() {
-    A=${1:-1}; B=${2:-1}; #ABSMIN=$3;
-    A=${A/ /}; B=${B/ /};
-    A=$(($A * 1)); B=$(($B * 1));
+    #A=${1:-1}; B=${2:-1}; #ABSMIN=$3;
+    A=$(( ${1:-1} * 1)); B=$(( ${2:-1} * 1))
+#    A=${A/ /}; B=${B/ /};
+#    A=$(($A * 1)); B=$(($B * 1));
 #    if [ ! ${#ABSMIN} -gt 0 ] || [ ! $(( $ABSMIN + 0 )) -eq $ABSMIN ]; then ABSMIN=1; fi
 #    if [ ! ${#A} -gt 0 ] && [ ! $A -ge $ABSMIN ]; then A=$ABSMIN; fi
 #    if [ ! ${#B} -gt 0 ] && [ ! $B -ge $ABSMIN ]; then B=$ABSMIN; fi
@@ -121,9 +122,10 @@ function min() {
 }
 
 function max() {
-    A=${1:-1}; B=${2:-1}; #ABSMIN=$3;
-    A=${A/ /}; B=${B/ /};
-    A=$(($A * 1)); B=$(($B * 1));
+    #A=${1:-1}; B=${2:-1}; #ABSMIN=$3;
+    A=$(( ${1:-1} * 1)); B=$(( ${2:-1} * 1));
+#    A=${A/ /}; B=${B/ /};
+#    A=$(($A * 1)); B=$(($B * 1));
 #    if [ ! ${#ABSMIN} -gt 0 ] || [ ! $(( $ABSMIN + 0 )) -eq $ABSMIN ]; then ABSMIN=1; fi
 #    if [ ! ${#A} -gt 0 ] && [ ! $A -ge $ABSMIN ]; then A=$ABSMIN; fi
 #    if [ ! ${#B} -gt 0 ] && [ ! $B -ge $ABSMIN ]; then B=$ABSMIN; fi

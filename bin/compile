@@ -68,7 +68,7 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_DEFAULTS 0
 
 
 # Make profile.d directory.
-[ ! -d "$PROFILE_PATH" ] && mkdir -p $(dirname $PROFILE_PATH) || true
+[ ! -d "$(dirname $PROFILE_PATH)" ] && mkdir -p $(dirname $PROFILE_PATH) || true
 
 
 # setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
