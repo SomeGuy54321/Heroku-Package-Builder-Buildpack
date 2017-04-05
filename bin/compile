@@ -9,8 +9,8 @@ set -eo pipefail
 #   - Move all of APP_DIR to BUILD_DIR
 #
 # Using this commit tag:
-# git rev-parse --verify HEAD  -->  9e37f8101af862ed2a0d7e28c734318668d927f5
-# git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1  -->  d8c8b867b
+#   git rev-parse --verify HEAD  -->  9e37f8101af862ed2a0d7e28c734318668d927f5
+#   git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1  -->  d8c8b867b
 export LINUXBREW_COMMIT="9e37f8101af862ed2a0d7e28c734318668d927f5"
 #
 # Start time:
@@ -32,6 +32,14 @@ unset GIT_DIR
 # Syntactic starch (more complex)
 # Note '-d' doesnt match hidden dirs
 for f in $(ls -d $BIN_DIR/utils.d/*); do source $f; done
+
+# debug settings
+export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
+export_configvar BUILDPACK_XTRACE 0  # print all commands to log
+[ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace  # print all commands to log, or not
+export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
+if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
+export_configvar PACKAGE_BUILDER_INSTALL_QUIET 0
 
 # check if i got the right PATH form last buildpack
 # assume it contained the same BUILDCACHE, if not rebuild it
@@ -61,14 +69,6 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_DEFAULTS 0
 
 # Make profile.d directory.
 [ ! -d "$PROFILE_PATH" ] && mkdir -p $(dirname $PROFILE_PATH) || true
-
-# debug settings
-export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
-export_configvar BUILDPACK_XTRACE 0  # print all commands to log
-[ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace  # print all commands to log, or not
-export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
-if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
-export_configvar PACKAGE_BUILDER_INSTALL_QUIET 0
 
 
 # setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
