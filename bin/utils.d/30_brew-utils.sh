@@ -9,11 +9,12 @@ JOB_REDUCE_MAX_TRIES=4
 # gradually reduce the jobs number
 export HOMEBREW_MAKE_JOBS=$(grep --count ^processor /proc/cpuinfo)
 
-# if the install fails, assume it's cuz of a
-# forking issue and reduce job numbers by this
-# amount
-JOB_REDUCE_INCREMENT=$(max 1 $(( $HOMEBREW_MAKE_JOBS / $JOB_REDUCE_MAX_TRIES)))
-
+function job_reduce_increment() {
+    local MAX_TRIES=$1
+    local MAX_JOBS=$(grep --count ^processor /proc/cpuinfo)
+    if [ ${#MAX_TRIES} -eq 0 ]; then MAX_TRIES=$JOB_REDUCE_MAX_TRIES; fi
+    max 1 $(( $MAX_JOBS / MAX_JOBS ))
+}
 
 function retry_print() {
     local PACKAGE="$1"
@@ -58,7 +59,7 @@ function brew_do() {
         # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
         if [ $INSTALL_TRY_NUMBER -le $JOB_REDUCE_MAX_TRIES ]; then
 
-            retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $JOB_REDUCE_INCREMENT )))
+            retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
             brew_do $ACTION $PACKAGE $FLAGS
 
         # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up

@@ -5,6 +5,13 @@ COMPRESS_PROGRAM="xz --extreme --verbose --threads=0"
 COMPRESSION_JOB_REDUCE_MAX_TRIES=4
 COMPRESSION_JOBS=$(grep --count ^processor /proc/cpuinfo)
 
+function job_reduce_increment() {
+    local MAX_TRIES=$1
+    local MAX_JOBS=$(grep --count ^processor /proc/cpuinfo)
+    if [ ${#MAX_TRIES} -eq 0 ]; then MAX_TRIES=$COMPRESSION_JOB_REDUCE_MAX_TRIES; fi
+    max 1 $(( $MAX_JOBS / MAX_JOBS ))
+}
+
 function decompress_to_builddir() {
     local INDIR="$1"
     local BASENAME=$(basename "$INDIR")
@@ -26,7 +33,7 @@ function compress_to_cache() {
     local MAX_TRIES=$2
 
     [ ${#MAX_TRIES} -eq 0 ] && MAX_TRIES=$COMPRESSION_JOB_REDUCE_MAX_TRIES || true
-    COMPRESSION_JOB_REDUCE_INCREMENT=$(max 1 $(( $COMPRESSION_JOBS / $COMPRESSION_JOB_REDUCE_MAX_TRIES)))
+    COMPRESSION_JOB_REDUCE_INCREMENT=$(job_reduce_increment)
     local JOBS=$COMPRESSION_JOBS
 
     local BASENAME=$(basename "$INDIR")
