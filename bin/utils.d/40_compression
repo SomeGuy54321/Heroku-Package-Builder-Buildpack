@@ -63,8 +63,6 @@ function compress_do() {
         do-debug "$DO_WHAT_LABEL ${FULL_INPATH} to $DESTINATION"
         tar $TARFLAGS --use-compress-program "$COMPRESS_PROGRAM" $LAST_ARG |& indent
 
-        set -e; exit 1
-
         # it might run out of memory and fail so reduce intensity and try again
         RTN_VAL=$?
         if [ $RTN_VAL -gt 0 ] && [ $TRY_NUM -le $MAX_TRIES ]; then
