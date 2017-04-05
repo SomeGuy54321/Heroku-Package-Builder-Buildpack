@@ -135,7 +135,8 @@ function export_env_dir() {
 # export_all_configvars & export_configvar are modified versions of Heroku's export_env_dir
 
 function export_configvar() {
-    set +e  # don't exit if error
+    #set +e  # don't exit if error
+    set -x
     local VAR=$1
     local DEFAULT=$2
     export "$VAR=$(cat $CONFIG_DIR/$VAR)" |& indent-debug
@@ -150,7 +151,8 @@ function export_configvar() {
 #        SET_TO=$DEFAULT
 #    fi
 #    export "$VAR=$SET_TO" #|| puts-warn "Unable to set configvar $VAR to \"$SET_TO\""
-    set -e  # exit if error
+    #set +x
+    #set -e  # exit if error
 }
 
 function export_all_configvars() {
