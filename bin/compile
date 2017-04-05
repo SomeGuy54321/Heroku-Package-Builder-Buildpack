@@ -41,7 +41,7 @@ if [ $BUILDPACK_XTRACE -gt 0 ]; then
     # print a lot when xtracing
     # http://stackoverflow.com/a/17805088/4106215
     export ORIG_PS4=$PS4
-    export export PS4='+(${BASH_SOURCE/$PWD\//}:${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+    export export PS4='+($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 else
     set +o xtrace  # print all commands to log, plus filename+linenum, or not
 fi
@@ -113,7 +113,7 @@ for d in $LINUXBREW_DIRS; do
         do-debug "Deleting cache $d and ${d}.tar.xz"
         rm -rf $CACHE_DIR/$d $CACHE_DIR/${d}.tar.xz || true
     else
-        if [[ "$d" == ".linuxbrew" ]] && [ -f "$CACHE_DIR/$d.tar.xz" ]; then  # if the archive doesnt exist then assume its the first install
+        if [ "$d" == ".linuxbrew" ] && [ -f "$CACHE_DIR/$d.tar.xz" ]; then  # if the archive doesnt exist then assume its the first install
             decompress_to_builddir $CACHE_DIR/${d}.tar.xz
         fi
     fi
@@ -134,13 +134,10 @@ for d in $LINUXBREW_DIRS; do
     compress_to_cache "$d"
 done
 
-# empty the local .cache to save space
-do-debug "Emptying $CURR_DIR/.cache"
-rm -rf "$CURR_DIR/.cache/Homebrew"/* |& indent-debug
-
-# for some reason the brew executable ends up in /app/bin when followed by a Scala buildpack.
-# this is weird, this is a workaround:
-echo "alias brew='$(which brew)'" >>"$PROFILE_PATH"
+# empty the local .cache to save space (latest download for each version should be archived already)
+puts-step "Clearing dyno's download cache"
+brew cleanup -s |& indent |& brew_quiet
+rm -rf $(brew --cache) |& indent |& brew_quiet
 
 # reset to default locations
 export HOME=$OLD_HOME; do-debug "HOME reset to '$HOME'"
@@ -151,16 +148,20 @@ export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
 ### END Linuxbrew-specific stuff #######################################################################################
 
 
+# Move all things in /app to BUILD_DIR (which will eventually be moved back)
+deep-mv $BUILD_DIR $ORIG_BUILD_DIR
+
+# Note that PROFILE_PATH still refers to .profile.d in ORIG_BUILD_DIR so we wait til everythigns moved back
+# for some reason the brew executable ends up in /app/bin when followed by a Scala buildpack.
+# this is weird, this is a workaround:
+echo "alias brew='$(which brew)'" >>"$PROFILE_PATH"
+
 ## Set context environment variables.
 set-env PATH "\$HOME/.linuxbrew/bin:\$HOME/.linuxbrew/sbin:\$PATH"
 set-env MANPATH "\$HOME/.linuxbrew/share/man:\$MANPATH"
 set-env INFOPATH "\$HOME/.linuxbrew/share/info:\$INFOPATH"
 set-default-env HOMEBREW_NO_ANALYTICS $HOMEBREW_NO_ANALYTICS
 #unexport_all_configvars
-
-
-# Move all things in /app to BUILD_DIR (which will eventually be moved back)
-deep-mv $BUILD_DIR $ORIG_BUILD_DIR
 
 
 # writing the export file dynamically

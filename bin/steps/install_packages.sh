@@ -66,6 +66,7 @@ function main() {
         puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
     fi
 
+    # delete all but the latest downloads of installed packages
     puts-step "Running brew cleanup"
     brew cleanup |& indent |& brew_quiet
 }

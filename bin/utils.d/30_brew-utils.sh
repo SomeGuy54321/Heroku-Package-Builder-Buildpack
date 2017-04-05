@@ -70,7 +70,7 @@ function brew_do() {
 
         # else it's failed
         else
-            if [ $PACKAGE_BUILDER_NOBUILDFAIL -eq 0 ] && [[ "$ACTION" != "uninstall" ]]; then
+            if [ $PACKAGE_BUILDER_NOBUILDFAIL -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
                 fail_print $PACKAGE
                 unset INSTALL_TRY_NUMBER
                 exit $?

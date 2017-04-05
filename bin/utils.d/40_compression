@@ -42,7 +42,7 @@ function compress_do() {
     local DO_WHAT_LABEL
     local LAST_ARG
     local DESTINATION
-    if [[ "${DO_WHAT/ /}" == "extract" ]]; then
+    if [ ${DO_WHAT/ /} == extract ]; then
         # when extracting I'm passing in the whole path to the tarfile to decompress to BUILD_DIR
         DESTINATION="$BUILD_DIR"
         TARFLAGS=" --extract --file ${FULL_INPATH} $TARFLAGS";
@@ -62,6 +62,8 @@ function compress_do() {
     while [ 1 ]; do
         do-debug "$DO_WHAT_LABEL ${FULL_INPATH} to $DESTINATION"
         tar $TARFLAGS --use-compress-program=${COMPRESS_PROGRAM} $LAST_ARG |& indent
+
+        set -e; exit 1
 
         # it might run out of memory and fail so reduce intensity and try again
         RTN_VAL=$?
