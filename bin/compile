@@ -52,7 +52,15 @@ export_configvar HOMEBREW_NO_ANALYTICS 0
 export_configvar PACKAGE_BUILDER_REINSTALL_LINUXBREW 0
 # use epoch date to hopefully control the order in which the profile.d scripts are executed
 export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
+export_configvar PACKAGE_BUILDER_NOINSTALL_GCC 0
+export_configvar PACKAGE_BUILDER_NOINSTALL_RUBY 0
+export_configvar PACKAGE_BUILDER_NOINSTALL_PERL 0
+export_configvar PACKAGE_BUILDER_NOINSTALL_PYTHON 0
+export_configvar PACKAGE_BUILDER_NOINSTALL_DEFAULTS 0
 
+
+# Make profile.d directory.
+[ ! -d "$PROFILE_PATH" ] && mkdir -p $(dirname $PROFILE_PATH) || true
 
 # debug settings
 export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
@@ -102,9 +110,6 @@ for d in $LINUXBREW_DIRS; do
         fi
     fi
 done
-# show_files "$PWD/"
-
-# show_linuxbrew_files
 
 # linuxbrew bases its installation on the HOME variable so temporarily we set this to the BUILD_DIR
 OLD_HOME=$HOME; export HOME=$BUILD_DIR
@@ -123,21 +128,21 @@ done
 
 # empty the local .cache to save space
 do-debug "Emptying $CURR_DIR/.cache"
-rm -rf "$CURR_DIR/.cache"/* |& indent-debug
+rm -rf "$CURR_DIR/.cache/Homebrew"/* |& indent-debug
 
-# debugging
-#show_linuxbrew_files
+# for some reason the brew executable ends up in /app/bin when followed by a Scala buildpack.
+# this is weird, this is a workaround:
+echo "alias brew='$(which brew)'" >>"$PROFILE_PATH"
 
 # reset to default locations
 export HOME=$OLD_HOME; do-debug "HOME reset to '$HOME'"
 export PATH=$OLD_PATH; do-debug "PATH reset to '$PATH'"
 export MANPATH=$OLD_MANPATH; do-debug "MANPATH reset to '$MANPATH'"
 export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
+
 ### END Linuxbrew-specific stuff #######################################################################################
 
 
-# Make profile.d directory.
-[ ! -d "$PROFILE_PATH" ] && mkdir -p $(dirname $PROFILE_PATH) || true
 
 ## Set context environment variables.
 set-env PATH "\$HOME/.linuxbrew/bin:\$HOME/.linuxbrew/sbin:\$PATH"

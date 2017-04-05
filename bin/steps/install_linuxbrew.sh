@@ -7,24 +7,27 @@ if [ ! -x "$(which brew)" ]; then
     do-debug "Building linuxbrew in $HOME"
     echo -e 'y\n' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)" |& indent |& brew_quiet
 
-    git_checks_linuxbrew
+    brew_install_defaults
 
-    puts-step "Installing GCC"
-    brew install gcc |& indent |& brew_quiet
+    do-debug "brew config:"
+    brew config |& indent-debug || true
 
-#    puts-step "Installing lz4"
-#    brew install lz4 |& indent |& brew_quiet
+    do-debug "brew doctor:"
+    brew doctor |& indent-debug || true
 
 else
 
     puts-step "Linuxbrew already installed"
     do-debug "\$(which brew)=$(which brew)"
+
+    brew update-reset |& indent-debug || true
+
+    do-debug "brew config:"
+    brew config |& indent-debug || true
+
+    do-debug "brew doctor:"
+    brew doctor |& indent-debug || true
+
     git_checks_linuxbrew
 
 fi
-
-do-debug "brew config:"
-brew config |& indent-debug || true
-
-do-debug "brew doctor:"
-brew doctor |& indent-debug || true

@@ -69,6 +69,12 @@ Removes all packages installed before and starts anew
 __*PACKAGE_BUILDER_MAX_BUILDTIME*__ (time in minutes)<br>
 Max time to take building (not exact)
 
+__*PACKAGE_BUILDER_NOINSTALL_GCC*__ (1 or 0)<br>
+__*PACKAGE_BUILDER_NOINSTALL_RUBY*__ (1 or 0)<br>
+__*PACKAGE_BUILDER_NOINSTALL_PERL*__ (1 or 0)<br>
+__*PACKAGE_BUILDER_NOINSTALL_PYTHON*__ (1 or 0)<br>
+__*PACKAGE_BUILDER_NOINSTALL_DEFAULTS*__ (1 or 0)<br>
+Some core tools are automatically installed on first install. Setting this to 1 disables this. PACKAGE_BUILDER_NOINSTALL_DEFAULTS=1 disables all automatic installs.
 
 NOTES
 ====
