@@ -51,8 +51,8 @@ function compress_do() {
     else
         # when compressing I'm just passing in the directory to compress to CACHE_DIR
         DESTINATION="${CACHE_DIR}/${BASENAME}.tar.xz"
-        TARFLAGS=" --create --file ${DESTINATION}.tar.xz $TARFLAGS";
-        LAST_ARG=" \"${FULL_INPATH}\"";
+        TARFLAGS=" --create --file ${DESTINATION} $TARFLAGS";
+        LAST_ARG=" ${FULL_INPATH}";
         DO_WHAT_LABEL="Compressing";
     fi
 
@@ -69,11 +69,11 @@ function compress_do() {
             TRY_NUM=$(( $TRY_NUM + 1 ))
             JOBS=$(max 1 $(( $JOBS - $THREADS_REDUCE_INCREMENT )))
             # remove extreme compression
-            COMPRESS_PROGRAM="${COMPRESS_PROGRAM/--extreme/}"
+            COMPRESS_PROGRAM=${COMPRESS_PROGRAM/--extreme/}
             # reduce number of threads
-            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/--threads=[0-9]*\s*/--threads=$JOBS /")
+            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/\s\?--threads=[0-9]*\s\?/--threads=$JOBS /")
             # rethink compression level
-            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/-[0-9]\s*/-$(compression_level_chooser) /")
+            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/\s\?-[0-9]\b\s\?/ -$(compression_level_chooser) /")
         else
             set -e  # exit if error
             return $RTN_VAL

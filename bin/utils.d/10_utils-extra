@@ -184,7 +184,7 @@ function export_configvar() {
     do-debug "$VAR=${!VAR}"
 #    local ISAV=$(ls -A ${CONFIG_DIR} | grep --count "$VAR")
 #    if [ $ISAV -gt 0 ]; then
-#        SET_TO=$(cat ${CONFIG_DIR}/${VAR} | head -n1) |& indent-debug #|| SET_TO="$DEFAULT"
+#        SET_TO=$(cat ${CONFIG_DIR}/${VAR} | head -n1) #|& indent-debug #|| SET_TO="$DEFAULT"
 #    else
 #        SET_TO=$DEFAULT
 #    fi

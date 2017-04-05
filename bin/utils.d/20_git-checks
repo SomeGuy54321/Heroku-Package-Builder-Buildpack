@@ -73,7 +73,7 @@ function git_remedy_linuxbuild() {
         [ $BUILD_DEBUG -gt 0 ] && set -o xtrace || true
         git --git-dir="$REPO" init |& indent-debug
         git --git-dir="$REPO" remote set-url origin https://github.com/Linuxbrew/brew.git |& indent-debug
-        git --git-dir="$REPO" fetch --all --recurse-submodules=yes --jobs=$(grep --count ^processor /proc/cpuinfo) |& indent-debug
+        git --git-dir="$REPO" fetch --all --recurse-submodules=yes --jobs=$(grep --count ^processor /proc/cpuinfo) #|& indent-debug
         git --git-dir="$REPO" checkout -f master |& indent-debug
         git --git-dir="$REPO" stash clear |& indent-debug
         git --git-dir="$REPO" stash |& indent-debug
@@ -105,9 +105,9 @@ function git_commit_check() {
     local REMEDY_NUM_GC=0
     local REMEDY_NUM_RESET=0
     #LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$REPO" show --oneline -s | cut -d' ' -f1)"
-    local LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$REPO" rev-parse --verify HEAD)" |& indent-debug
+    local LINUXBREW_CURRENT_COMMIT=$(git --git-dir="$REPO" rev-parse --verify HEAD) #|& indent-debug
 
-    while [[ "$LINUXBREW_CURRENT_COMMIT" != "$LINUXBREW_COMMIT" ]]; do
+    while [ $LINUXBREW_CURRENT_COMMIT != $LINUXBREW_COMMIT ]; do
 
         git_reset_linuxbrew
         if [ $? -gt 0 ]; then
@@ -119,8 +119,8 @@ function git_commit_check() {
 
     done
 
-    LINUXBREW_CURRENT_COMMIT="$(git --git-dir="$REPO" rev-parse --verify HEAD)" |& indent-debug
-    while [[ "$LINUXBREW_CURRENT_COMMIT" != "$LINUXBREW_COMMIT" ]]; do
+    LINUXBREW_CURRENT_COMMIT=$(git --git-dir="$REPO" rev-parse --verify HEAD) #|& indent-debug
+    while [ $LINUXBREW_CURRENT_COMMIT != $LINUXBREW_COMMIT ]; do
 
         git_gc_linuxbrew
         if [ $? -gt 0 ]; then

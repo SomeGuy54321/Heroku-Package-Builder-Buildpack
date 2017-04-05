@@ -30,4 +30,7 @@ else
 
     git_checks_linuxbrew
 
+    do-debug "brew config:"
+    brew config |& indent-debug || true
+
 fi
