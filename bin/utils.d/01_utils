@@ -149,11 +149,11 @@ function deep_cp_subdirs(){
 # dynamically export configvars
 function export_configvar() {
     #set +e  # don't exit if error
-    local VAR="$1"
-    local DEFAULT="$2"
+    local VAR=$1
+    local DEFAULT=$2
     local ISAV=$(ls -A ${CONFIG_DIR} | grep --count "$VAR")
     if [ $ISAV -gt 0 ]; then
-        SET_TO="$(cat ${CONFIG_DIR}/${VAR})" |& indent-debug #|| SET_TO="$DEFAULT"
+        SET_TO=$(cat ${CONFIG_DIR}/${VAR} | head -n1) |& indent-debug #|| SET_TO="$DEFAULT"
     else
         SET_TO=$DEFAULT
     fi
