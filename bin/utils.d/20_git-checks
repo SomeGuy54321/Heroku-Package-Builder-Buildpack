@@ -13,6 +13,36 @@ function git_gc_linuxbrew() {
 }
 
 
+function git_remedy_desperate() {
+    # these are all the bew/git commands I ran in an interactive session
+    # in which I was somehow able to rebuild the git repo. I don't know
+    # what combination of these did the trick. But we're desperate at
+    # this point.
+    brew update-reset |& indent-debug
+    brew update |& indent-debug
+    brew update-reset |& indent-debug
+    brew update |& indent-debug
+    brew update-reset |& indent-debug
+    brew prune  |& indent-debug
+    git --git-dir=/app/.linuxbrew/Library/.git clean -d |& indent-debug
+    git --git-dir="$REPO" init |& indent-debug
+    git --git-dir=/app/.linuxbrew/Library/.git clean -d |& indent-debug
+    brew update-reset |& indent-debug
+    git --git-dir=/app/.linuxbrew/Library/.git clean -d |& indent-debug
+    brew cleanup -s |& indent-debug
+    git --git-dir="$REPO" init |& indent-debug
+    git --git-dir="$REPO" rev-parse --verify HEAD |& indent-debug
+    git --git-dir="$REPO" fetch |& indent-debug
+    git --git-dir="$REPO" stash clear |& indent-debug
+    git --git-dir="$REPO" stash |& indent-debug
+    git --git-dir="$REPO" stash --all |& indent-debug
+    git --git-dir="$REPO" clean -n |& indent-debug
+    git --git-dir="$REPO" clean -nd |& indent-debug
+    git --git-dir="$REPO" fetch -p |& indent-debug
+    git --git-dir="$REPO" fetch --recurse-submodules=yes --jobs=$(grep -c ^processor /proc/cpuinfo) --all |& indent-debug
+    git --git-dir="$REPO" stash clear |& indent-debug
+}
+
 function git_remedy_linuxbuild() {
     local REMEDY_NUM=$1
     case $REMEDY_NUM in
@@ -55,6 +85,13 @@ function git_remedy_linuxbuild() {
         return 0
     ;;
     *)
+        [ $BUILDPACK_XTRACE -eq 0 ] && set +o xtrace || true
+        puts-warn "Resorting to desperate measures..."
+        git_remedy_desperate
+        return 0
+    ;;
+    *)
+        [ $BUILD_DEBUG -gt 0 ] && set -o xtrace || true
         puts-warn "Unable to run regular git checks. This build will probably fail."
         return 1
     ;;
