@@ -139,9 +139,9 @@ function export_configvar() {
     set -x
     local VAR=$1
     local DEFAULT=$2
-    export "$VAR=$(cat $CONFIG_DIR/$VAR)" |& indent-debug
+    export "$VAR=$(cat $CONFIG_DIR/$VAR)" #|& indent-debug
       :
-    export "$VAR=${!VAR:-$DEFAULT}" |& indent-debug
+    export "$VAR=${!VAR:-$DEFAULT}" #|& indent-debug
       :
     do-debug "$VAR=${!VAR}"
 #    local ISAV=$(ls -A ${CONFIG_DIR} | grep --count "$VAR")
