@@ -26,7 +26,7 @@ function git_remedy_linuxbuild() {
         do-debug "Running 'git add origin'"
         git --git-dir="$REPO" init |& indent-debug
         git --git-dir="$REPO" add origin https://github.com/Linuxbrew/brew.git |& indent-debug
-        git --git-dir="$REPO" pull --autostash origin master |& indent-debug
+        git --git-dir="$REPO" pull --autostash --rebase origin master |& indent-debug
         return 0
     ;;
     2)
