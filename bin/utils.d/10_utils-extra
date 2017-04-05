@@ -87,7 +87,7 @@ function print-env() {
 
 function do-debug() {
     local DEFAULT=1
-    if [ ${BUILD_DEBUG:+$DEFAULT} -gt 0 ]; then
+    if [ ${BUILD_DEBUG:-$DEFAULT} -gt 0 ]; then
         echo "-----> DEBUG1: $@"
     fi
 }
