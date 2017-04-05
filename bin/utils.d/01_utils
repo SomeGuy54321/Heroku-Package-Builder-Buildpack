@@ -151,9 +151,13 @@ function export_configvar() {
     #set +e  # don't exit if error
     local VAR="$1"
     local DEFAULT="$2"
-    SET_TO="$(cat ${CONFIG_DIR}/${VAR})" |& indent-debug || SET_TO="$DEFAULT"
-    export "${VAR}=${SET_TO}" || puts-warn "Unable to set configvar $VAR to \"$SET_TO\""
-    unset SET_TO DEFAULT VAR
+    local ISAV=$(ls -A ${CONFIG_DIR}/${VAR} | grep --count "$VAR")
+    if [ $ISAV -gt 0 ]; then
+        SET_TO="$(cat ${CONFIG_DIR}/${VAR})" |& indent-debug #|| SET_TO="$DEFAULT"
+    else
+        SET_TO=$DEFAULT
+    fi
+    export "${VAR}=${SET_TO}" #|| puts-warn "Unable to set configvar $VAR to \"$SET_TO\""
     #set -e  # exit if error
 }
 
