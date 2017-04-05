@@ -65,6 +65,34 @@ function parse_yaml() {
     | sed 's/_=/+=/g'
 }
 
+function set-default-configvar() {
+    local this_var=$1  # no spaces in var name
+    local this_val="$2"
+    local default="$3"
+
+    # this must be shortened...
+    if [ -s "$this_val" ]; then
+        export $this_var=$(cat "$this_val" 2>/dev/null | head -n1 || echo "$default")
+    else
+        export $this_var="$default"
+    fi
+}
+
+function print-env() {
+    echo ""
+    puts-step "Current environment:"
+    env | sort |& indent
+    echo ""
+}
+
+function do-debug() {
+    local DEFAULT=1
+    if [ ${BUILD_DEBUG:+$DEFAULT} -gt 0 ]; then
+        echo "-----> DEBUG1: $@"
+    fi
+}
+#alias do_debug='do-debug'
+
 # print a lot of stuff
 function debug_heavy() {
     local EXTRA="|$1"
@@ -95,8 +123,6 @@ function max() {
 function time_remaining() {
     echo $(( $BUILD_MAX_RUNTIME - $(date +'%s') ))
 }
-
-
 
 # Get things from CONFIG_DIR
 # arg1 = file to check for, cat contents if found
@@ -139,9 +165,9 @@ function export_configvar() {
     set -x
     local VAR=$1
     local DEFAULT=$2
-    export "$VAR=$(cat $CONFIG_DIR/$VAR)" #|& indent-debug
+    export "$VAR=$(cat $CONFIG_DIR/$VAR)" |& indent-debug
       :
-    export "$VAR=${!VAR:-$DEFAULT}" #|& indent-debug
+    export "$VAR=${!VAR:-$DEFAULT}" |& indent-debug
       :
     do-debug "$VAR=${!VAR}"
 #    local ISAV=$(ls -A ${CONFIG_DIR} | grep --count "$VAR")
