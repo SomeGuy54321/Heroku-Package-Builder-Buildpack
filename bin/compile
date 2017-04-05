@@ -41,7 +41,7 @@ if [ $BUILDPACK_XTRACE -gt 0 ]; then
     # print a lot when xtracing
     # http://stackoverflow.com/a/17805088/4106215
     export ORIG_PS4=$PS4
-    export export PS4='+(${BASH_SOURCE/$PWD/}:${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+    export export PS4='+(${BASH_SOURCE/$PWD\//}:${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 else
     set +o xtrace  # print all commands to log, plus filename+linenum, or not
 fi
