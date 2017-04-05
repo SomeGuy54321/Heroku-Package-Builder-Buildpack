@@ -47,7 +47,7 @@ function main() {
 
     if [ ${#REMAINING_PACKAGES} -gt 0 ]; then
         puts-warn "The following packages did not install in time:"
-        echo -e $REMAINING_PACKAGES |& indent
+        echo -e $REMAINING_PACKAGES |& indent | indent
         puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
     fi
 
@@ -62,7 +62,7 @@ function main() {
 
     if [ ${#REMAINING_UNINSTALLS} -gt 0 ]; then
         puts-warn "The following packages did not uninstall in time:"
-        echo -e $REMAINING_UNINSTALLS |& indent
+        echo -e $REMAINING_UNINSTALLS |& indent | indent
         puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
     fi
 
