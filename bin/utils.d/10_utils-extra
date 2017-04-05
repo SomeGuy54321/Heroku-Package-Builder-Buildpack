@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+BUILD_DEBUG_DEFAULT=1
+
 # taken from https://gist.github.com/DinoChiesa/3e3c3866b51290f31243
 # which is derived from https://gist.github.com/epiloque/8cf512c6d64641bde388
 # which is based on https://gist.github.com/pkuczynski/8665367
@@ -85,9 +87,15 @@ function print-env() {
     echo ""
 }
 
+indent-debug() {
+    RE="s/^/       /"
+    if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
+        sed $SED_FLAG "$RE"
+    fi
+}
+
 function do-debug() {
-    local DEFAULT=1
-    if [ ${BUILD_DEBUG:-$DEFAULT} -gt 0 ]; then
+    if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
         echo "-----> DEBUG1: $@"
     fi
 }

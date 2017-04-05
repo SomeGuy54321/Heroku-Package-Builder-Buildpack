@@ -14,13 +14,6 @@ indent() {
     sed $SED_FLAG "$RE"
 }
 
-indent-debug() {
-    RE="s/^/       /"
-    if [ $BUILD_DEBUG -gt 0 ]; then
-        sed $SED_FLAG "$RE"
-    fi
-}
-
 # Clean up pip output
 cleanup() {
     do-debug "Running cleanup()"
