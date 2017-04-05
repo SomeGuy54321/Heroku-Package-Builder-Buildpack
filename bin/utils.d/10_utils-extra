@@ -89,13 +89,15 @@ function print-env() {
 
 indent-debug() {
     RE="s/^/       /"
-    if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
+    #if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
+    if [ ${BUILD_DEBUG} -gt 0 ]; then
         sed $SED_FLAG "$RE"
     fi
 }
 
 function do-debug() {
-    if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
+    #if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
+    if [ ${BUILD_DEBUG} -gt 0 ]; then
         echo "-----> DEBUG1: $@"
     fi
 }
@@ -170,12 +172,12 @@ function export_env_dir() {
 
 function export_configvar() {
     #set +e  # don't exit if error
-    set -x
+    #set -x
     local VAR=$1
     local DEFAULT=$2
-    export "$VAR=$(cat $CONFIG_DIR/$VAR)" |& indent-debug
+    export "$VAR=$(cat $CONFIG_DIR/$VAR)" #|& indent-debug
       :
-    export "$VAR=${!VAR:-$DEFAULT}" |& indent-debug
+    export "$VAR=${!VAR:-$DEFAULT}" #|& indent-debug
       :
     do-debug "$VAR=${!VAR}"
 #    local ISAV=$(ls -A ${CONFIG_DIR} | grep --count "$VAR")
