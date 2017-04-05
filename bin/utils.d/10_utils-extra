@@ -78,7 +78,7 @@ function min() {
 #    if [ ! ${#ABSMIN} -gt 0 ] || [ ! $(( $ABSMIN + 0 )) -eq $ABSMIN ]; then ABSMIN=1; fi
 #    if [ ! ${#A} -gt 0 ] && [ ! $A -ge $ABSMIN ]; then A=$ABSMIN; fi
 #    if [ ! ${#B} -gt 0 ] && [ ! $B -ge $ABSMIN ]; then B=$ABSMIN; fi
-    python3 -c "print(min($1,$2))"
+    python -c "print(min($1,$2))"
 }
 
 function max() {
@@ -86,7 +86,7 @@ function max() {
 #    if [ ! ${#ABSMIN} -gt 0 ] || [ ! $(( $ABSMIN + 0 )) -eq $ABSMIN ]; then ABSMIN=1; fi
 #    if [ ! ${#A} -gt 0 ] && [ ! $A -ge $ABSMIN ]; then A=$ABSMIN; fi
 #    if [ ! ${#B} -gt 0 ] && [ ! $B -ge $ABSMIN ]; then B=$ABSMIN; fi
-    python3 -c "print(max($1,$2))"
+    python -c "print(max($1,$2))"
 }
 
 function time_remaining() {
