@@ -112,6 +112,8 @@ function git_commit_check() {
         git_reset_linuxbrew
         if [ $? -gt 0 ]; then
             git_remedy_linuxbuild $REMEDY_NUM_RESET || break
+        else
+            break
         fi
         REMEDY_NUM_RESET=$(( $REMEDY_NUM_RESET + 1 ))
 
@@ -123,6 +125,8 @@ function git_commit_check() {
         git_gc_linuxbrew
         if [ $? -gt 0 ]; then
             git_remedy_linuxbuild $REMEDY_NUM_GC || break
+        else
+            break
         fi
         REMEDY_NUM_GC=$(( $REMEDY_NUM_GC + 1 ))
 
