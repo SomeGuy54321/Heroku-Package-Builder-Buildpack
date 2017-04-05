@@ -5,14 +5,14 @@
 # just reduce to 1 job immediately
 JOB_REDUCE_MAX_TRIES=4
 
-# if the install fails, assume it's cuz of a
-# forking issue and reduce job numbers by this
-# amount
-JOB_REDUCE_INCREMENT=2
-
 # this can cause forking issues, if it does then
 # gradually reduce the jobs number
 export HOMEBREW_MAKE_JOBS=$(grep --count ^processor /proc/cpuinfo)
+
+# if the install fails, assume it's cuz of a
+# forking issue and reduce job numbers by this
+# amount
+JOB_REDUCE_INCREMENT=$(max 1 $(( $HOMEBREW_MAKE_JOBS / $JOB_REDUCE_MAX_TRIES)))
 
 
 function retry_print() {
@@ -46,7 +46,6 @@ function brew_do() {
     local PACKAGE="$2"
     local FLAGS="$3"
     local JOB_REDUCE_MAX_TRIES=$(echo_default $4 $JOB_REDUCE_MAX_TRIES)
-    local JOB_REDUCE_INCREMENT=$(echo_default $5 $JOB_REDUCE_INCREMENT)
 
     export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
 
@@ -96,28 +95,59 @@ function brew_checkfor_tools() {
 function brew_install_defaults() {
     # install core tools
     if [ $PACKAGE_BUILDER_NOINSTALL_DEFAULTS -neq 1 ]; then
+
         brew_checkfor_tools gcc
-        if [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_GCC -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_GCC -neq 1 ]; then
             puts-step "Installing GCC"
             brew_do install gcc
         fi
 
         brew_checkfor_tools ruby
-        if [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_RUBY -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_RUBY -neq 1 ]; then
             puts-step "Installing Ruby"
             brew_do install ruby
         fi
 
         brew_checkfor_tools perl
-        if [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_PERL -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_PERL -neq 1 ]; then
             puts-step "Installing Perl"
             brew_do install perl
         fi
 
         brew_checkfor_tools python3
-        if [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_PYTHON -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_PYTHON -neq 1 ]; then
             puts-step "Installing Python3"
             brew_do install python3
         fi
     fi
 }
+
+# makes the brew output not show lines starting with '  ==>'
+function brew_quiet() {
+    if [ $PACKAGE_BUILDER_INSTALL_QUIET -gt 0 ]; then
+        grep -vE --line-buffered '^\s*==>'
+    else
+        tee
+    fi
+}
+
+
+function show_linuxbrew() {
+    do-debug "Contents of $HOME/.linuxbrew:"
+    ls -Flah $HOME/.linuxbrew | indent-debug || true
+    do-debug "Contents of $HOME/.linuxbrew/bin:"
+    ls -Flah $HOME/.linuxbrew/bin | indent-debug || true
+    do-debug "Contents of $HOME/.linuxbrew/Cellar:"
+    ls -Flah $HOME/.linuxbrew/Cellar | indent-debug || true
+}
+
+function show_linuxbrew_files() {
+    show_files $BUILD_DIR/.cache
+    show_files $BUILD_DIR/.linuxbrew
+    show_files $APP_DIR/.cache
+    show_files $APP_DIR/.linuxbrew
+    show_files $CACHE_DIR/.cache
+    show_files $CACHE_DIR/.linuxbrew
+    show_linuxbrew
+}
+

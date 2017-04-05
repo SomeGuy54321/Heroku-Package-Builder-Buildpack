@@ -2,6 +2,8 @@
 
 TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --absolute-names "
 COMPRESS_PROGRAM="xz --extreme --verbose --threads=0"
+COMPRESSION_JOB_REDUCE_MAX_TRIES=4
+COMPRESSION_JOBS=$(grep --count ^processor /proc/cpuinfo)
 
 function decompress_to_builddir() {
     local INDIR="$1"
@@ -21,16 +23,36 @@ function decompress_to_builddir() {
 
 function compress_to_cache() {
     local INDIR="$1"
+    local MAX_TRIES=$2
+
+    [ ${#MAX_TRIES} -eq 0 ] && MAX_TRIES=$COMPRESSION_JOB_REDUCE_MAX_TRIES || true
+    COMPRESSION_JOB_REDUCE_INCREMENT=$(max 1 $(( $COMPRESSION_JOBS / $COMPRESSION_JOB_REDUCE_MAX_TRIES)))
+    local JOBS=$COMPRESSION_JOBS
+
     local BASENAME=$(basename "$INDIR")
     local DIRNAME=$(cd $(dirname "$INDIR"); pwd)
     local FULL_INDIR="$DIRNAME/$BASENAME"
     local TARFLAGS=" $TARFLAGS"
+    local TRY_NUM=0
 
-    do-debug "Compressing ${FULL_INDIR} to ${CACHE_DIR}/${BASENAME}.tar.xz"
-    tar --create               \
-        --file ${CACHE_DIR}/${BASENAME}.tar.xz \
-        $TARFLAGS \
-        --use-compress-program="$COMPRESS_PROGRAM" \
-        ${FULL_INDIR} \
-    |& indent
+    while [ 1 ]; do
+
+        do-debug "Compressing ${FULL_INDIR} to ${CACHE_DIR}/${BASENAME}.tar.xz"
+        tar --create               \
+            --file ${CACHE_DIR}/${BASENAME}.tar.xz \
+            $TARFLAGS \
+            --use-compress-program="$COMPRESS_PROGRAM" \
+            ${FULL_INDIR} \
+        |& indent
+
+        if [ $TRY_NUM -le $MAX_TRIES ]; then
+            TRY_NUM=$(( $TRY_NUM + 1 ))
+            JOBS=$(max 1 $(( $JOBS - $COMPRESSION_JOB_REDUCE_INCREMENT )))
+            TARFLAGS="${TARFLAGS/--extreme/--jobs=}"
+            TARFLAGS=$(echo $TARFLAGS | sed -e "s/--jobs=[0-9]*\s*/--jobs=$JOBS /")
+        else
+            break
+        fi
+
+    done
 }

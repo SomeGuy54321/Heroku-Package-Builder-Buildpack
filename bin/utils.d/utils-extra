@@ -72,36 +72,6 @@ function debug_heavy() {
     set -o posix && set | sort | grep -E "HOMEBREW|PATH|HOME|APP_DIR|PACKAGE_EXTRAS" |& indent
 }
 
-# makes the brew output not show lines starting with '  ==>'
-function brew_quiet() {
-    if [ $PACKAGE_BUILDER_INSTALL_QUIET -gt 0 ]; then
-        grep -vE --line-buffered '^\s*==>'
-    else
-        tee
-    fi
-}
-
-
-function show_linuxbrew() {
-    do-debug "Contents of $HOME/.linuxbrew:"
-    ls -Flah $HOME/.linuxbrew | indent-debug || true
-    do-debug "Contents of $HOME/.linuxbrew/bin:"
-    ls -Flah $HOME/.linuxbrew/bin | indent-debug || true
-    do-debug "Contents of $HOME/.linuxbrew/Cellar:"
-    ls -Flah $HOME/.linuxbrew/Cellar | indent-debug || true
-}
-
-function show_linuxbrew_files() {
-    show_files $BUILD_DIR/.cache
-    show_files $BUILD_DIR/.linuxbrew
-    show_files $APP_DIR/.cache
-    show_files $APP_DIR/.linuxbrew
-    show_files $CACHE_DIR/.cache
-    show_files $CACHE_DIR/.linuxbrew
-    show_linuxbrew
-}
-
-
 function max() {
     python -c "print(max($1,$2))"
 }
