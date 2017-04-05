@@ -19,7 +19,7 @@ function compression_level_chooser() {
 function job_reduce_increment() {
     local MAX_TRIES=$1
     if [ ${#MAX_TRIES} -eq 0 ]; then MAX_TRIES=$COMPRESSION_MAX_TRIES; fi
-    max 1 $(( $MAX_JOBS / $MAX_JOBS ))
+    max 1 $(( $MAX_JOBS / $MAX_TRIES ))
 }
 
 function compress_do() {
@@ -46,12 +46,12 @@ function compress_do() {
         # when extracting I'm passing in the whole path to the tarfile to decompress to BUILD_DIR
         DESTINATION="$BUILD_DIR"
         TARFLAGS=" --extract --file ${FULL_INPATH} $TARFLAGS";
-        LAST_ARG=" --directory=\"$DESTINATION\"";
+        LAST_ARG=" --directory=$DESTINATION";
         DO_WHAT_LABEL="Decompressing";
     else
         # when compressing I'm just passing in the directory to compress to CACHE_DIR
         DESTINATION="${CACHE_DIR}/${BASENAME}.tar.xz"
-        TARFLAGS=" --create --file \"${DESTINATION}.tar.xz\" $TARFLAGS";
+        TARFLAGS=" --create --file ${DESTINATION}.tar.xz $TARFLAGS";
         LAST_ARG=" \"${FULL_INPATH}\"";
         DO_WHAT_LABEL="Compressing";
     fi
@@ -61,7 +61,7 @@ function compress_do() {
     local TRY_NUM=0
     while [ 1 ]; do
         do-debug "$DO_WHAT_LABEL ${FULL_INPATH} to $DESTINATION"
-        tar $TARFLAGS --use-compress-program="$COMPRESS_PROGRAM" $LAST_ARG |& indent
+        tar $TARFLAGS --use-compress-program=$COMPRESS_PROGRAM $LAST_ARG |& indent
 
         # it might run out of memory and fail so reduce intensity and try again
         if [ $? -gt 0 ] && [ $TRY_NUM -le $MAX_TRIES ]; then
@@ -82,7 +82,8 @@ function compress_do() {
 
 function decompress_to_builddir() {
     local TARFLAGS="--remove-files --overwrite $TARFLAGS"
-    compress_do extract "$1" "$TARFLAGS" "$COMPRESS_PROGRAM -$(compression_level_chooser)" $COMPRESSION_MAX_TRIES
+    local COMPRESS_PROGRAM="COMPRESS_PROGRAM -$(compression_level_chooser)"
+    compress_do extract "$1" "$TARFLAGS" "$COMPRESS_PROGRAM" $COMPRESSION_MAX_TRIES
 }
 
 function compress_to_cache() {
