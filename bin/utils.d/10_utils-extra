@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BUILD_DEBUG_DEFAULT=1
+export BUILD_DEBUG_DEFAULT=1
 
 # taken from https://gist.github.com/DinoChiesa/3e3c3866b51290f31243
 # which is derived from https://gist.github.com/epiloque/8cf512c6d64641bde388
@@ -89,15 +89,15 @@ function print-env() {
 
 indent-debug() {
     RE="s/^/       /"
-    #if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
-    if [ ${BUILD_DEBUG} -gt 0 ]; then
+    if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
+    #if [ ${BUILD_DEBUG} -gt 0 ]; then
         sed $SED_FLAG "$RE"
     fi
 }
 
 function do-debug() {
-    #if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
-    if [ ${BUILD_DEBUG} -gt 0 ]; then
+    if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
+    #if [ ${BUILD_DEBUG} -gt 0 ]; then
         echo "-----> DEBUG1: $@"
     fi
 }
@@ -175,9 +175,9 @@ function export_configvar() {
     #set -x
     local VAR=$1
     local DEFAULT=$2
-    export "$VAR=$(cat $CONFIG_DIR/$VAR)" |& indent
+    export "$VAR=$(cat $CONFIG_DIR/$VAR |& indent-debug)"
       :
-    export "$VAR=${!VAR:-$DEFAULT}" |& indent
+    export "$VAR=${!VAR:-$DEFAULT}" |& indent-debug
       :
     do-debug "$VAR=${!VAR}"
 #    local ISAV=$(ls -A ${CONFIG_DIR} | grep --count "$VAR")
