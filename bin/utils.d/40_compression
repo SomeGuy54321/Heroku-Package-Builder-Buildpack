@@ -61,10 +61,11 @@ function compress_do() {
     local TRY_NUM=0
     while [ 1 ]; do
         do-debug "$DO_WHAT_LABEL ${FULL_INPATH} to $DESTINATION"
-        tar $TARFLAGS --use-compress-program=$COMPRESS_PROGRAM $LAST_ARG |& indent
+        tar $TARFLAGS --use-compress-program="$COMPRESS_PROGRAM" $LAST_ARG |& indent
 
         # it might run out of memory and fail so reduce intensity and try again
-        if [ $? -gt 0 ] && [ $TRY_NUM -le $MAX_TRIES ]; then
+        RTN_VAL=$?
+        if [ $RTN_VAL -gt 0 ] && [ $TRY_NUM -le $MAX_TRIES ]; then
             TRY_NUM=$(( $TRY_NUM + 1 ))
             JOBS=$(max 1 $(( $JOBS - $THREADS_REDUCE_INCREMENT )))
             # remove extreme compression
@@ -74,6 +75,8 @@ function compress_do() {
             # rethink compression level
             COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/-[0-9]\s*/-$(compression_level_chooser) /")
         else
+            set -e  # exit if error
+            return $RTN_VAL
             break
         fi
     done

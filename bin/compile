@@ -36,15 +36,23 @@ for f in $(ls -d $BIN_DIR/utils.d/*); do source $f; done
 # debug settings
 export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
 export_configvar BUILDPACK_XTRACE 0  # print all commands to log
-[ $BUILDPACK_XTRACE -gt 0 ] && set -o xtrace || set +o xtrace  # print all commands to log, or not
+if [ $BUILDPACK_XTRACE -gt 0 ]; then
+    set -o xtrace
+    # print a lot when xtracing
+    # http://stackoverflow.com/a/17805088/4106215
+    export ORIG_PS4=$PS4
+    export export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+else
+    set +o xtrace  # print all commands to log, plus filename+linenum, or not
+fi
+
 export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
 if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
 export_configvar PACKAGE_BUILDER_INSTALL_QUIET 0
 
 # check if i got the right PATH form last buildpack
-# assume it contained the same BUILDCACHE, if not rebuild it
-do-debug "PATH when starting: '$PATH'"
 do-debug "PREV_BUILDPACK_PATH when starting: '$PREV_BUILDPACK_PATH'"
+do-debug "PATH when starting: '$PATH'"
 do-debug "BIN_DIR when starting: '$BIN_DIR'"
 do-debug "BUILD_DIR when starting: '$BUILD_DIR'"
 do-debug "CACHE_DIR when starting: '$CACHE_DIR'"
@@ -67,8 +75,8 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_PYTHON 0
 export_configvar PACKAGE_BUILDER_NOINSTALL_DEFAULTS 0
 
 
-# Make profile.d directory.
-[ ! -d "$(dirname $PROFILE_PATH)" ] && mkdir -p $(dirname $PROFILE_PATH) || true
+# Make profile.d directory. if [ -d /.dir ] doesnt work for hidden dirs
+[ $(ls -A $PROFILE_PATH 2>/dev/null | grep --count .) -eq 0 ] && mkdir -p $(dirname $PROFILE_PATH) || true
 
 
 # setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
@@ -143,7 +151,6 @@ export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
 ### END Linuxbrew-specific stuff #######################################################################################
 
 
-
 ## Set context environment variables.
 set-env PATH "\$HOME/.linuxbrew/bin:\$HOME/.linuxbrew/sbin:\$PATH"
 set-env MANPATH "\$HOME/.linuxbrew/share/man:\$MANPATH"
@@ -162,3 +169,6 @@ cat <<EOF > $BIN_DIR/../export
 export PREV_BUILDPACK_PATH=$PATH
 
 EOF
+
+# reset some things to orig values just to be safe
+export PS4=$ORIG_PS4
