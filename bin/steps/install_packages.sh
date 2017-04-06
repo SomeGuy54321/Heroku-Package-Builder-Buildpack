@@ -2,12 +2,14 @@
 
 
 function run_user_script() {
+    set +e
     SCRIPT="$1"
     puts-step "Running '"$(basename "$SCRIPT")"'"
     chmod +x "$SCRIPT" |& indent
     # the traced output is sent to stderr, |& redirects stderr to stdout
     bash -o xtrace "$SCRIPT" |& indent | indent
-    puts-step "Finished '"$(basename "$SCRIPT")"'"
+    puts-step "Finished '"$(basename "$SCRIPT")"' with exit code $?"
+    set -e
 }
 
 function main() {
