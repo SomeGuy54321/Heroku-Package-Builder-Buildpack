@@ -132,6 +132,12 @@ function max() {
     python3 -c "print(max("$A","$B"))"
 }
 
+function time_elapsed() {
+    ELAPSED=$(( $(date +'%s') - $BUILD_START_TIME ))
+    echo $(date --date=@$ELAPSED +'%M:%S')
+    unset ELAPSED
+}
+
 function time_remaining() {
     echo $(( $BUILD_MAX_RUNTIME - $(date +'%s') ))
 }

@@ -33,26 +33,23 @@ unset GIT_DIR
 # Note '-d' doesnt match hidden dirs
 for f in $(ls -d $BIN_DIR/utils.d/*); do source $f; done
 
+# set prompts
+export PS1='[$(time_elapsed)] '
+export PS2=$PS2
+export PS3=$PS3
+export PS4='$PS1      +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+do-debug "PROMPT_COMMAND=$PROMPT_COMMAND"
+exit 1
+
 # debug settings
 export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
 export_configvar BUILDPACK_XTRACE 0  # print all commands to log
 if [ $BUILDPACK_XTRACE -gt 0 ]; then
     set -o xtrace
-    # print a lot when xtracing
-    # http://stackoverflow.com/a/17805088/4106215
-    export ORIG_PS4=$PS4
-    export export PS4='+($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 else
     set +o xtrace  # print all commands to log, plus filename+linenum, or not
 fi
 
-# add time elapsed to one of these
-do-debug "PS1=$PS1"
-do-debug "PS2=$PS2"
-do-debug "PS3=$PS3"
-do-debug "PS4=$PS4"
-do-debug "PROMPT_COMMAND=$PROMPT_COMMAND"
-exit 1
 
 export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
 if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
@@ -178,6 +175,3 @@ cat <<EOF > $BIN_DIR/../export
 export PREV_BUILDPACK_PATH=$PATH
 
 EOF
-
-# reset some things to orig values just to be safe
-export PS4=$ORIG_PS4
