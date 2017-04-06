@@ -139,7 +139,7 @@ function time_elapsed() {
 }
 
 function time_remaining() {
-    echo $(( $BUILD_MAX_RUNTIME - $(date +'%s') )) ?@
+    echo $(( $BUILD_MAX_RUNTIME - $(date +'%s') ))
 }
 
 function time_elapsed_piped() {
