@@ -38,7 +38,7 @@ export PS1='1[$(time_elapsed)]'
 export PS2='2[$(time_elapsed)]'
 export PS3='3[$(time_elapsed)]'
 export PS4='[$(time_elapsed)]       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-export PROMPT_COMMAND='P[$(time_elapsed)]'
+export PROMPT_COMMAND='echo -n P[$(time_elapsed)]'
 echo "im here"
 exit 1
 
