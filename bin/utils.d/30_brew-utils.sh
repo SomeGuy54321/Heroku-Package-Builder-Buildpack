@@ -57,20 +57,20 @@ function brew_do() {
     if [ $? -gt 0 ]; then
 
         # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
-        if [ $INSTALL_TRY_NUMBER -le $JOB_REDUCE_MAX_TRIES ]; then
+        if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-1} ]; then
 
             retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
             brew_do $ACTION $PACKAGE $FLAGS
 
         # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
-        elif [ $INSTALL_TRY_NUMBER -eq $(( $JOB_REDUCE_MAX_TRIES + 1 )) ] && [ $HOMEBREW_MAKE_JOBS -neq 1 ]; then
+        elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-1} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -neq 1 ]; then
 
             retry_print $PACKAGE 1
             brew_do $ACTION $PACKAGE $FLAGS
 
         # else it's failed
         else
-            if [ $PACKAGE_BUILDER_NOBUILDFAIL -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
+            if [ ${PACKAGE_BUILDER_NOBUILDFAIL:-0} -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
                 fail_print $PACKAGE
                 unset INSTALL_TRY_NUMBER
                 exit $?
@@ -95,28 +95,28 @@ function brew_checkfor_tools() {
 
 function brew_install_defaults() {
     # install core tools
-    if [ $PACKAGE_BUILDER_NOINSTALL_DEFAULTS -neq 1 ]; then
+    if [ ${PACKAGE_BUILDER_NOINSTALL_DEFAULTS:-0} -neq 1 ]; then
 
         brew_checkfor_tools gcc
-        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_GCC -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -neq 1 ]; then
             puts-step "Installing GCC"
             brew_do install gcc
         fi
 
         brew_checkfor_tools ruby
-        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_RUBY -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-0} -neq 1 ]; then
             puts-step "Installing Ruby"
             brew_do install ruby
         fi
 
         brew_checkfor_tools perl
-        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_PERL -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-0} -neq 1 ]; then
             puts-step "Installing Perl"
             brew_do install perl
         fi
 
         brew_checkfor_tools python3
-        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ $PACKAGE_BUILDER_NOINSTALL_PYTHON -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-0} -neq 1 ]; then
             puts-step "Installing Python3"
             brew_do install python3
         fi
@@ -125,7 +125,7 @@ function brew_install_defaults() {
 
 # makes the brew output not show lines starting with '  ==>'
 function brew_quiet() {
-    if [ $PACKAGE_BUILDER_INSTALL_QUIET -gt 0 ]; then
+    if [ ${PACKAGE_BUILDER_INSTALL_QUIET:-0} -gt 0 ]; then
         grep -vE --line-buffered '^\s*==>'
     else
         tee
