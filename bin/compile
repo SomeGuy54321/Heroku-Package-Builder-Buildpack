@@ -52,6 +52,7 @@ do-debug "PS2=$PS2"
 do-debug "PS3=$PS3"
 do-debug "PS4=$PS4"
 do-debug "PROMPT_COMMAND=$PROMPT_COMMAND"
+exit 1
 
 export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
 if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
