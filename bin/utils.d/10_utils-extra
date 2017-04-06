@@ -134,12 +134,16 @@ function max() {
 
 function time_elapsed() {
     ELAPSED=$(( $(date +'%s') - $BUILD_START_TIME ))
-    echo $(date --date=@$ELAPSED +'%M:%S')
+    echo $(date --date=@$ELAPSED +'%M:%S') $@
     unset ELAPSED
 }
 
 function time_remaining() {
-    echo $(( $BUILD_MAX_RUNTIME - $(date +'%s') ))
+    echo $(( $BUILD_MAX_RUNTIME - $(date +'%s') )) ?@
+}
+
+function time_remaining_piped() {
+    xargs -L1 echo $(time_elapsed) $1
 }
 
 # Get things from CONFIG_DIR

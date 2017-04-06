@@ -34,6 +34,7 @@ unset GIT_DIR
 for f in $(ls -d $BIN_DIR/utils.d/*); do source $f; done
 
 # set prompts
+exec 2> >(time_remaining_piped)
 export PS1='1[$(time_elapsed)]'
 export PS2='2[$(time_elapsed)]'
 export PS3='3[$(time_elapsed)]'
