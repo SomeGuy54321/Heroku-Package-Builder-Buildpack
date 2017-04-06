@@ -37,7 +37,7 @@ for f in $(ls -d $BIN_DIR/utils.d/*); do source $f; done
 export PS1='[$(time_elapsed)] '
 export PS2=$PS2
 export PS3=$PS3
-export PS4='$PS1      +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+export PS4='[$(time_elapsed)]       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 do-debug "PROMPT_COMMAND=$PROMPT_COMMAND"
 exit 1
 
