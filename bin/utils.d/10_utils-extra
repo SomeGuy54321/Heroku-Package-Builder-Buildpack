@@ -143,7 +143,9 @@ function time_remaining() {
 }
 
 function time_elapsed_piped() {
-    xargs -L1 echo " [$(time_elapsed)] $1"
+    ELAPSED=$(( $(date +'%s') - $BUILD_START_TIME ))
+    xargs -L1 echo [$(date --date=@$ELAPSED +'%M:%S:%2N')] $@
+    unset ELAPSED
 }
 
 # Get things from CONFIG_DIR
