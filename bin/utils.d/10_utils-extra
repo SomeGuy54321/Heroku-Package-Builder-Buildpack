@@ -183,7 +183,7 @@ function export_configvar() {
     #set -x
     local VAR=$1
     local DEFAULT=$2
-    export "$VAR=$(cat $CONFIG_DIR/$VAR)"
+    export "$VAR=$(cat $CONFIG_DIR/$VAR 2>/dev/null)"
       :
     export "$VAR=${!VAR:-$DEFAULT}"
       :

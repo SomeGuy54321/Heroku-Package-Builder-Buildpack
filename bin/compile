@@ -34,11 +34,12 @@ unset GIT_DIR
 for f in $(ls -d $BIN_DIR/utils.d/*); do source $f; done
 
 # set prompts
-export PS1='[$(time_elapsed)] '
-export PS2=$PS2
-export PS3=$PS3
+export PS1='1[$(time_elapsed)]'
+export PS2='2[$(time_elapsed)]'
+export PS3='3[$(time_elapsed)]'
 export PS4='[$(time_elapsed)]       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 do-debug "PROMPT_COMMAND=$PROMPT_COMMAND"
+exit 1
 
 # debug settings
 export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
