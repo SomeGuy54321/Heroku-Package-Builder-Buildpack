@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eo pipefail ; set -o xtrace
+set -eo pipefail #; set -o xtrace
 # Explanation:
 #   - All git code is initially in BUILD_DIR
 #   - Move all git code from BUILD_DIR to APP_DIR (i.e. /app)
