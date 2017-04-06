@@ -39,7 +39,6 @@ export PS2=$PS2
 export PS3=$PS3
 export PS4='[$(time_elapsed)]       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 do-debug "PROMPT_COMMAND=$PROMPT_COMMAND"
-exit 1
 
 # debug settings
 export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
