@@ -18,6 +18,7 @@ function git_remedy_linuxbuild() {
     0)
         [ $BUILD_DEBUG -gt 0 ] && set -o xtrace || true
         git --git-dir=$REPO init |& indent-debug
+        git --git-dir=$REPO stash list |& indent-debug
         brew update-reset
         [ $BUILDPACK_XTRACE -eq 0 ] && set +o xtrace || true
         return 0
@@ -111,9 +112,11 @@ function git_commit_check() {
 
     # this seems to fix things consistently
     [ $BUILD_DEBUG -gt 0 ] && set -o xtrace || true
-    puts-warn "Trying one more thing..."
+    puts-warn "Cleaning up git repo"
     git --git-dir=$REPO init |& indent-debug
     git --git-dir=$REPO remote set-url origin https://github.com/Linuxbrew/brew.git |& indent-debug
+    git --git-dir=$REPO stash save |& indent-debug
+    git --git-dir=$REPO fetch --prune |& indent-debug
     brew update-reset |& indent-debug
     [ $BUILDPACK_XTRACE -eq 0 ] && set +o xtrace || true
 

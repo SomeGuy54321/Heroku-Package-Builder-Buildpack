@@ -157,6 +157,8 @@ function show_linuxbrew_files() {
 # creating this (originally) so install_packages.sh doesn't keep trying to install
 # a package that it can't find.
 function brew_outputhandler() {
+
+    # need to enable line buffering somehow, and for
     local BREW_STATUS=$1
     local BREW_OUT="$2"
 
@@ -171,8 +173,14 @@ function brew_outputhandler() {
         if [ $TEST -gt 0 ]; then
             RTN_STATUS=929292  # just some unique value that'll tell brew_do that the package isnt available so dont retry
         fi
+    else
+        OLD_IFS=$IFS
+        IFS="
+"
+        for line in ${BREW_OUT[@]}; do
+            echo $RTN_OUT | indent | brew_quiet
+        done
     fi
 
-    echo $RTN_OUT | indent | brew_quiet
     return $RTN_STATUS
 }
