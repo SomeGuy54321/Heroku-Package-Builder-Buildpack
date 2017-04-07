@@ -52,7 +52,7 @@ function brew_do() {
 
     do-debug "Running 'brew $ACTION $PACKAGE $FLAGS'"
     BREW_OUT=$(brew $ACTION $PACKAGE $FLAGS 2>&1)
-    brew_outputhandler $? $BREW_OUT
+    brew_outputhandler $? "$BREW_OUT"
 
     # if the install failed try again, except if brew_outputhandler
     # returned 929292, which means the package wasn't found
@@ -158,7 +158,7 @@ function show_linuxbrew_files() {
 # a package that it can't find.
 function brew_outputhandler() {
     local BREW_STATUS=$1
-    local BREW_OUT=$2
+    local BREW_OUT="$2"
 
     # plan to just re-echo what brew did, but these might e changed in the tests
     local RTN_STATUS=$BREW_STATUS
