@@ -14,13 +14,17 @@ function run_user_script() {
 
 function main() {
 
+    # add a configvar to control this
+    USE_DPKG_BUILDFLAGS=1
+    if [ $USE_DPKG_BUILDFLAGS -neq 0 ]; then eval $(dpkg-buildflags --export); fi
+
     puts-step "Parsing package-extras.yaml"
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
     #do-debug "Parsed YAML variables:"
     #debug_heavy "PACKAGE_EXTRAS_"
     local REMAINING_PACKAGES
     local REMAINING_UPACKAGES
-    for package in ${PACKAGE_EXTRAS_packages[@]}; do
+    for package in ${PACKAGE_EXTRAS_install[@]}; do
 
         if [ $(time_remaining) -gt 0 ]; then
 
@@ -53,6 +57,29 @@ function main() {
     if [ ${#REMAINING_PACKAGES} -gt 0 ]; then
         puts-warn "The following packages did not install in time:"
         echo -e $REMAINING_PACKAGES |& indent | indent
+        puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
+    fi
+
+    # reinstall things
+    for rpackage in ${PACKAGE_EXTRAS_reinstall[@]}; do
+        if [ $(time_remaining) -gt 0 ]; then
+
+            # only one formula allowed
+            local RFORMULAS_VAR="PACKAGE_EXTRAS_formulas_${rpackage}"
+            local RFORMULAS="${!RFORMULAS_VAR}"
+            [ ${#RFORMULAS} -eq 0 ] && RFORMULAS=$rpackage || true
+
+            puts-step "Reinstalling $rpackage"
+            brew_do reinstall $RFORMULAS
+
+        else
+            REMAINING_RPACKAGES="$REMAINING_UPACKAGES\n- $rpackage"
+        fi
+    done
+
+    if [ ${#REMAINING_RPACKAGES} -gt 0 ]; then
+        puts-warn "The following packages did not reinstall in time:"
+        echo -e $REMAINING_RPACKAGES |& indent | indent
         puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
     fi
 

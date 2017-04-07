@@ -10,6 +10,10 @@ packages:
   - strace
   - linux-pam
   - openssh
+uninstall:
+  - gnutls
+reinstall:
+  - xz
 formulas:
   strace: https://github.com/Linuxbrew/homebrew-extra/blob/master/Formula/strace.rb
   linux-pam: linuxbrew/extra/linux-pam
@@ -21,15 +25,20 @@ options:
 config:
   postgresql:
     - setup_djangodb.sh
-uninstall:
-  - gnutls
 ```
 YAML Setup
 ==========
-##### packages
-- REQUIRED
+##### install
 - just the package name
 - installed in the order entered
+- runs first
+#### reinstall
+- reinstall something
+- runs second
+#### uninstall
+- OPTIONAL
+- uninstall something
+- runs third
 ##### formulas
 - OPTIONAL
 - a custom linuxbrew formula to apply to a package
@@ -37,7 +46,8 @@ YAML Setup
   - Remove this package from `package-extras.yaml`
   - Get a successful build
   - Run `heroku run brew search <packagename> -a <appname>`
-  - If it has a special path like `homebrew/dupes/<packagename>` then add this to your `formulas` section for this package
+  - If it has a special path like `.linuxbrew/dupes/<packagename>` then add this to your `formulas` section for this package
+  - the key must correspond to an install/uninstall/reinstall package
 ##### options
 - OPTIONAL
 - Command line flags to use when building the package
@@ -48,9 +58,6 @@ YAML Setup
   - make sure the script has a shebang line
 - The script will be passed the same arguments as the compile script
   - See [bin/compile](https://devcenter.heroku.com/articles/buildpack-api#bin-compile) in the Heroku Buildpack API documentation
-#### uninstall
-- OPTIONAL
-- uninstall something
 
 CONFIG VARS
 ===========

@@ -34,27 +34,29 @@ current buildpack maintainer know. Copy-paste this buildlog into an email to
 him/her." |& indent
 }
 
-function echo_default() {
-    VAL="$1"
-    DEF="$2"]
-    if [ ${#VAL} -eq 0 ]; then echo "$DEF"; else echo "$VAL"; fi
-}
+#function echo_default() {
+#    VAL="$1"
+#    DEF="$2"
+#    if [ ${#VAL} -eq 0 ]; then echo "$DEF"; else echo "$VAL"; fi
+#}
 
 function brew_do() {
     set +e  # don't exit if error
 
     local ACTION=$1
-    local PACKAGE="$2"
-    local FLAGS="$3"
-    local JOB_REDUCE_MAX_TRIES=$(echo_default $4 $JOB_REDUCE_MAX_TRIES)
+    local PACKAGE=$2
+    local FLAGS=$3
+    local JOB_REDUCE_MAX_TRIES=${4:-$JOB_REDUCE_MAX_TRIES}
 
     export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
 
     do-debug "Running 'brew $ACTION $PACKAGE $FLAGS'"
-    brew $ACTION $PACKAGE $FLAGS |& indent |& brew_quiet
+    BREW_OUT=$(brew $ACTION $PACKAGE $FLAGS 2>&1)
+    brew_outputhandler $? $BREW_OUT
 
-    # if the install failed try again
-    if [ $? -gt 0 ]; then
+    # if the install failed try again, except if brew_outputhandler
+    # returned 929292, which means the package wasn't found
+    if [ $? -ne 929292 ] && [ $? -gt 0 ]; then
 
         # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
         if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-1} ]; then
@@ -100,25 +102,25 @@ function brew_install_defaults() {
         brew_checkfor_tools gcc
         if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -neq 1 ]; then
             puts-step "Installing GCC"
-            brew_do install gcc
+            brew_do install gcc '--with-glibc'
         fi
 
         brew_checkfor_tools ruby
         if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-0} -neq 1 ]; then
             puts-step "Installing Ruby"
-            brew_do install ruby
+            brew_do install ruby '--with-libffi'
         fi
 
         brew_checkfor_tools perl
         if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-0} -neq 1 ]; then
             puts-step "Installing Perl"
-            brew_do install perl
+            brew_do install perl '--without-test'
         fi
 
         brew_checkfor_tools python3
         if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-0} -neq 1 ]; then
             puts-step "Installing Python3"
-            brew_do install python3
+            brew_do install python3 '--with-tcl-tk --with-quicktest'
         fi
     fi
 }
@@ -152,3 +154,25 @@ function show_linuxbrew_files() {
     show_linuxbrew
 }
 
+# creating this (originally) so install_packages.sh doesn't keep trying to install
+# a package that it can't find.
+function brew_outputhandler() {
+    local BREW_STATUS=$1
+    local BREW_OUT=$2
+
+    # plan to just re-echo what brew did, but these might e changed in the tests
+    local RTN_STATUS=$BREW_STATUS
+    local RTN_OUT=$BREW_OUT
+
+    # tests
+    if [ $BREW_STATUS -gt 0 ]; then
+
+        local TEST=$(echo $BREW_OUT | grep --count 'Error: No such keg: ')
+        if [ $TEST -gt 0 ]; then
+            RTN_STATUS=929292  # just some unique value that'll tell brew_do that the package isnt available so dont retry
+        fi
+    fi
+
+    echo $RTN_OUT | indent | brew_quiet
+    return $RTN_STATUS
+}

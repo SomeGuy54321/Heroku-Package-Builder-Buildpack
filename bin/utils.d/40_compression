@@ -1,24 +1,36 @@
 #!/usr/bin/env bash
 
-TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --absolute-names "
-COMPRESS_PROGRAM="xz --extreme --verbose --threads=0"
+TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --absolute-names"
+# We definitely use the system xz for decompression.
+# But if brew has its own xz then it'll use that for compression.
+# Best to use the same one both times
+XZ="$(which xz)"; XZ=${XZ:-/usr/bin/xz}
+COMPRESS_PROGRAM="$XZ --extreme --verbose --threads=0"
 COMPRESSION_LEVEL_DEFAULT=9  # Runs 0..9, 9 = best and slowest compression, default is 6
 COMPRESSION_MAX_TRIES=4
 MAX_JOBS=$(grep --count ^processor /proc/cpuinfo)
 
+
+
 function compression_level_chooser() {
-    local TRIES_MADE=$1
-    if [ ${#TRIES_MADE} -eq 0 ]; then TRIES_MADE=0; fi
-    local CURR_LEVEL=$2
-    if [ ${#CURR_LEVEL} -eq 0 ]; then CURR_LEVEL=$COMPRESSION_LEVEL_DEFAULT; fi
+    local TRY_NUM=${1:-0}
+    local CURR_LEVEL=${2:-$COMPRESSION_LEVEL_DEFAULT}
+
     local TIME_LEFT=$(time_remaining)
-    # do something fancy here eventually
-    echo $CURR_LEVEL
+    # if < 1min remains then drop the compression level to min
+    if [ $TIME_LEFT -le 60 ]; then
+        echo 0
+    # if I've passed in a try number then I'm wanting to decrease it
+    elif [ $TRY_NUM -gt 0 ]; then
+        max 0 $(( $CURR_LEVEL - 1 ))
+    # else I'm pretty much just accessing the default compression level
+    else
+        max 0 $CURR_LEVEL
+    fi
 }
 
 function job_reduce_increment() {
-    local MAX_TRIES=$1
-    if [ ${#MAX_TRIES} -eq 0 ]; then MAX_TRIES=$COMPRESSION_MAX_TRIES; fi
+    local MAX_TRIES=${1:-$COMPRESSION_MAX_TRIES}
     max 1 $(( $MAX_JOBS / $MAX_TRIES ))
 }
 
@@ -68,12 +80,13 @@ function compress_do() {
         if [ $RTN_VAL -gt 0 ] && [ $TRY_NUM -le $MAX_TRIES ]; then
             TRY_NUM=$(( $TRY_NUM + 1 ))
             JOBS=$(max 1 $(( $JOBS - $THREADS_REDUCE_INCREMENT )))
+            COMP_LEVEL=$(compression_level_chooser $TRY_NUM)
             # remove extreme compression
             COMPRESS_PROGRAM=${COMPRESS_PROGRAM/--extreme/}
             # reduce number of threads
-            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/\s\?--threads=[0-9]*\s\?/ --threads=$JOBS /")
+            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/\s\?--threads=[0-9]*\s\?/ --threads=${JOBS:-0} /")
             # rethink compression level
-            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/\s\?-[0-9]\b\s\?/ -$(compression_level_chooser) /")
+            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/\s\?-[0-9]\b\s\?/ -${COMP_LEVEL:-9} /")
         else
             set -e  # exit if error
             return $RTN_VAL
