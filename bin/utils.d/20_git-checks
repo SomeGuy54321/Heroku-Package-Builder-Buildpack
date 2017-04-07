@@ -12,10 +12,6 @@ function git_gc_linuxbrew() {
     git --git-dir=$REPO gc --auto |& indent #|& brew_quiet
 }
 
-
-function git_remedy_desperate() {
-}
-
 function git_remedy_linuxbuild() {
     local REMEDY_NUM=$1
     case $REMEDY_NUM in
