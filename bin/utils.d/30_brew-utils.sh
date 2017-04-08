@@ -65,7 +65,7 @@ function brew_do() {
             brew_do $ACTION $PACKAGE $FLAGS
 
         # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
-        elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-1} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -neq 1 ]; then
+        elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-1} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
 
             retry_print $PACKAGE 1
             brew_do $ACTION $PACKAGE $FLAGS
@@ -96,35 +96,35 @@ function brew_checkfor() {
 
 function brew_install_defaults() {
     # install core tools
-    if [ ${PACKAGE_BUILDER_NOINSTALL_DEFAULTS:-0} -neq 1 ]; then
+    if [ ${PACKAGE_BUILDER_NOINSTALL_DEFAULTS:-0} -ne 1 ]; then
 
         # gcc & glibc wont install without a newer gawk
         brew_checkfor gawk
-        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GAWK:-0} -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GAWK:-0} -ne 1 ]; then
             puts-step "Installing gawk"
             brew_do install gawk
         fi
 
         brew_checkfor gcc
-        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -ne 1 ]; then
             puts-step "Installing GCC"
             brew_do install gcc '--with-glibc' # --with-java --with-jit --with-multilib --with-nls'
         fi
 
         brew_checkfor ruby
-        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-0} -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-0} -ne 1 ]; then
             puts-step "Installing Ruby"
             brew_do install ruby '--with-libffi'
         fi
 
         brew_checkfor perl
-        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-0} -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-0} -ne 1 ]; then
             puts-step "Installing Perl"
             brew_do install perl '--without-test'
         fi
 
         brew_checkfor python3
-        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-0} -neq 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-0} -ne 1 ]; then
             puts-step "Installing Python3"
             brew_do install python3 '--with-tcl-tk --with-quicktest'
         fi
