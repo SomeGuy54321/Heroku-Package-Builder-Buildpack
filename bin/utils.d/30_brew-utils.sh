@@ -55,7 +55,7 @@ function brew_do() {
 
     # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
     # text 'Error: No such keg: ' appeared in the output
-    local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall brew_test_results.txt || echo 0)
+    local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall brew_test_results.txt 2>/dev/null || echo 0)
     if [ ${CHECK_ALREADY_INSTALLED:-0} -eq 0 ]; then
 
         # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
@@ -167,6 +167,6 @@ function show_linuxbrew_files() {
 # a package that it can't find.
 function brew_outputhandler() {
 #    local TEST='{if ($0 ~ /Error: No such keg: /) { print "'"$Y"'" > "'"brew_test_results.txt"'"; print $0; } else { print $0; } }'
-    local TEST='{if ($0 ~ /Error: No such keg: /) { print "is_reinstall" > "brew_test_results.txt"; print $0; } else { print $0; } } END { fflush(); }'
+    local TEST='BEGIN { if ($0 ~ /Error: No such keg: /) { print "is_reinstall" > "brew_test_results.txt"; } } END { print $0; system(""); }'
     awk "$TEST" | indent
 }
