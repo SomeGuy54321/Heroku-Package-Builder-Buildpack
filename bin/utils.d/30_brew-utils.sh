@@ -51,7 +51,7 @@ function brew_do() {
     export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
 
     do-debug "Running 'brew $ACTION $PACKAGE $FLAGS'"
-    BREW_OUT=$(brew $ACTION $PACKAGE $FLAGS 2>&1) | brew_outputhandler
+    brew $ACTION $PACKAGE $FLAGS |& brew_outputhandler
 
     # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
     # text 'Error: No such keg: ' appeared in the output
