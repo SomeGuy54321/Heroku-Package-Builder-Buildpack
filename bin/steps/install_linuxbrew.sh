@@ -20,18 +20,13 @@ else
     puts-step "Linuxbrew already installed"
     do-debug "\$(which brew)=$(which brew)"
 
-    brew update-reset |& indent-debug || true
+    #git_checks_linuxbrew
+    git_rebuild_latest
 
     do-debug "brew config:"
     brew config |& indent-debug || true
 
     do-debug "brew doctor:"
     brew doctor |& indent-debug || true
-
-    #git_checks_linuxbrew
-    git_rebuild_latest
-
-    do-debug "brew config:"
-    brew config |& indent-debug || true
 
 fi
