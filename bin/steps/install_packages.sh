@@ -16,7 +16,7 @@ function main() {
 
     # add a configvar to control this
     USE_DPKG_BUILDFLAGS=1
-    if [ $USE_DPKG_BUILDFLAGS -neq 0 ]; then eval $(dpkg-buildflags --export); fi
+    if [ $USE_DPKG_BUILDFLAGS -ne 0 ]; then eval $(dpkg-buildflags --export); fi
 
     puts-step "Parsing package-extras.yaml"
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
