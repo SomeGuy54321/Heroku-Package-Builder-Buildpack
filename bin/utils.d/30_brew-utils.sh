@@ -56,7 +56,7 @@ function brew_do() {
     # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
     # text 'Error: No such keg: ' appeared in the output
     local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall brew_test_results.txt)
-    if [ ${CHECK_ALREADY_INSTALLED} -eq 0 ] && [ $? -gt 0 ]; then
+    if [ ${CHECK_ALREADY_INSTALLED} -eq 0 ]; then
 
         # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
         if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-1} ]; then
