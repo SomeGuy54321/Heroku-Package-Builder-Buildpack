@@ -51,12 +51,12 @@ function brew_do() {
     export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
 
     do-debug "Running 'brew $ACTION $PACKAGE $FLAGS'"
-    BREW_OUT=$(brew $ACTION $PACKAGE $FLAGS 2>&1)
-    brew_outputhandler $? $BREW_OUT
+    BREW_OUT=$(brew $ACTION $PACKAGE $FLAGS 2>&1) | brew_outputhandler
 
-    # if the install failed try again, except if brew_outputhandler
-    # returned 929292, which means the package wasn't found
-    if [ $? -ne 929292 ] && [ $? -gt 0 ]; then
+    # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
+    # text 'Error: No such keg: ' appeared in the output
+    local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall brew_test_results.txt)
+    if [ ${CHECK_ALREADY_INSTALLED} -eq 0 ] && [ $? -gt 0 ]; then
 
         # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
         if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-1} ]; then
@@ -98,6 +98,7 @@ function brew_install_defaults() {
     # install core tools
     if [ ${PACKAGE_BUILDER_NOINSTALL_DEFAULTS:-0} -ne 1 ]; then
 
+        puts-step "Installing core tools"
         local CHECK
 
         # gcc & glibc wont install without a newer gawk
@@ -166,29 +167,31 @@ function show_linuxbrew_files() {
 # a package that it can't find.
 function brew_outputhandler() {
 
-    # need to enable line buffering somehow, and for
-    local BREW_STATUS=$1
-    local BREW_OUT="$2"
+    awk '{ if ($0 ~ /Error: No such keg: /) { print "is_reinstall" > "brew_test_results.txt"; print $0; } else { print $0; } }' | indent
 
-    # plan to just re-echo what brew did, but these might e changed in the tests
-    local RTN_STATUS=$BREW_STATUS
-    local RTN_OUT=$BREW_OUT
-
-    # tests
-    if [ $BREW_STATUS -gt 0 ]; then
-
-        local TEST=$(echo $BREW_OUT | grep --count 'Error: No such keg: ')
-        if [ $TEST -gt 0 ]; then
-            RTN_STATUS=929292  # just some unique value that'll tell brew_do that the package isnt available so dont retry
-        fi
-    else
-        OLD_IFS=$IFS
-        IFS="
-"
-        for line in ${BREW_OUT[@]}; do
-            echo $RTN_OUT | indent | brew_quiet
-        done
-    fi
-
-    return $RTN_STATUS
+#    # need to enable line buffering somehow, and for
+#    local BREW_STATUS=$1
+#    local BREW_OUT="$2"
+#
+#    # plan to just re-echo what brew did, but these might e changed in the tests
+#    local RTN_STATUS=$BREW_STATUS
+#    local RTN_OUT=$BREW_OUT
+#
+#    # tests
+#    if [ $BREW_STATUS -gt 0 ]; then
+#
+#        local TEST=$(echo $BREW_OUT | grep --count 'Error: No such keg: ')
+#        if [ $TEST -gt 0 ]; then
+#            RTN_STATUS=929292  # just some unique value that'll tell brew_do that the package isnt available so dont retry
+#        fi
+#    else
+#        OLD_IFS=$IFS
+#        IFS="
+#"
+#        for line in ${BREW_OUT[@]}; do
+#            echo $RTN_OUT | indent | brew_quiet
+#        done
+#    fi
+#
+#    return $RTN_STATUS
 }
