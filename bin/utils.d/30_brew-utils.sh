@@ -57,7 +57,7 @@ function brew_do() {
     BREW_RTN_STATUS=${PIPESTATUS[0]}
     # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
     # text 'Error: No such keg: ' appeared in the output
-    local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall brew_test_results.txt 2>/dev/null || echo 0)
+    local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall /tmp/brew_test_results.txt 2>/dev/null || echo 0)
     if [ ${CHECK_ALREADY_INSTALLED:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
 
         # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
@@ -90,10 +90,7 @@ function brew_do() {
 }
 
 function brew_checkfor() {
-    local CHECK="$(brew list | grep --count $1)"
-    if [ ${CHECK} -eq 0 ]; then echo 0; else echo $CHECK; fi
-#    CHECK=${PATH_TO_CHECKFOR/.linuxbrew/}
-#    if [ ${#PATH_TO_CHECKFOR} -gt ${#CHECK} ]; then echo 1; fi
+    brew list | grep --count "$1"
 }
 
 function brew_install_defaults() {
@@ -104,32 +101,27 @@ function brew_install_defaults() {
         local CHECK
 
         # gcc & glibc wont install without a newer gawk
-        CHECK=$(brew_checkfor gawk)
-        if [ $(time_remaining) -gt 0 ] && [ ${CHECK:-0} -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GAWK:-0} -ne 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor gawk) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GAWK:-0} -ne 1 ]; then
             puts-step "Installing gawk"
             brew_do install gawk
         fi
 
-        CHECK=$(brew_checkfor gcc)
-        if [ $(time_remaining) -gt 0 ] && [ ${CHECK:-0} -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -ne 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor gcc) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -ne 1 ]; then
             puts-step "Installing GCC"
             brew_do install gcc '--with-glibc' # --with-java --with-jit --with-multilib --with-nls'
         fi
 
-        CHECK=$(brew_checkfor ruby)
-        if [ $(time_remaining) -gt 0 ] && [ ${CHECK:-0} -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-0} -ne 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor ruby) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-0} -ne 1 ]; then
             puts-step "Installing Ruby"
             brew_do install ruby '--with-libffi'
         fi
 
-        CHECK=$(brew_checkfor perl)
-        if [ $(time_remaining) -gt 0 ] && [ ${CHECK:-0} -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-0} -ne 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor perl) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-0} -ne 1 ]; then
             puts-step "Installing Perl"
             brew_do install perl #'--without-test'
         fi
 
-        CHECK=$(brew_checkfor python3)
-        if [ $(time_remaining) -gt 0 ] && [ ${CHECK:-0} -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-0} -ne 1 ]; then
+        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor python3) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-0} -ne 1 ]; then
             puts-step "Installing Python3"
             brew_do install python3 '--with-tcl-tk --with-quicktest'
         fi
@@ -169,6 +161,6 @@ function show_linuxbrew_files() {
 # a package that it can't find.
 function brew_outputhandler() {
 #    local TEST='{if ($0 ~ /Error: No such keg: /) { print "'"$Y"'" > "'"brew_test_results.txt"'"; print $0; } else { print $0; } }'
-    local TEST='{ if ($0 ~ /Error: No such keg: /) { print "is_reinstall" > "brew_test_results.txt"; } print $0; system(""); }'
+    local TEST='{ if ($0 ~ /Error: No such keg: /) { print "is_reinstall" > "/tmp/brew_test_results.txt"; } print $0; system(""); }'
     awk "$TEST" | indent
 }
