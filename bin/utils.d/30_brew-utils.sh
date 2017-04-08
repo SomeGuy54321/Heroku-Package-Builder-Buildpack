@@ -111,20 +111,20 @@ function brew_install_defaults() {
             brew_do install gcc '--with-glibc' # --with-java --with-jit --with-multilib --with-nls'
         fi
 
-        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor ruby) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-0} -ne 1 ]; then
-            puts-step "Installing Ruby"
-            brew_do install ruby '--with-libffi'
-        fi
-
-        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor perl) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-0} -ne 1 ]; then
-            puts-step "Installing Perl"
-            brew_do install perl #'--without-test'
-        fi
-
-        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor python3) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-0} -ne 1 ]; then
-            puts-step "Installing Python3"
-            brew_do install python3 '--with-tcl-tk --with-quicktest'
-        fi
+#        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor ruby) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-0} -ne 1 ]; then
+#            puts-step "Installing Ruby"
+#            brew_do install ruby '--with-libffi'
+#        fi
+#
+#        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor perl) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-0} -ne 1 ]; then
+#            puts-step "Installing Perl"
+#            brew_do install perl #'--without-test'
+#        fi
+#
+#        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor python3) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-0} -ne 1 ]; then
+#            puts-step "Installing Python3"
+#            brew_do install python3 '--with-tcl-tk --with-quicktest'
+#        fi
     fi
 }
 
