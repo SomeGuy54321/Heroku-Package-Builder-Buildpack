@@ -52,7 +52,7 @@ function brew_do() {
 
     do-debug "Running 'brew $ACTION $PACKAGE $FLAGS'"
     BREW_OUT=$(brew $ACTION $PACKAGE $FLAGS 2>&1)
-    brew_outputhandler $? "$BREW_OUT"
+    brew_outputhandler $? $BREW_OUT
 
     # if the install failed try again, except if brew_outputhandler
     # returned 929292, which means the package wasn't found
@@ -87,37 +87,43 @@ function brew_do() {
     set -e
 }
 
-function brew_checkfor_tools() {
-    local CHECKFOR="$1"
-    local PATH_TO_CHECKFOR="$(which $CHECKFOR)"
-    if [ ${#PATH_TO_CHECKFOR} -eq 0 ]; then echo 0; fi
-    CHECK=${PATH_TO_CHECKFOR/.linuxbrew/}
-    if [ ${#PATH_TO_CHECKFOR} -gt ${#CHECK} ]; then echo 1; fi
+function brew_checkfor() {
+    local CHECK="$(brew list | grep --count $1)"
+    if [ ${CHECK} -eq 0 ]; then echo 0; else echo $CHECK; fi
+#    CHECK=${PATH_TO_CHECKFOR/.linuxbrew/}
+#    if [ ${#PATH_TO_CHECKFOR} -gt ${#CHECK} ]; then echo 1; fi
 }
 
 function brew_install_defaults() {
     # install core tools
     if [ ${PACKAGE_BUILDER_NOINSTALL_DEFAULTS:-0} -neq 1 ]; then
 
-        brew_checkfor_tools gcc
-        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -neq 1 ]; then
-            puts-step "Installing GCC"
-            brew_do install gcc '--with-glibc'
+        # gcc & glibc wont install without a newer gawk
+        brew_checkfor gawk
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GAWK:-0} -neq 1 ]; then
+            puts-step "Installing gawk"
+            brew_do install gawk
         fi
 
-        brew_checkfor_tools ruby
+        brew_checkfor gcc
+        if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -neq 1 ]; then
+            puts-step "Installing GCC"
+            brew_do install gcc '--with-glibc' # --with-java --with-jit --with-multilib --with-nls'
+        fi
+
+        brew_checkfor ruby
         if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-0} -neq 1 ]; then
             puts-step "Installing Ruby"
             brew_do install ruby '--with-libffi'
         fi
 
-        brew_checkfor_tools perl
+        brew_checkfor perl
         if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-0} -neq 1 ]; then
             puts-step "Installing Perl"
             brew_do install perl '--without-test'
         fi
 
-        brew_checkfor_tools python3
+        brew_checkfor python3
         if [ $(time_remaining) -gt 0 ] && [ $? -eq 1 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-0} -neq 1 ]; then
             puts-step "Installing Python3"
             brew_do install python3 '--with-tcl-tk --with-quicktest'

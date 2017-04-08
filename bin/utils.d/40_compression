@@ -57,15 +57,19 @@ function compress_do() {
     if [ ${DO_WHAT/ /} == extract ]; then
         # when extracting I'm passing in the whole path to the tarfile to decompress to BUILD_DIR
         DESTINATION="$BUILD_DIR"
-        TARFLAGS=" --extract --file ${FULL_INPATH} $TARFLAGS";
+        TARFLAGS=" --extract --file ${FULL_INPATH} $TARFLAGS ";
         LAST_ARG=" --directory=$DESTINATION";
         DO_WHAT_LABEL="Decompressing";
-    else
+    elif [ ${DO_WHAT/ /} == create ]; then
         # when compressing I'm just passing in the directory to compress to CACHE_DIR
         DESTINATION="${CACHE_DIR}/${BASENAME}.tar.xz"
-        TARFLAGS=" --create --file ${DESTINATION} $TARFLAGS";
+        TARFLAGS=" --create --file ${DESTINATION} $TARFLAGS --exclude-vcs ";
         LAST_ARG=" ${FULL_INPATH}";
         DO_WHAT_LABEL="Compressing";
+    else
+        echo "Need to specify the tar action at compress_do"
+        set -e
+        return 1
     fi
 
     local JOBS=$MAX_JOBS

@@ -103,6 +103,19 @@ function git_remedy_linuxbuild() {
     esac
 }
 
+
+function git_rebuild_latest() {
+    brew update --force
+#    git --git-dir=$REPO reset --hard $LINUXBREW_COMMIT
+#    # ensure there's quotes because the stdout can have an asterisk
+#    BRANCH="$(git --git-dir=$REPO branch --contains $LINUXBREW_COMMIT | head -1)"; BRANCH="${BRANCH##* }"
+#    git --git-dir=$REPO branch --set-upstream-to=origin/master $BRANCH
+#    git --git-dir=$HOME/.linuxbrew/.git config --global user.email "no.one@nothin.no"
+#    git --git-dir=$HOME/.linuxbrew/.git config --global user.name "Nothing None"
+#    git --git-dir=$HOME/.linuxbrew/.git stash clear
+#    git --git-dir=$REPO pull --allow-unrelated-histories
+}
+
 function git_commit_check() {
     set +e
 

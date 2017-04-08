@@ -11,7 +11,7 @@ set -eo pipefail #; set -o xtrace
 # Using this commit tag:
 #   git rev-parse --verify HEAD  -->  9e37f8101af862ed2a0d7e28c734318668d927f5
 #   git --git-dir="$BUILD_DIR/.linuxbrew/.git" show --oneline -s | cut -d' ' -f1  -->  d8c8b867b
-export LINUXBREW_COMMIT="9e37f8101af862ed2a0d7e28c734318668d927f5"
+export LINUXBREW_COMMIT="d8c8b867b"
 #
 # Start time:
 export BUILD_START_TIME=$(date +'%s')
@@ -74,6 +74,7 @@ export_configvar PACKAGE_BUILDER_REINSTALL_LINUXBREW 0
 # use epoch date to hopefully control the order in which the profile.d scripts are executed
 export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
 export_configvar PACKAGE_BUILDER_NOINSTALL_GCC 0
+export_configvar PACKAGE_BUILDER_NOINSTALL_GLIBC 0
 export_configvar PACKAGE_BUILDER_NOINSTALL_RUBY 0
 export_configvar PACKAGE_BUILDER_NOINSTALL_PERL 0
 export_configvar PACKAGE_BUILDER_NOINSTALL_PYTHON 0

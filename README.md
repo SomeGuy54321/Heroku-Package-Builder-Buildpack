@@ -76,6 +76,7 @@ Removes all packages installed before and starts anew
 __*PACKAGE_BUILDER_MAX_BUILDTIME*__ (time in minutes)<br>
 Max time to take building (not exact)
 
+__*PACKAGE_BUILDER_NOINSTALL_GAWK*__ (1 or 0)<br>
 __*PACKAGE_BUILDER_NOINSTALL_GCC*__ (1 or 0)<br>
 __*PACKAGE_BUILDER_NOINSTALL_RUBY*__ (1 or 0)<br>
 __*PACKAGE_BUILDER_NOINSTALL_PERL*__ (1 or 0)<br>
