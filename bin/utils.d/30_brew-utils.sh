@@ -168,5 +168,5 @@ function show_linuxbrew_files() {
 function brew_outputhandler() {
 #    local TEST='{if ($0 ~ /Error: No such keg: /) { print "'"$Y"'" > "'"brew_test_results.txt"'"; print $0; } else { print $0; } }'
     local TEST='{if ($0 ~ /Error: No such keg: /) { print "is_reinstall" > "brew_test_results.txt"; print $0; } else { print $0; } } END { fflush("/dev/stdout"); }'
-    awk -W interactive "$TEST" | indent
+    awk "$TEST" | indent
 }
