@@ -65,7 +65,7 @@ do-debug "CONFIG_DIR when starting: '$CONFIG_DIR'"
 
 
 # get things from CONFIG_DIR
-export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 14
+export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 10
 export PACKAGE_BUILDER_MAX_BUILDTIME=$(min $PACKAGE_BUILDER_MAX_BUILDTIME 14)
 export_configvar BUILDCACHE ".heroku"
 export_configvar PACKAGE_BUILDER_NOBUILDFAIL 0  # dont fail if a package fails to install
@@ -86,7 +86,6 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_DEFAULTS 0
 
 
 # setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
-# do something with this someday
 PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS=$(( $PACKAGE_BUILDER_MAX_BUILDTIME * 60 ))
 CURRENT_SECONDS=$(date +'%s')
 export BUILD_MAX_RUNTIME=$(($PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS + $CURRENT_SECONDS))

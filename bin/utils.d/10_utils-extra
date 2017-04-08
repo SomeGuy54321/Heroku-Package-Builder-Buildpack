@@ -101,7 +101,6 @@ function do-debug() {
         echo "-----> DEBUG1: $@"
     fi
 }
-#alias do_debug='do-debug'
 
 # print a lot of stuff
 function debug_heavy() {
@@ -111,24 +110,12 @@ function debug_heavy() {
 }
 
 function min() {
-    #A=${1:-1}; B=${2:-1}; #ABSMIN=$3;
     A=$(( ${1:-1} * 1)); B=$(( ${2:-1} * 1))
-#    A=${A/ /}; B=${B/ /};
-#    A=$(($A * 1)); B=$(($B * 1));
-#    if [ ! ${#ABSMIN} -gt 0 ] || [ ! $(( $ABSMIN + 0 )) -eq $ABSMIN ]; then ABSMIN=1; fi
-#    if [ ! ${#A} -gt 0 ] && [ ! $A -ge $ABSMIN ]; then A=$ABSMIN; fi
-#    if [ ! ${#B} -gt 0 ] && [ ! $B -ge $ABSMIN ]; then B=$ABSMIN; fi
     python3 -c "print(min("$A","$B"))"
 }
 
 function max() {
-    #A=${1:-1}; B=${2:-1}; #ABSMIN=$3;
     A=$(( ${1:-1} * 1)); B=$(( ${2:-1} * 1));
-#    A=${A/ /}; B=${B/ /};
-#    A=$(($A * 1)); B=$(($B * 1));
-#    if [ ! ${#ABSMIN} -gt 0 ] || [ ! $(( $ABSMIN + 0 )) -eq $ABSMIN ]; then ABSMIN=1; fi
-#    if [ ! ${#A} -gt 0 ] && [ ! $A -ge $ABSMIN ]; then A=$ABSMIN; fi
-#    if [ ! ${#B} -gt 0 ] && [ ! $B -ge $ABSMIN ]; then B=$ABSMIN; fi
     python3 -c "print(max("$A","$B"))"
 }
 
@@ -185,7 +172,6 @@ function export_env_dir() {
 }
 
 # export_all_configvars & export_configvar are modified versions of Heroku's export_env_dir
-
 function export_configvar() {
     #set +e  # don't exit if error
     #set -x
@@ -196,22 +182,9 @@ function export_configvar() {
     export "$VAR=${!VAR:-$DEFAULT}"
       :
     do-debug "$VAR=${!VAR}"
-#    local ISAV=$(ls -A ${CONFIG_DIR} | grep --count "$VAR")
-#    if [ $ISAV -gt 0 ]; then
-#        SET_TO=$(cat ${CONFIG_DIR}/${VAR} | head -n1) #|& indent-debug #|| SET_TO="$DEFAULT"
-#    else
-#        SET_TO=$DEFAULT
-#    fi
-#    export "$VAR=$SET_TO" #|| puts-warn "Unable to set configvar $VAR to \"$SET_TO\""
-    #set +x
-    #set -e  # exit if error
 }
 
 function export_all_configvars() {
-#    for f in $(ls -A ${CONFIG_DIR}); do
-#        export_configvar ${f}
-#    done
-#    unset f
   env_dir=$1
   whitelist_regex=${2:-''}
   blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
