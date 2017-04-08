@@ -53,10 +53,12 @@ function brew_do() {
     do-debug "Running 'brew $ACTION $PACKAGE $FLAGS'"
     brew $ACTION $PACKAGE $FLAGS |& brew_outputhandler
 
+    # about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
+    BREW_RTN_STATUS=${PIPESTATUS[0]}
     # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
     # text 'Error: No such keg: ' appeared in the output
     local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall brew_test_results.txt 2>/dev/null || echo 0)
-    if [ ${CHECK_ALREADY_INSTALLED:-0} -eq 0 ]; then
+    if [ ${CHECK_ALREADY_INSTALLED:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
 
         # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
         if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-1} ]; then
