@@ -5,7 +5,7 @@ if [ ! -x "$(which brew)" ]; then
 
     puts-step "Installing Linuxbrew"
     do-debug "Building linuxbrew in $HOME"
-    echo -e 'y\n' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)" |& indent |& brew_quiet
+    echo -e 'y\n' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)" |& brew_outputhandler
 
     brew_install_defaults
 
