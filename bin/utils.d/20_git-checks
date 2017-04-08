@@ -105,7 +105,8 @@ function git_remedy_linuxbuild() {
 
 
 function git_rebuild_latest() {
-    brew update --force
+    do-debug "Running 'brew update --force'"
+    brew update --force |& indent-debug
 #    git --git-dir=$REPO reset --hard $LINUXBREW_COMMIT
 #    # ensure there's quotes because the stdout can have an asterisk
 #    BRANCH="$(git --git-dir=$REPO branch --contains $LINUXBREW_COMMIT | head -1)"; BRANCH="${BRANCH##* }"
