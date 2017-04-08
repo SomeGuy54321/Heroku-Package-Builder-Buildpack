@@ -167,7 +167,7 @@ function show_linuxbrew_files() {
 # a package that it can't find.
 function brew_outputhandler() {
 
-    awk '{ if ($0 ~ /Error: No such keg: /) { print "is_reinstall" > "brew_test_results.txt"; print $0; } else { print $0; } }' | indent
+    awk -W interactive '{ if ($0 ~ /Error: No such keg: /) { print "is_reinstall" > "brew_test_results.txt"; print $0; } else { print $0; } }' | indent
 
 #    # need to enable line buffering somehow, and for
 #    local BREW_STATUS=$1
