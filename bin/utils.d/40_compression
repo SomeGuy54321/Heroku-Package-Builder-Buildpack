@@ -77,7 +77,7 @@ function compress_do() {
     local TRY_NUM=0
     while [ 1 ]; do
         puts-step "$DO_WHAT_LABEL ${FULL_INPATH} to $DESTINATION"
-        do-debug "Running 'tar $TARFLAGS --use-compress-program "$COMPRESS_PROGRAM" $LAST_ARG'"
+        do-debug "Running 'tar $TARFLAGS --use-compress-program "'$COMPRESS_PROGRAM'" $LAST_ARG'"
         tar $TARFLAGS --use-compress-program "'$COMPRESS_PROGRAM'" $LAST_ARG |& indent
 
         # it might run out of memory and fail so reduce intensity and try again
