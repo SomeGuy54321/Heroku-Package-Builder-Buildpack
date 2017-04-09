@@ -42,10 +42,10 @@ export_configvar BUILDPACK_XTRACE 0  # print all commands to log
 
 # set prompts
 if [ ${BUILDPACK_XTRACE:-0} -eq 0 ]; then
-    set +o xtrace  # ensure xtrace isn't on
-    set +o functrace  # prevent subshells from getting crazy values
-    shopt -s extdebug
-    trap countdown DEBUG
+#    set +o xtrace  # ensure xtrace isn't on
+#    set +o functrace  # prevent subshells from getting crazy values
+#    shopt -s extdebug
+#    trap countdown DEBUG
 else
     export PS4='[$(time_elapsed)]       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
     set -o xtrace
