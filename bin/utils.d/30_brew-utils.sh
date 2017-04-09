@@ -161,6 +161,6 @@ function show_linuxbrew_files() {
 # a package that it can't find.
 function brew_outputhandler() {
 #    local TEST='{if ($0 ~ /Error: No such keg: /) { print "'"$Y"'" > "'"brew_test_results.txt"'"; print $0; } else { print $0; } }'
-    local TEST='{ if ($0 ~ /Error: No such keg: /) { print "is_reinstall" > "/tmp/brew_test_results.txt"; } print $0; system(""); }'
+    local TEST='{ if ($0 ~ /Error: No such keg: / || $0 ~ /Error: No available formula with the name / || $0 ~ /Error: No formulae found in taps/) { print "is_reinstall" > "/tmp/brew_test_results.txt"; } print $0; system(""); }'
     awk "$TEST" | indent
 }
