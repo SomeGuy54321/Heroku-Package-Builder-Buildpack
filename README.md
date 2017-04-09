@@ -7,7 +7,7 @@ Use this by finding the package you want [here](http://brewformulas.org/search?u
 ```
 packages:
   - postgresql
-  - man-db
+  - man__db
   - openssh
 uninstall:
   - gnutls
@@ -25,6 +25,7 @@ config:
 ```
 YAML Setup
 ==========
+#### _IMPORTANT_ <br>If your package name contains dashes "-" replace them with double-underscores "__" e.g. man-db -> man__db
 ##### install
 - just the package name
 - installed in the order entered

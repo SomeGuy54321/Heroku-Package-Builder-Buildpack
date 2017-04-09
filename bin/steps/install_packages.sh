@@ -28,17 +28,21 @@ function main() {
 
         if [ $(time_remaining) -gt 0 ]; then
 
-            # only one formula allowed
-            local FORMULAS_VAR="PACKAGE_EXTRAS_formulas_${package}"
-            local FORMULAS="${!FORMULAS_VAR}"
-            [ ${#FORMULAS} -eq 0 ] && FORMULAS=$package || true
-
             # multiple options flags allowed so add [@]
             local OPTIONS_VAR="PACKAGE_EXTRAS_options_${package}[@]"
             local OPTIONS
             for opt in ${!OPTIONS_VAR}; do
                 OPTIONS="$OPTIONS --${opt}"
             done
+
+            # only one formula allowed
+            # THIS PART MUST BE JUST BEFORE brew_do!
+            local FORMULAS_VAR="PACKAGE_EXTRAS_formulas_${package}"
+            local FORMULAS="${!FORMULAS_VAR}"
+            if [ ${#FORMULAS} -eq 0 ]; then
+                # if package name contains "-" the user should've replaced it with "__" in the yaml
+                FORMULAS=${package/__/-}
+            fi
 
             # do the thing
             puts-step "Installing $package"
