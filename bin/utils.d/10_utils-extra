@@ -229,3 +229,22 @@ function unexport_all_configvars() {
     done
     unset f
 }
+
+function change_shell_default() {
+    export ORIG_SHELLOPTS=$SHELLOPTS
+    export ORIG_BASHOPTS=$BASHOPTS
+    export ORIG_PS4=$PS4
+
+}
+
+function reset_shell_default() {
+    export PS4=${ORIG_PS4:-PS4}
+    case $1 in
+    shopt)
+        shopt $2 $3
+    ;;
+    set)
+        set $2 $3
+    ;;
+    esac
+}
