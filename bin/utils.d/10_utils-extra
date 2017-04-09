@@ -109,8 +109,7 @@ indent-debug() {
 
 function do-debug() {
     if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
-    #if [ ${BUILD_DEBUG} -gt 0 ]; then
-        echo "-----> DEBUG1: $@"
+        puts-step "DEBUG: $@"
     fi
 }
 
