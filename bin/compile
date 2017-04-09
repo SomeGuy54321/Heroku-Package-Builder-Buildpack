@@ -110,7 +110,6 @@ CURR_DIR="$PWD"
 
 # Move the linuxbrew cache to APP_DIR, or optionally reinstall by deleting the cache dirs
 if [ ${PACKAGE_BUILDER_REINSTALL_LINUXBREW:-0} -eq 0 ]; then
-    puts-step "Detected existing Linuxbrew install"
     for d in ${LINUXBREW_DIRS}; do
         if [ -f "${CACHE_DIR}/${d}.tar.xz" ]; then
             do-debug "Found ${d}.tar.xz in CACHE_DIR"
