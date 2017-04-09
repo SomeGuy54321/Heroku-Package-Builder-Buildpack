@@ -78,7 +78,7 @@ function compress_do() {
     while [ 1 ]; do
         puts-step "$DO_WHAT_LABEL ${FULL_INPATH} to $DESTINATION"
         #do-debug "Running \"tar $TARFLAGS --use-compress-program '$COMPRESS_PROGRAM' $LAST_ARG\""
-        (set -x; tar $TARFLAGS --use-compress-program "'$COMPRESS_PROGRAM'" $LAST_ARG |& indent)
+        (set -x; tar $TARFLAGS --use-compress-program "'"$COMPRESS_PROGRAM"'" $LAST_ARG) |& indent
 
         # it might run out of memory and fail so reduce intensity and try again
         RTN_VAL=$?
