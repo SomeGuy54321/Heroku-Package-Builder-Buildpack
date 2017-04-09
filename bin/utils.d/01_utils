@@ -6,8 +6,7 @@ shopt -s extglob
 
 BUILD_DEBUG=0  # just so there isn't an error thrown when this is sourced, shoudl be overridden
 
-for v in $(compgen -v); do vv="$v[*]"; echo " ${vv}:"; echo "${!vv}" sed 's/^/     /'; done
-type $(which bash)
+for v in $(compgen -v); do vv="$v[*]"; echo " ${vv}:"; echo "${!vv}" | sed 's/^/     /'; done
 
 # Syntax sugar.
 indent() {
