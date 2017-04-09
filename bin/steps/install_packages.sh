@@ -39,13 +39,17 @@ function main() {
             # THIS PART MUST BE JUST BEFORE brew_do!
             local FORMULAS_VAR="PACKAGE_EXTRAS_formulas_${package}"
             local FORMULAS="${!FORMULAS_VAR}"
+            local INSTALL_INFO
             if [ ${#FORMULAS} -eq 0 ]; then
                 # if package name contains "-" the user should've replaced it with "__" in the yaml
                 FORMULAS=${package/__/-}
+                INSTALL_INFO=$FORMULAS
+            else
+                INSTALL_INFO="${package/__/-} from $FORMULAS"
             fi
 
             # do the thing
-            puts-step "Installing $package"
+            puts-step "Installing $INSTALL_INFO"
             brew_do install $FORMULAS $OPTIONS
             unset FORMULAS_VAR FORMULAS OPTIONS_VAR OPTIONS
 
