@@ -14,7 +14,24 @@ function countdown() {
         COLOR_POST='\033[39m';
     fi
     local ELAPSED_FMT=$(date --date=@$ELAPSED +'%M:%S.%2N')
-    echo -ne "${COLOR_PRE}[${ELAPSED_FMT}]${COLOR_POST}";
+    echo -e " ${COLOR_PRE}[${ELAPSED_FMT}]${COLOR_POST} $(countdown_postpend $1) ${@:2}";
 }
 
-countdown
+function countdown_postpend() {
+    case ${1:-0} in
+    0)
+        echo -n "       "
+    ;;
+    1)
+        echo -n " -----> "
+    ;;
+    2)
+        echo -n " !     "
+    ;;
+    *)
+        echo -n "       "
+    ;;
+    esac
+}
+
+countdown $@
