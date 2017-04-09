@@ -50,7 +50,7 @@ function main() {
                 run_user_script "$BUILD_DIR/$script"
             done
         else
-            REMAINING_PACKAGES="$REMAINING_PACKAGES\n- $package"
+            REMAINING_PACKAGES="$package\n$REMAINING_PACKAGES"
         fi
     done
 
@@ -73,7 +73,7 @@ function main() {
             brew_do reinstall $RFORMULAS
 
         else
-            REMAINING_RPACKAGES="$REMAINING_UPACKAGES\n- $rpackage"
+            REMAINING_RPACKAGES="$rpackage\n$REMAINING_UPACKAGES"
         fi
     done
 
@@ -96,7 +96,7 @@ function main() {
             brew_do uninstall $UFORMULAS
 
         else
-            REMAINING_UPACKAGES="$REMAINING_UPACKAGES\n- $upackage"
+            REMAINING_UPACKAGES="$upackage\n$REMAINING_UPACKAGES"
         fi
     done
 

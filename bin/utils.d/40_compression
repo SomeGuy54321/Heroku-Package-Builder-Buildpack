@@ -5,7 +5,7 @@ TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserv
 # But if brew has its own xz then it'll use that for compression.
 # Best to use the same one both times
 XZ="$(which xz)"; XZ=${XZ:-/usr/bin/xz}
-COMPRESS_PROGRAM="$XZ --extreme --verbose --threads=0"
+COMPRESS_PROGRAM="$XZ --verbose --threads=0"  #--extreme
 COMPRESSION_LEVEL_DEFAULT=9  # Runs 0..9, 9 = best and slowest compression, default is 6
 COMPRESSION_MAX_TRIES=4
 MAX_JOBS=$(grep --count ^processor /proc/cpuinfo)
@@ -76,7 +76,8 @@ function compress_do() {
     local THREADS_REDUCE_INCREMENT=$(job_reduce_increment)
     local TRY_NUM=0
     while [ 1 ]; do
-        do-debug "$DO_WHAT_LABEL ${FULL_INPATH} to $DESTINATION"
+        puts-step "$DO_WHAT_LABEL ${FULL_INPATH} to $DESTINATION"
+        do-debug "Running 'tar $TARFLAGS --use-compress-program "$COMPRESS_PROGRAM" $LAST_ARG'"
         tar $TARFLAGS --use-compress-program "$COMPRESS_PROGRAM" $LAST_ARG |& indent
 
         # it might run out of memory and fail so reduce intensity and try again
