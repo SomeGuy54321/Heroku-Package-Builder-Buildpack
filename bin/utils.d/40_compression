@@ -2,12 +2,13 @@
 
 # about checkpoints: https://www.gnu.org/software/tar/manual/html_section/tar_26.html
 # this lets the xz show its output on different lines
-TARFLAGS="--sparse --checkpoint=1000 --checkpoint-action=exec=echo --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --absolute-names --xattrs"
+# --checkpoint=1000 --checkpoint-action=exec=/tmp/trackxz.sh
+TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --absolute-names --xattrs"
 # We definitely use the system xz for decompression.
 # But if brew has its own xz then it'll use that for compression.
 # Best to use the same one both times
 XZ="$(which xz)"; XZ=${XZ:-/usr/bin/xz}
-COMPRESS_PROGRAM="$XZ --verbose --threads=0"  #--extreme
+COMPRESS_PROGRAM="$XZ --verbose --verbose --threads=0"  #--extreme
 COMPRESSION_LEVEL_DEFAULT=9  # Runs 0..9, 9 = best and slowest compression, default is 6
 COMPRESSION_MAX_TRIES=4
 MAX_JOBS=$(grep --count ^processor /proc/cpuinfo)
@@ -105,7 +106,9 @@ function compress_do() {
     local TRY_NUM=0
     while [ 1 ]; do
         puts-step "$DO_WHAT_LABEL ${FULL_INPATH} to $DESTINATION"
-        (set -x; tar ${TARFLAGS} --use-compress-program "$COMPRESS_PROGRAM" ${LAST_ARG}) #|& indent
+
+        echo -e '#!/usr/bin/env bash\ntail -n1 /tmp/.linuxbrew.tar.xz.log 2>/dev/null' >/tmp/trackxz.sh && chmod +x /tmp/trackxz.sh
+        (set -x; tar ${TARFLAGS} --use-compress-program "$COMPRESS_PROGRAM" ${LAST_ARG} >>/tmp/.linuxbrew.tar.xz.log) |& indent
 
         # it might run out of memory and fail so reduce intensity and try again
         RTN_VAL=$?
