@@ -49,6 +49,7 @@ function main() {
             local CONFIG_VAR="PACKAGE_EXTRAS_config_${package}[@]"
             for script in ${!CONFIG_VAR}; do
                 run_user_script "$BUILD_DIR/$script"
+                unset script
             done
         else
             REMAINING_PACKAGES="$package\n$REMAINING_PACKAGES"
