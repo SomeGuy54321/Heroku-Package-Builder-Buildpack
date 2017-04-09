@@ -25,7 +25,7 @@ function main() {
     local REMAINING_RPACKAGES
     for package in ${PACKAGE_EXTRAS_install[@]}; do
 
-        if [ $(time_remaining) -gt 0 ]; then
+        if [ $(time_remaining) -gt 60 ]; then
 
             # multiple options flags allowed so add [@]
             local OPTIONS_VAR="PACKAGE_EXTRAS_options_${package}[@]"

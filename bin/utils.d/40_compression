@@ -17,8 +17,8 @@ function compression_level_chooser() {
     local CURR_LEVEL=${2:-$COMPRESSION_LEVEL_DEFAULT}
 
     local TIME_LEFT=$(time_remaining)
-    # if < 1min remains then drop the compression level to min
-    if [ $TIME_LEFT -le 60 ]; then
+    # if < 2min remains then drop the compression level to min
+    if [ $TIME_LEFT -le 120 ]; then
         echo 0
     # if I've passed in a try number then I'm wanting to decrease it
     elif [ $TRY_NUM -gt 0 ]; then
