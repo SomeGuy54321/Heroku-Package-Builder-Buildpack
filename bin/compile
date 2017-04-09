@@ -14,7 +14,7 @@ set -eo pipefail #; set -o xtrace
 export LINUXBREW_COMMIT="d8c8b867b"
 #
 # Start time:
-export BUILD_START_TIME=$(date +'%s')
+export BUILD_START_TIME=$(date +'%s.%N')
 #
 # just so there isn't an error thrown when this is sourced, shoudl be overridden
 BUILD_DEBUG=0
@@ -142,10 +142,7 @@ puts-step "Clearing dyno's download cache"
 brew cleanup -s |& indent |& brew_quiet
 rm -rf $(brew --cache) |& indent |& brew_quiet
 
-# Note that PROFILE_PATH still refers to .profile.d in ORIG_BUILD_DIR so we wait til everythigns moved back
-# for some reason the brew executable ends up in /app/bin when followed by a Scala buildpack.
-# this is weird, this is a workaround:
-echo "alias brew='$(which brew)'" >>"$PROFILE_PATH"
+BREW_EXE_LOCATION="$(which brew)"
 
 # The brew .git directory breaks *again* when running an interactive session.
 # For now we'll tell the user how to fix it. Maybe we fix it ourselves in the future.
@@ -162,6 +159,11 @@ export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
 
 # Move all things in /app to BUILD_DIR (which will eventually be moved back)
 deep-mv $BUILD_DIR $ORIG_BUILD_DIR
+
+# Note that PROFILE_PATH still refers to .profile.d in ORIG_BUILD_DIR so we wait til everythigns moved back
+# for some reason the brew executable ends up in /app/bin when followed by a Scala buildpack.
+# this is weird, this is a workaround:
+echo "alias brew='$BREW_EXE_LOCATION'" >>"$PROFILE_PATH"
 
 ## Set context environment variables.
 set-env PATH "\$HOME/.linuxbrew/bin:\$HOME/.linuxbrew/sbin:\$PATH"

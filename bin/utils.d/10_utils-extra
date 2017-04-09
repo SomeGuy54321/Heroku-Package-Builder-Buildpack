@@ -137,21 +137,18 @@ function time_elapsed() {
 }
 
 function countdown() {
-#    set +o functrace
-#    shopt -u extdebug
     local COLOR_PRE=""
     local COLOR_POST=""
-    local CURR_TIME=$(date +'%s')
-    local START_TIME=${BUILD_START_TIME:-$(date +'%s')}
-    local ELAPSED=$(( $CURR_TIME - $START_TIME ))
-    if [ ${ELAPSED} -gt ${BUILD_MAX_RUNTIME:-900} ]; then
+    local START_TIME=${BUILD_START_TIME:-$(date +'%s.%N')}
+    local CURR_TIME=$(date +'%s.%N')
+    #local ELAPSED=$(( $CURR_TIME - $START_TIME ))
+    local ELAPSED=$(awk '{printf "%f", $1 - $2}' <<< "$CURR_TIME $START_TIME")
+    if [ ${ELAPSED/.*/} -gt ${BUILD_MAX_RUNTIME:-900} ]; then
         COLOR_PRE='\033[31;1;148m';
         COLOR_POST='\033[39m';
     fi
-    local ELAPSED_FMT=$(date --date=@$ELAPSED +'%M:%S')
-    (echo -ne "${COLOR_PRE}[${ELAPSED_FMT}]${COLOR_POST}");
-#    set -o functrace
-#    shopt -s extdebug
+    local ELAPSED_FMT=$(date --date=@$ELAPSED +'%M:%S.%2N')
+    echo -e "${COLOR_PRE}[${ELAPSED_FMT}]${COLOR_POST}";
 }
 
 function time_remaining() {
