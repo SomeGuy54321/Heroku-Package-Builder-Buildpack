@@ -14,12 +14,12 @@ indent() {
     # http://stackoverflow.com/a/9113604/4106215
     #RE="s/^/\x1B[1G       /"
     #RE="s/^/\r       /"
-    RE="s/^/ countdown \"       $@\"/e" && \
-    sed $SED_FLAG "$RE" 2>/dev/null || \
-    RE="s/^/ $(countdown)      /" && \
-    sed $SED_FLAG "$RE" 2>/dev/null || \
-    RE="s/^/       /" && \
-    sed $SED_FLAG "$RE" 2>/dev/null
+    RE="s/^/ countdown        /e" && \
+    sed $SED_FLAG "$RE" 2>/dev/null #|| \
+#    RE="s/^/ $(countdown)      /" && \
+#    sed $SED_FLAG "$RE" 2>/dev/null || \
+#    RE="s/^/       /" && \
+#    sed $SED_FLAG "$RE" 2>/dev/null
 }
 
 # Clean up pip output
@@ -30,16 +30,16 @@ cleanup() {
 
 # Buildpack Steps.
 function puts-step (){
-    RE="s/^/ countdown \"-----> $@\"/e" && \
-    sed $SED_FLAG "$RE" 2>/dev/null || \
+#    RE="s/^/ countdown \"-----> $@\"/e" && \
+#    sed $SED_FLAG "$RE" 2>/dev/null || \
     echo " $(countdown) -----> $@" 2>/dev/null || \
     echo " -----> $@"
 }
 
 # Buildpack Warnings.
 function puts-warn (){
-    RE="s/^/ countdown \" !     $@\"/e" && \
-    sed $SED_FLAG "$RE" 2>/dev/null || \
+#    RE="s/^/ countdown \" !     $@\"/e" && \
+#    sed $SED_FLAG "$RE" 2>/dev/null || \
     echo " $(countdown) !     $@" 2>/dev/null || \
     echo " !     $@"
 }
