@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-TARFLAGS="--sparse --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --absolute-names --xattrs"
+# about checkpoints: https://www.gnu.org/software/tar/manual/html_section/tar_26.html
+# this lets the xz show its output on different lines
+TARFLAGS="--sparse --checkpoint=200 --checkpoint-action=exec='echo' --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --absolute-names --xattrs"
 # We definitely use the system xz for decompression.
 # But if brew has its own xz then it'll use that for compression.
 # Best to use the same one both times
@@ -37,6 +39,10 @@ function compression_level_chooser() {
         USE_THREADS=${USE_THREADS}
         USE_COMPRESSION=${USE_COMPRESSION}
         USE_XTREME=${USE_XTREME}
+        # Maybe useful xz args:
+        #   --memlimit-decompress=M
+        #   --memlimit-compress=N
+        #   --memlimit=X (same as --memlimit-compress=X and --memlimit-decompress=X)
     fi
 
     # if < 2min remains then drop the compression level to min
