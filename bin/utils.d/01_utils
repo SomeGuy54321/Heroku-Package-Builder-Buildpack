@@ -10,7 +10,8 @@ BUILD_DEBUG=0  # just so there isn't an error thrown when this is sourced, shoud
 indent() {
     # consider different annotations for stdout and stderr
     # http://stackoverflow.com/a/9113604/4106215
-    RE="s/^/\x1B[1G       /"
+    #RE="s/^/\x1B[1G       /"
+    RE="s/^/       /"
     sed $SED_FLAG "$RE"
 }
 
