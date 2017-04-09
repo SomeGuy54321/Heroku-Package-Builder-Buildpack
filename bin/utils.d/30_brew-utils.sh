@@ -48,7 +48,7 @@ function brew_do() {
             if [ ${#DEPS} -gt 0 ]; then
                 puts-step "Incrementally installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | tr ' ' ',')"
                 for dep in ${DEPS}; do
-                    brew_do ${ACTION} ${PACKAGE}
+                    brew_do ${ACTION} ${dep}
                 done
             fi
         fi
