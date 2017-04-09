@@ -43,6 +43,7 @@ function main() {
             # do the thing
             puts-step "Installing $package"
             brew_do install $FORMULAS $OPTIONS
+            unset FORMULAS_VAR FORMULAS OPTIONS_VAR OPTIONS
 
             # multiple scripts can run
             local CONFIG_VAR="PACKAGE_EXTRAS_config_${package}[@]"
