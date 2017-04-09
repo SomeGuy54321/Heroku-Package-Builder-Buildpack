@@ -5,7 +5,7 @@ shopt -s extglob
 
 # this should hopefully put the adjacent bin directory in the path when this is sourced
 export ORIG_PATH=$PATH
-export PATH="$(pwd)/$BASH_SOURCE/bin:$PATH"
+export PATH="$(dirname $BASH_SOURCE)/bin:$PATH"
 echo $PATH
 
 # Syntax sugar.
