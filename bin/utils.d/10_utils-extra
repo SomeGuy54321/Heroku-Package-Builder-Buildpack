@@ -149,7 +149,7 @@ function countdown() {
         COLOR_POST='\033[39m';
     fi
     local ELAPSED_FMT=$(date --date=@$ELAPSED +'%M:%S')
-    (echo -ne "${COLOR_PRE}[${ELAPSED_FMT}]${COLOR_POST} -----> ");
+    (echo -ne "${COLOR_PRE}[${ELAPSED_FMT}]${COLOR_POST}");
 #    set -o functrace
 #    shopt -s extdebug
 }
