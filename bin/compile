@@ -35,7 +35,7 @@ unset GIT_DIR
 # Syntactic starch (more complex)
 # Note '-d' doesnt match hidden dirs
 # -p + grep prevents sourcing of directories
-for f in $(ls -dp $BIN_DIR/utils.d/* | grep -vE '/$'); do source $f; done
+for f in $(ls -dp ${BIN_DIR}/utils.d/* | grep -vE '/$'); do source ${f}; done
 
 # debug settings
 export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
@@ -54,12 +54,12 @@ fi
 
 
 export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
-if [ $PACKAGE_BUILDER_HOMEBREW_VERBOSE -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
+if [ ${PACKAGE_BUILDER_HOMEBREW_VERBOSE} -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
 export_configvar PACKAGE_BUILDER_INSTALL_QUIET 0
 
 
 # check if i got the right PATH form last buildpack
-do-debug "PREV_BUILDPACK_PATH when starting: '$PREV_BUILDPACK_PATH'"
+do-debug "PREV_BUILDPACK_PATH when starting: '${PREV_BUILDPACK_PATH}'"
 
 
 # get things from CONFIG_DIR
@@ -76,33 +76,33 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_GCC 0
 
 # setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
 export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 10
-export PACKAGE_BUILDER_MAX_BUILDTIME=$(min $PACKAGE_BUILDER_MAX_BUILDTIME 14)
-PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS=$(( $PACKAGE_BUILDER_MAX_BUILDTIME * 60 ))
+export PACKAGE_BUILDER_MAX_BUILDTIME=$(min ${PACKAGE_BUILDER_MAX_BUILDTIME} 14)
+PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS=$(( ${PACKAGE_BUILDER_MAX_BUILDTIME} * 60 ))
 CURRENT_SECONDS=$(date +'%s')
-export BUILD_MAX_RUNTIME=$(($PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS + $CURRENT_SECONDS))
+export BUILD_MAX_RUNTIME=$((${PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS} + ${CURRENT_SECONDS}))
 
 
 # use epoch date to hopefully control the order in which the profile.d scripts are executed
 #export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
 # try to make this get sourced last with special characters
 # Make profile.d directory. if [ -d /.dir ] doesnt work for hidden dirs
-export PROFILE_PATH="$BUILD_DIR/.profile.d/ραckage_builder.sh"
-[ $(ls -A $PROFILE_PATH 2>/dev/null | grep --count .) -eq 0 ] && mkdir -p $(dirname $PROFILE_PATH) || true
+export PROFILE_PATH="${BUILD_DIR}/.profile.d/ραckage_builder.sh"
+[ $(ls -A ${PROFILE_PATH} 2>/dev/null | grep --count .) -eq 0 ] && mkdir -p $(dirname ${PROFILE_PATH}) || true
 
 
 # Move all code from BUILD_DIR to APP_DIR, make APP_DIR the new BUILD_DIR, and enter the new BUILD_DIR
 APP_DIR="/app"
-deep-mv $BUILD_DIR $APP_DIR
-ORIG_BUILD_DIR=$BUILD_DIR
-BUILD_DIR=$APP_DIR
-cd $BUILD_DIR
+deep-mv ${BUILD_DIR} ${APP_DIR}
+ORIG_BUILD_DIR=${BUILD_DIR}
+BUILD_DIR=${APP_DIR}
+cd ${BUILD_DIR}
 
 
 ### START Linuxbrew-specific stuff #####################################################################################
 # Get my specific cache
-ORIG_CACHE_DIR=$CACHE_DIR
-CACHE_DIR=$CACHE_DIR/packagebuilder_cache
-mkdir -p $CACHE_DIR
+ORIG_CACHE_DIR=${CACHE_DIR}
+CACHE_DIR=${CACHE_DIR}/packagebuilder_cache
+mkdir -p ${CACHE_DIR}
 LINUXBREW_DIRS=".linuxbrew .cache"
 CURR_DIR="$PWD"
 
@@ -151,16 +151,16 @@ BREW_EXE_LOCATION="$(which brew)"
 echo 'echo -e "If you are in a shell and brew keeps saying \"fatal: Not a git repository\" then run this:\n> find ~/.linuxbrew -type d -name .git -exec rm -rf \"{}\" \; ; brew update --force"' >> $HOME/.bashrc
 
 # reset to default locations
-export HOME=$OLD_HOME; do-debug "HOME reset to '$HOME'"
-export PATH=$OLD_PATH; do-debug "PATH reset to '$PATH'"
-export MANPATH=$OLD_MANPATH; do-debug "MANPATH reset to '$MANPATH'"
-export INFOPATH=$OLD_INFOPATH; do-debug "INFOPATH reset to '$INFOPATH'"
+export HOME=${OLD_HOME}; do-debug "HOME reset to '$HOME'"
+export PATH=${OLD_PATH}; do-debug "PATH reset to '$PATH'"
+export MANPATH=${OLD_MANPATH}; do-debug "MANPATH reset to '$MANPATH'"
+export INFOPATH=${OLD_INFOPATH}; do-debug "INFOPATH reset to '$INFOPATH'"
 
 ### END Linuxbrew-specific stuff #######################################################################################
 
 
 # Move all things in /app to BUILD_DIR (which will eventually be moved back)
-deep-mv $BUILD_DIR $ORIG_BUILD_DIR
+deep-mv ${BUILD_DIR} ${ORIG_BUILD_DIR}
 
 # Note that PROFILE_PATH still refers to .profile.d in ORIG_BUILD_DIR so we wait til everythigns moved back
 # for some reason the brew executable ends up in /app/bin when followed by a Scala buildpack.
@@ -171,12 +171,12 @@ echo "alias brew='$BREW_EXE_LOCATION'" >>"$PROFILE_PATH"
 set-env PATH "\$HOME/.linuxbrew/bin:\$HOME/.linuxbrew/sbin:\$PATH"
 set-env MANPATH "\$HOME/.linuxbrew/share/man:\$MANPATH"
 set-env INFOPATH "\$HOME/.linuxbrew/share/info:\$INFOPATH"
-set-default-env HOMEBREW_NO_ANALYTICS $HOMEBREW_NO_ANALYTICS
+set-default-env HOMEBREW_NO_ANALYTICS ${HOMEBREW_NO_ANALYTICS}
 #unexport_all_configvars
 
 
 # writing the export file dynamically
-cat <<EOF > $BIN_DIR/../export
+cat <<EOF > ${BIN_DIR}/../export
 
 export PREV_BUILDPACK_PATH=$PATH
 
