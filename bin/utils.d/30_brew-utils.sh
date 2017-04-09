@@ -46,9 +46,14 @@ function brew_do() {
         if [ ${ACTION} = "install" ]; then
             local DEPS=$(brew deps ${PACKAGE})
             if [ ${#DEPS} -gt 0 ]; then
-                puts-step "Incrementally installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | tr ' ' ',')"
+                puts-step "Incrementally installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | sed 's/ /, /g')"
                 for dep in ${DEPS}; do
-                    brew_do ${ACTION} ${dep}
+                    IS_INSTALLED=$(brew_checkfor ${dep})
+                    if [ ${IS_INSTALLED} -eq 0 ]; then
+                        brew_do ${ACTION} ${dep}
+                    else
+                        puts-step "${dep} has already been installed by Linuxbrew"
+                    fi
                 done
             fi
         fi
