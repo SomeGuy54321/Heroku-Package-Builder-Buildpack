@@ -33,21 +33,19 @@ unset GIT_DIR
 # Note '-d' doesnt match hidden dirs
 for f in $(ls -d $BIN_DIR/utils.d/*); do source $f; done
 
-# set prompts
-#exec 1> >(time_elapsed_piped)
-export PS1='1[$(time_elapsed)]'
-export PS2='2[$(time_elapsed)]'
-export PS3='3[$(time_elapsed)]'
-export PS4='[$(time_elapsed)]       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-export PROMPT_COMMAND='echo -n P[$(time_elapsed)]'
-
 # debug settings
 export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
 export_configvar BUILDPACK_XTRACE 0  # print all commands to log
-if [ $BUILDPACK_XTRACE -gt 0 ]; then
-    set -o xtrace
+
+# set prompts
+if [ ${BUILDPACK_XTRACE:-0} -eq 0 ]; then
+    set +o xtrace  # ensure xtrace isn't on
+    set +o functrace  # prevent subshells from getting crazy values
+    shopt -s extdebug
+    trap countdown DEBUG
 else
-    set +o xtrace  # print all commands to log, plus filename+linenum, or not
+    export PS4='[$(time_elapsed)]       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+    set -o xtrace
 fi
 
 

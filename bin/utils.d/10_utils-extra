@@ -136,6 +136,24 @@ function time_elapsed() {
     unset ELAPSED
 }
 
+function countdown() {
+#    set +o functrace
+#    shopt -u extdebug
+    local COLOR_PRE=""
+    local COLOR_POST=""
+    local CURR_TIME=$(date +'%s')
+    local START_TIME=${BUILD_START_TIME:-$(date +'%s')}
+    local ELAPSED=$(( $CURR_TIME - $START_TIME ))
+    if [ ${ELAPSED} -gt ${BUILD_MAX_RUNTIME:-900} ]; then
+        COLOR_PRE='\033[31;1;148m';
+        COLOR_POST='\033[39m';
+    fi
+    local ELAPSED_FMT=$(date --date=@$ELAPSED +'%M:%S')
+    (echo -ne "${COLOR_PRE}[${ELAPSED_FMT}]${COLOR_POST} --------> ");
+#    set -o functrace
+#    shopt -s extdebug
+}
+
 function time_remaining() {
     echo $(( $BUILD_MAX_RUNTIME - $(date +'%s') ))
 }
