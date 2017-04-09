@@ -15,7 +15,7 @@ indent() {
     #RE="s/^/\x1B[1G       /"
     #RE="s/^/\r       /"
     #RE="s/^/       /"
-    RE="s/^/ countdown        /e"
+    RE="s/^/ countdown \"       $@\"/e"
     sed $SED_FLAG "$RE"
 }
 
@@ -27,7 +27,7 @@ cleanup() {
 
 # Buildpack Steps.
 function puts-step (){
-    RE="s/^/ countdown -----> /e"
+    RE="s/^/ countdown \"-----> $@\"/e"
     sed $SED_FLAG "$RE"
 #    echo " $(countdown) -----> $@"
     #echo "$@"
@@ -35,7 +35,7 @@ function puts-step (){
 
 # Buildpack Warnings.
 function puts-warn (){
-    RE="s/^/ countdown  !     /e"
+    RE="s/^/ countdown \" !     $@\"/e"
     sed $SED_FLAG "$RE"
 #    echo " $(countdown) !     $@"
 }
