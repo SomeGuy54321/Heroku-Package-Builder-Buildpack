@@ -45,7 +45,7 @@ function brew_do() {
 
     local ACTION=$1
     local PACKAGE=$2
-    local FLAGS=$3
+    local FLAGS=${@:3}
     local JOB_REDUCE_MAX_TRIES=${4:-$JOB_REDUCE_MAX_TRIES}
 
     export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
