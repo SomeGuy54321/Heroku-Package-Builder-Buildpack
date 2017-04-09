@@ -23,6 +23,7 @@ cleanup() {
 # Buildpack Steps.
 function puts-step (){
     echo "-----> $@"
+    echo "$@"
 }
 
 # Buildpack Warnings.
