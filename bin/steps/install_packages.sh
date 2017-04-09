@@ -20,10 +20,9 @@ function main() {
 
     puts-step "Parsing package-extras.yaml"
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
-    #do-debug "Parsed YAML variables:"
-    #debug_heavy "PACKAGE_EXTRAS_"
     local REMAINING_PACKAGES
     local REMAINING_UPACKAGES
+    local REMAINING_RPACKAGES
     for package in ${PACKAGE_EXTRAS_install[@]}; do
 
         if [ $(time_remaining) -gt 0 ]; then
