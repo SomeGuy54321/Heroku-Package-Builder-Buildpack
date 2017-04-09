@@ -31,14 +31,14 @@ cleanup() {
 function puts-step (){
     # echo " -----> $@"
     RE='s/^/ -----> /; e countdown;'
-    sed $SED_FLAG "$RE" #2>/dev/null
+    echo $@ | sed $SED_FLAG "$RE" #2>/dev/null
 }
 
 # Buildpack Warnings.
 function puts-warn (){
     # echo " !     $@"
     RE='s/^/ !     /; e countdown;'
-    sed $SED_FLAG "$RE" #2>/dev/null
+    echo $@ | sed $SED_FLAG "$RE" #2>/dev/null
 }
 
 # Usage: $ set-env key value
