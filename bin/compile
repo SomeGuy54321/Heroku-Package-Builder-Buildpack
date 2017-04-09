@@ -34,7 +34,8 @@ unset GIT_DIR
 
 # Syntactic starch (more complex)
 # Note '-d' doesnt match hidden dirs
-for f in $(ls -d $BIN_DIR/utils.d/*); do source $f; done
+# -p + grep prevents sourcing of directories
+for f in $(ls -dp $BIN_DIR/utils.d/* | grep -vE '/$'); do source $f; done
 
 # debug settings
 export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
@@ -62,8 +63,6 @@ do-debug "PREV_BUILDPACK_PATH when starting: '$PREV_BUILDPACK_PATH'"
 
 
 # get things from CONFIG_DIR
-export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 10
-export PACKAGE_BUILDER_MAX_BUILDTIME=$(min $PACKAGE_BUILDER_MAX_BUILDTIME 14)
 export_configvar BUILDCACHE ".heroku"
 export_configvar PACKAGE_BUILDER_NOBUILDFAIL 0  # dont fail if a package fails to install
 export_configvar HOMEBREW_NO_ANALYTICS 0
@@ -75,6 +74,13 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_GCC 0
 #export_configvar PACKAGE_BUILDER_NOINSTALL_PYTHON 0
 #export_configvar PACKAGE_BUILDER_NOINSTALL_DEFAULTS 0
 
+# setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
+export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 10
+export PACKAGE_BUILDER_MAX_BUILDTIME=$(min $PACKAGE_BUILDER_MAX_BUILDTIME 14)
+PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS=$(( $PACKAGE_BUILDER_MAX_BUILDTIME * 60 ))
+CURRENT_SECONDS=$(date +'%s')
+export BUILD_MAX_RUNTIME=$(($PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS + $CURRENT_SECONDS))
+
 
 # use epoch date to hopefully control the order in which the profile.d scripts are executed
 #export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
@@ -82,12 +88,6 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_GCC 0
 # Make profile.d directory. if [ -d /.dir ] doesnt work for hidden dirs
 export PROFILE_PATH="$BUILD_DIR/.profile.d/ραckage_builder.sh"
 [ $(ls -A $PROFILE_PATH 2>/dev/null | grep --count .) -eq 0 ] && mkdir -p $(dirname $PROFILE_PATH) || true
-
-
-# setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
-PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS=$(( $PACKAGE_BUILDER_MAX_BUILDTIME * 60 ))
-CURRENT_SECONDS=$(date +'%s')
-export BUILD_MAX_RUNTIME=$(($PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS + $CURRENT_SECONDS))
 
 
 # Move all code from BUILD_DIR to APP_DIR, make APP_DIR the new BUILD_DIR, and enter the new BUILD_DIR

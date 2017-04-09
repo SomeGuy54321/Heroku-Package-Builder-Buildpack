@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
 shopt -s extglob
-
 [ $(uname) == "Darwin" ] && SED_FLAG='-l' || SED_FLAG='-u'
+
+# this should hopefully put the adjacent bin directory in the path when this is sourced
+export ORIG_PATH=$PATH
+export PATH="$(pwd)/$BASH_SOURCE/bin:$PATH"
+echo $PATH
 
 # Syntax sugar.
 indent() {
