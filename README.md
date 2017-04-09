@@ -7,17 +7,14 @@ Use this by finding the package you want [here](http://brewformulas.org/search?u
 ```
 packages:
   - postgresql
-  - strace
-  - linux-pam
+  - man-db
   - openssh
 uninstall:
   - gnutls
 reinstall:
   - xz
 formulas:
-  strace: https://github.com/Linuxbrew/homebrew-extra/blob/master/Formula/strace.rb
-  linux-pam: linuxbrew/extra/linux-pam
-  openssh: homebrew/dupes/openssh
+  man-db: https://raw.githubusercontent.com/Linuxbrew/homebrew-extra/master/Formula/man-db.rb
 options:
   openssh: 
     - with-ldns
@@ -48,6 +45,7 @@ YAML Setup
   - Run `heroku run brew search <packagename> -a <appname>`
   - If it has a special path like `.linuxbrew/dupes/<packagename>` then add this to your `formulas` section for this package
   - the key must correspond to an install/uninstall/reinstall package
+- Some Linux-specific formulas can be found [here](https://github.com/Linuxbrew/homebrew-extra)
 ##### options
 - OPTIONAL
 - Command line flags to use when building the package
