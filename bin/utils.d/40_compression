@@ -2,7 +2,7 @@
 
 # about checkpoints: https://www.gnu.org/software/tar/manual/html_section/tar_26.html
 # this lets the xz show its output on different lines
-TARFLAGS="--sparse --checkpoint=200 --checkpoint-action=exec='echo' --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --absolute-names --xattrs"
+TARFLAGS="--sparse --checkpoint=1000 --checkpoint-action=exec=echo --check-links --same-permissions --same-owner --atime-preserve=system --delay-directory-restore --absolute-names --xattrs"
 # We definitely use the system xz for decompression.
 # But if brew has its own xz then it'll use that for compression.
 # Best to use the same one both times
