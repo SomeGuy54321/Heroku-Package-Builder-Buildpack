@@ -6,7 +6,7 @@ shopt -s extglob
 # this should hopefully put the adjacent bin directory in the path when this is sourced
 export ORIG_PATH=$PATH
 export PATH="$(dirname $BASH_SOURCE)/bin:$PATH"
-echo $PATH
+#echo $PATH
 
 # Syntax sugar.
 indent() {
@@ -14,9 +14,12 @@ indent() {
     # http://stackoverflow.com/a/9113604/4106215
     #RE="s/^/\x1B[1G       /"
     #RE="s/^/\r       /"
-    #RE="s/^/       /"
-    RE="s/^/ countdown \"       $@\"/e"
-    sed $SED_FLAG "$RE"
+    RE="s/^/ countdown \"       $@\"/e" && \
+    sed $SED_FLAG "$RE" 2>/dev/null || \
+    RE="s/^/ $(countdown)      /" && \
+    sed $SED_FLAG "$RE" 2>/dev/null || \
+    RE="s/^/       /" && \
+    sed $SED_FLAG "$RE" 2>/dev/null
 }
 
 # Clean up pip output
@@ -27,17 +30,18 @@ cleanup() {
 
 # Buildpack Steps.
 function puts-step (){
-    RE="s/^/ countdown \"-----> $@\"/e"
-    sed $SED_FLAG "$RE"
-#    echo " $(countdown) -----> $@"
-    #echo "$@"
+    RE="s/^/ countdown \"-----> $@\"/e" && \
+    sed $SED_FLAG "$RE" 2>/dev/null || \
+    echo " $(countdown) -----> $@" 2>/dev/null || \
+    echo " -----> $@"
 }
 
 # Buildpack Warnings.
 function puts-warn (){
-    RE="s/^/ countdown \" !     $@\"/e"
-    sed $SED_FLAG "$RE"
-#    echo " $(countdown) !     $@"
+    RE="s/^/ countdown \" !     $@\"/e" && \
+    sed $SED_FLAG "$RE" 2>/dev/null || \
+    echo " $(countdown) !     $@" 2>/dev/null || \
+    echo " !     $@"
 }
 
 # Usage: $ set-env key value
