@@ -15,7 +15,7 @@ indent() {
     #RE="s/^/\x1B[1G       /"
     #RE="s/^/\r       /"
     RE="s/^/ countdown        /e" && \
-    sed $SED_FLAG "$RE" 2>/dev/null #|| \
+    sed $SED_FLAG "$RE" #2>/dev/null || \
 #    RE="s/^/ $(countdown)      /" && \
 #    sed $SED_FLAG "$RE" 2>/dev/null || \
 #    RE="s/^/       /" && \
