@@ -10,22 +10,44 @@ COMPRESSION_LEVEL_DEFAULT=9  # Runs 0..9, 9 = best and slowest compression, defa
 COMPRESSION_MAX_TRIES=4
 MAX_JOBS=$(grep --count ^processor /proc/cpuinfo)
 
+function decompress_to_builddir() {
+    local TARFLAGS="--remove-files --overwrite $TARFLAGS"
+    local COMPRESS_PROGRAM="$COMPRESS_PROGRAM -$(compression_level_chooser)"
+    compress_do extract "$1" "$TARFLAGS" "$COMPRESS_PROGRAM" ${COMPRESSION_MAX_TRIES}
+}
 
+function compress_to_cache() {
+    local TARFLAGS=" $TARFLAGS"
+    local COMPRESS_PROGRAM="$COMPRESS_PROGRAM -$(compression_level_chooser)"
+    compress_do create "$1" "$TARFLAGS" "$COMPRESS_PROGRAM" ${COMPRESSION_MAX_TRIES}
+}
 
 function compression_level_chooser() {
     local TRY_NUM=${1:-0}
     local CURR_LEVEL=${2:-$COMPRESSION_LEVEL_DEFAULT}
-
+    local SAFE_JOBS_NUM=${3:-$MAX_JOBS}
     local TIME_LEFT=$(time_remaining)
+    local SIZE2COMPRESS=$(du --max-depth=0 $4 2>/dev/null || echo 0)
+
+    local USE_THREADS
+    local USE_COMPRESSION
+    local USE_XTREME
+    if [ 0 ]; then
+        # need a smart way to choose arguments
+        USE_THREADS=${USE_THREADS}
+        USE_COMPRESSION=${USE_COMPRESSION}
+        USE_XTREME=${USE_XTREME}
+    fi
+
     # if < 2min remains then drop the compression level to min
-    if [ $TIME_LEFT -le 120 ]; then
+    if [ ${TIME_LEFT} -le 120 ]; then
         echo 0
     # if I've passed in a try number then I'm wanting to decrease it
-    elif [ $TRY_NUM -gt 0 ]; then
+    elif [ ${TRY_NUM} -gt 0 ]; then
         max 0 $(( $CURR_LEVEL - 1 ))
     # else I'm pretty much just accessing the default compression level
     else
-        max 0 $CURR_LEVEL
+        max 0 ${CURR_LEVEL}
     fi
 }
 
@@ -44,7 +66,7 @@ function compress_do() {
     declare -i MAX_TRIES=$5
 
     if [ ${#MAX_TRIES} -eq 0 ]; then
-        MAX_TRIES=$COMPRESSION_MAX_TRIES
+        MAX_TRIES=${COMPRESSION_MAX_TRIES}
     fi
 
     local BASENAME=$(basename "$INPATH")
@@ -72,94 +94,30 @@ function compress_do() {
         return 1
     fi
 
-    local JOBS=$MAX_JOBS
+    local JOBS=${MAX_JOBS}
     local THREADS_REDUCE_INCREMENT=$(job_reduce_increment)
     local TRY_NUM=0
     while [ 1 ]; do
         puts-step "$DO_WHAT_LABEL ${FULL_INPATH} to $DESTINATION"
-        #do-debug "Running \"tar $TARFLAGS --use-compress-program '$COMPRESS_PROGRAM' $LAST_ARG\""
-        (set -x; tar $TARFLAGS --use-compress-program "$COMPRESS_PROGRAM" $LAST_ARG) |& indent
+        (set -x; tar ${TARFLAGS} --use-compress-program "$COMPRESS_PROGRAM" ${LAST_ARG}) |& indent
 
         # it might run out of memory and fail so reduce intensity and try again
         RTN_VAL=$?
         if [ $RTN_VAL -gt 0 ] && [ $TRY_NUM -le $MAX_TRIES ]; then
             TRY_NUM=$(( $TRY_NUM + 1 ))
-            JOBS=$(max 1 $(( $JOBS - $THREADS_REDUCE_INCREMENT )))
-            COMP_LEVEL=$(compression_level_chooser $TRY_NUM)
+            JOBS=$(max 1 $(( ${JOBS} - ${THREADS_REDUCE_INCREMENT} )))
+            COMP_LEVEL=$(compression_level_chooser ${TRY_NUM})
             # remove extreme compression
             COMPRESS_PROGRAM=${COMPRESS_PROGRAM/--extreme/}
             # reduce number of threads
-            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/\s\?--threads=[0-9]*\s\?/ --threads=${JOBS:-0} /")
+            COMPRESS_PROGRAM=$(echo ${COMPRESS_PROGRAM} | sed -e "s/\s\?--threads=[0-9]*\s\?/ --threads=${JOBS:-0} /")
             # rethink compression level
-            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/\s\?-[0-9]\b\s\?/ -${COMP_LEVEL:-9} /")
+            COMPRESS_PROGRAM=$(echo ${COMPRESS_PROGRAM} | sed -e "s/\s\?-[0-9]\b\s\?/ -${COMP_LEVEL:-9} /")
         else
             set -e  # exit if error
-            return $RTN_VAL
+            return ${RTN_VAL}
             break
         fi
     done
     set -e  # exit if error
 }
-
-function decompress_to_builddir() {
-    local TARFLAGS="--remove-files --overwrite $TARFLAGS"
-    local COMPRESS_PROGRAM="$COMPRESS_PROGRAM -$(compression_level_chooser)"
-    compress_do extract "$1" "$TARFLAGS" "$COMPRESS_PROGRAM" $COMPRESSION_MAX_TRIES
-}
-
-function compress_to_cache() {
-    local TARFLAGS=" $TARFLAGS"
-    local COMPRESS_PROGRAM="$COMPRESS_PROGRAM -$(compression_level_chooser)"
-    compress_do create "$1" "$TARFLAGS" "$COMPRESS_PROGRAM" $COMPRESSION_MAX_TRIES
-}
-
-#function decompress_to_builddir() {
-#    local INDIR="$1"
-#    local BASENAME=$(basename "$INDIR")
-#    local DIRNAME=$(cd $(dirname "$INDIR"); pwd)
-#    local FULL_INDIR="$DIRNAME/$BASENAME"
-#    local TARFLAGS="--remove-files --overwrite $TARFLAGS"
-#
-#    do-debug "Decompressing ${FULL_INDIR} into ${BUILD_DIR}"
-#    tar --extract               \
-#        --file ${FULL_INDIR} \
-#        $TARFLAGS \
-#        --use-compress-program="$COMPRESS_PROGRAM" \
-#        --directory=${BUILD_DIR} \
-#    |& indent
-#}
-
-#function compress_to_cache() {
-#    local INDIR="$1"
-#    local MAX_TRIES=$2
-#
-#    [ ${#MAX_TRIES} -eq 0 ] && MAX_TRIES=$COMPRESSION_MAX_TRIES || true
-#    COMPRESSION_JOB_REDUCE_INCREMENT=$(job_reduce_increment)
-#    local JOBS=$COMPRESSION_JOBS
-#
-#    local BASENAME=$(basename "$INDIR")
-#    local DIRNAME=$(cd $(dirname "$INDIR"); pwd)
-#    local FULL_INDIR="$DIRNAME/$BASENAME"
-#    local TARFLAGS=" $TARFLAGS"
-#    local TRY_NUM=0
-#
-#    while [ 1 ]; do
-#        do-debug "Compressing ${FULL_INDIR} to ${CACHE_DIR}/${BASENAME}.tar.xz"
-#        tar --create               \
-#            --file ${CACHE_DIR}/${BASENAME}.tar.xz \
-#            $TARFLAGS \
-#            --use-compress-program="$COMPRESS_PROGRAM" \
-#            ${FULL_INDIR} \
-#        |& indent
-#
-#        # it might run out of memory and fail so reduce intensity and try again
-#        if [ $? -gt 0 ] && [ $TRY_NUM -le $MAX_TRIES ]; then
-#            TRY_NUM=$(( $TRY_NUM + 1 ))
-#            JOBS=$(max 1 $(( $JOBS - $COMPRESSION_JOB_REDUCE_INCREMENT )))
-#            COMPRESS_PROGRAM="${COMPRESS_PROGRAM/--extreme/}"
-#            COMPRESS_PROGRAM=$(echo $COMPRESS_PROGRAM | sed -e "s/--threads=[0-9]*\s*/--threads=$JOBS /")
-#        else
-#            break
-#        fi
-#    done
-#}

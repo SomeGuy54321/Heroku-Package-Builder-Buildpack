@@ -18,27 +18,26 @@ indent() {
     #     RE="s/^/countdown 0 \"$@\"/e"
     #     RE="s/^/ $(countdown)      /"
     RE='s/^/        /; e countdown;'
-    sed $SED_FLAG "$RE" #2>/dev/null
-}
-
-# Clean up pip output
-cleanup() {
-    do-debug "Running cleanup()"
-    sed $SED_FLAG -e 's/\.\.\.\+/.../g' | sed $SED_FLAG '/already satisfied/Id' | sed $SED_FLAG -e '/Overwriting/Id' |  sed $SED_FLAG -e '/python executable/Id' | sed $SED_FLAG -e '/no previously-included files/Id'
+    sed $SED_FLAG "$RE"
 }
 
 # Buildpack Steps.
 function puts-step (){
     # echo " -----> $@"
     RE='s/^/ -----> /; e countdown;'
-    echo $@ | sed $SED_FLAG "$RE" #2>/dev/null
+    echo $@ | sed $SED_FLAG "$RE"
 }
 
 # Buildpack Warnings.
 function puts-warn (){
     # echo " !     $@"
     RE='s/^/ !     /; e countdown;'
-    echo $@ | sed $SED_FLAG "$RE" #2>/dev/null
+    echo $@ | sed $SED_FLAG "$RE"
+}
+
+# Buildpack Commands.
+puts-cmd() {
+  echo "     $ $@"
 }
 
 # Usage: $ set-env key value
@@ -72,12 +71,6 @@ function deep-mv (){
 
   rm -fr $1/!(tmp)
   find -H $1 -maxdepth 1 -name '.*' -a \( -type d -o -type f -o -type l \) -exec rm -fr '{}' \;
-}
-
-
-# Buildpack Commands.
-puts-cmd() {
-  echo "     $ $@"
 }
 
 
