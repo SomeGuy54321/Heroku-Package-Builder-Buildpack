@@ -101,10 +101,9 @@ function print-env() {
 }
 
 indent-debug() {
-    RE="s/^/       /"
+    #RE="s/^/       /"
     if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
-    #if [ ${BUILD_DEBUG} -gt 0 ]; then
-        sed $SED_FLAG "$RE"
+        indent #sed $SED_FLAG "$RE"
     fi
 }
 
