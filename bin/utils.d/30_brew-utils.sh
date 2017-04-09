@@ -34,59 +34,66 @@ current buildpack maintainer know. Copy-paste this buildlog into an email to
 him/her." |& indent
 }
 
-#function echo_default() {
-#    VAL="$1"
-#    DEF="$2"
-#    if [ ${#VAL} -eq 0 ]; then echo "$DEF"; else echo "$VAL"; fi
-#}
-
 function brew_do() {
-    set +e  # don't exit if error
-
-    local ACTION=$1
+    declare -l ACTION=${1/ /}
     local PACKAGE=$2
     local FLAGS=${@:3}
-    local JOB_REDUCE_MAX_TRIES=${4:-$JOB_REDUCE_MAX_TRIES}
+    if [ $(time_remaining) -gt 0 ]; then
+        set +e  # don't exit if error
+        local JOB_REDUCE_MAX_TRIES=${4:-$JOB_REDUCE_MAX_TRIES}
 
-    export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
-
-    do-debug "Running 'brew $ACTION $PACKAGE $FLAGS'"
-    brew $ACTION $PACKAGE $FLAGS |& brew_outputhandler
-
-    # about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
-    BREW_RTN_STATUS=${PIPESTATUS[0]}
-    # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
-    # text 'Error: No such keg: ' appeared in the output
-    local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall /tmp/brew_test_results.txt 2>/dev/null || echo 0)
-    if [ ${CHECK_ALREADY_INSTALLED:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
-
-        # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
-        if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-1} ]; then
-
-            retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
-            brew_do $ACTION $PACKAGE $FLAGS
-
-        # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
-        elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-1} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
-
-            retry_print $PACKAGE 1
-            brew_do $ACTION $PACKAGE $FLAGS
-
-        # else it's failed
-        else
-            if [ ${PACKAGE_BUILDER_NOBUILDFAIL:-0} -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
-                fail_print $PACKAGE
-                unset INSTALL_TRY_NUMBER
-                exit $?
-            else
-                puts-warn "Unable to install ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
+        # install dependencies incrementally
+        if [ ${ACTION} = "install" ]; then
+            local DEPS=$(brew deps ${PACKAGE})
+            if [ ${#DEPS} -gt 0 ]; then
+                puts-step "Incrementally installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | tr ' ' ',')"
+                for dep in ${DEPS}; do
+                    brew_do ${ACTION} ${PACKAGE}
+                done
             fi
         fi
-    fi
 
-    # reset to exiting if error
-    unset INSTALL_TRY_NUMBER
-    set -e
+        puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
+        brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler
+
+        # about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
+        BREW_RTN_STATUS=${PIPESTATUS[0]}
+        # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
+        # text 'Error: No such keg: ' appeared in the output
+        local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall /tmp/brew_test_results.txt 2>/dev/null || echo 0)
+        export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
+        if [ ${CHECK_ALREADY_INSTALLED:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
+
+            # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
+            if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-1} ]; then
+
+                retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
+                brew_do $ACTION $PACKAGE $FLAGS
+
+            # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
+            elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-1} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
+
+                retry_print $PACKAGE 1
+                brew_do $ACTION $PACKAGE $FLAGS
+
+            # else it's failed
+            else
+                if [ ${PACKAGE_BUILDER_NOBUILDFAIL:-0} -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
+                    fail_print $PACKAGE
+                    unset INSTALL_TRY_NUMBER
+                    exit $?
+                else
+                    puts-warn "Unable to install ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
+                fi
+            fi
+        fi
+
+        # reset to exiting if error
+        unset INSTALL_TRY_NUMBER
+        set -e
+    else
+        puts-warn "Not enough time to install ${PACKAGE}"
+    fi
 }
 
 function brew_checkfor() {
