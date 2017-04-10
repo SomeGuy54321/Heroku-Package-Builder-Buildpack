@@ -35,11 +35,11 @@ him/her." |& indent
 }
 
 function brew_do() {
+    set +e  # don't exit if error
     declare -l ACTION=${1/ /}
     local PACKAGE=$2
     local FLAGS=${@:3}
     if [ $(time_remaining) -gt 0 ]; then
-        set +e  # don't exit if error
         local JOB_REDUCE_MAX_TRIES=${4:-$JOB_REDUCE_MAX_TRIES}
 
         # install dependencies incrementally
@@ -49,7 +49,7 @@ function brew_do() {
                 puts-step "Incrementally installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | sed 's/ /, /g')"
                 for dep in ${DEPS}; do
                     IS_INSTALLED=$(brew_checkfor ${dep})
-                    if [ ${IS_INSTALLED} -eq 0 ]; then
+                    if [ $IS_INSTALLED -eq 0 ]; then
                         brew_do ${ACTION} ${dep}
                     else
                         puts-step "${dep} has already been installed by Linuxbrew"
@@ -95,10 +95,10 @@ function brew_do() {
 
         # reset to exiting if error
         unset INSTALL_TRY_NUMBER
-        set -e
     else
         puts-warn "Not enough time to install ${PACKAGE}"
     fi
+    set -e
 }
 
 function brew_checkfor() {
