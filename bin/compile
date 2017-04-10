@@ -64,6 +64,7 @@ do-debug "PREV_BUILDPACK_PATH when starting: '${PREV_BUILDPACK_PATH}'"
 
 
 # get things from CONFIG_DIR
+export_configvar USE_DPKG_BUILDFLAGS 1
 export_configvar BUILDCACHE ".heroku"
 export_configvar PACKAGE_BUILDER_NOBUILDFAIL 0  # dont fail if a package fails to install
 export_configvar HOMEBREW_NO_ANALYTICS 0

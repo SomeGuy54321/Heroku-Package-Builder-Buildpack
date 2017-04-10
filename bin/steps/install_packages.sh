@@ -12,21 +12,13 @@ function run_user_script() {
     set -e
 }
 
-function main() {
+function package_manage() {
+    local ACTION="${1}"
+    local PREFIX="${2:-PACKAGE_EXTRAS_}"
+    local MAIN_VAR="${PREFIX}${ACTION}[@]"
 
-    # add a configvar to control this
-    USE_DPKG_BUILDFLAGS=1
-    if [ $USE_DPKG_BUILDFLAGS -ne 0 ]; then eval $(dpkg-buildflags --export); fi
-
-    puts-step "Parsing package-extras.yaml"
-    eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
-    local REMAINING_PACKAGES
-    local REMAINING_UPACKAGES
-    local REMAINING_RPACKAGES
-    for package in ${PACKAGE_EXTRAS_install[@]}; do
-
+    for package in ${!MAIN_VAR}; do
         if [ $(time_remaining) -gt 60 ]; then
-
             # multiple options flags allowed so add [@]
             local OPTIONS_VAR="PACKAGE_EXTRAS_options_${package}[@]"
             local OPTIONS
@@ -38,18 +30,18 @@ function main() {
             # THIS PART MUST BE JUST BEFORE brew_do!
             local FORMULAS_VAR="PACKAGE_EXTRAS_formulas_${package}"
             local FORMULAS="${!FORMULAS_VAR}"
-            local INSTALL_INFO
+            local INFO
             if [ ${#FORMULAS} -eq 0 ]; then
                 # if package name contains "-" the user should've replaced it with "__" in the yaml
                 FORMULAS=${package/__/-}
-                INSTALL_INFO=$FORMULAS
+                INFO=${FORMULAS}
             else
-                INSTALL_INFO="${package/__/-} from $FORMULAS"
+                INFO="${package/__/-} from $FORMULAS"
             fi
 
             # do the thing
-            puts-step "Installing $INSTALL_INFO"
-            brew_do install $FORMULAS $OPTIONS
+            puts-step "${ACTION}ing $INFO"
+            brew_do ${ACTION} ${FORMULAS} ${OPTIONS}
             unset FORMULAS_VAR FORMULAS OPTIONS_VAR OPTIONS
 
             # multiple scripts can run
@@ -64,56 +56,26 @@ function main() {
     done
 
     if [ ${#REMAINING_PACKAGES} -gt 0 ]; then
-        puts-warn "The following packages did not install in time:"
+        puts-warn "The following packages did not ${ACTION} in time:"
         echo -e $REMAINING_PACKAGES |& indent_notime | indent
         puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
     fi
+}
 
-    # reinstall things
-    for rpackage in ${PACKAGE_EXTRAS_reinstall[@]}; do
-        if [ $(time_remaining) -gt 0 ]; then
+function main() {
 
-            # only one formula allowed
-            local RFORMULAS_VAR="PACKAGE_EXTRAS_formulas_${rpackage}"
-            local RFORMULAS="${!RFORMULAS_VAR}"
-            [ ${#RFORMULAS} -eq 0 ] && RFORMULAS=$rpackage || true
-
-            puts-step "Reinstalling $rpackage"
-            brew_do reinstall $RFORMULAS
-
-        else
-            REMAINING_RPACKAGES="$rpackage\n$REMAINING_UPACKAGES"
-        fi
-    done
-
-    if [ ${#REMAINING_RPACKAGES} -gt 0 ]; then
-        puts-warn "The following packages did not reinstall in time:"
-        echo -e $REMAINING_RPACKAGES |& indent_notime | indent
-        puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
+    if [ ${USE_DPKG_BUILDFLAGS} -ne 0 ] && [ -x "$(which dpkg-buildflags)" ]; then
+        do-debug "Exporting dpkg-buildflags:"
+        dpkg-buildflags --status |& indent_notime | indent-debug || true
+        eval $(dpkg-buildflags --export=sh)
     fi
 
-    # uninstall things
-    for upackage in ${PACKAGE_EXTRAS_uninstall[@]}; do
-        if [ $(time_remaining) -gt 0 ]; then
+    puts-step "Parsing package-extras.yaml"
+    eval export $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
 
-            # only one formula allowed
-            local UFORMULAS_VAR="PACKAGE_EXTRAS_formulas_${upackage}"
-            local UFORMULAS="${!UFORMULAS_VAR}"
-            [ ${#UFORMULAS} -eq 0 ] && UFORMULAS=$upackage || true
-
-            puts-step "Uninstalling $upackage"
-            brew_do uninstall $UFORMULAS
-
-        else
-            REMAINING_UPACKAGES="$upackage\n$REMAINING_UPACKAGES"
-        fi
-    done
-
-    if [ ${#REMAINING_UPACKAGES} -gt 0 ]; then
-        puts-warn "The following packages did not uninstall in time:"
-        echo -e $REMAINING_UPACKAGES |& indent_notime | indent
-        puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
-    fi
+    package_manage install 'PACKAGE_EXTRAS_'
+    package_manage reinstall 'PACKAGE_EXTRAS_'
+    package_manage uninstall 'PACKAGE_EXTRAS_'
 
     # delete all but the latest downloads of installed packages, or older than 30 days
     puts-step "Running brew cleanup"
