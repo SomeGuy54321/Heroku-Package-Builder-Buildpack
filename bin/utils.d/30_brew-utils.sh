@@ -7,11 +7,11 @@ JOB_REDUCE_MAX_TRIES=4
 
 # this can cause forking issues, if it does then
 # gradually reduce the jobs number
-export HOMEBREW_MAKE_JOBS=$(grep --count ^processor /proc/cpuinfo)
+export HOMEBREW_MAKE_JOBS=$(grep --count ^processor /proc/cpuinfo || echo 1)
 
 function job_reduce_increment() {
     local MAX_TRIES=$1
-    local MAX_JOBS=$(grep --count ^processor /proc/cpuinfo)
+    local MAX_JOBS=$(grep --count ^processor /proc/cpuinfo || echo 1)
     if [ ${#MAX_TRIES} -eq 0 ]; then MAX_TRIES=$JOB_REDUCE_MAX_TRIES; fi
     max 1 $(( $MAX_JOBS / MAX_JOBS ))
 }
@@ -118,6 +118,10 @@ function brew_install_defaults() {
 
         if [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -ne 1 ]; then  # [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor gcc) -eq 0 ] &&
             puts-step "Installing GCC"
+            # these dont show up as dependencies but they are
+            brew_do install binutils
+            brew_do install linux-headers
+            brew_do install glibc
             brew_do install gcc '--with-glibc' # --with-java --with-jit --with-multilib --with-nls'
         fi
 
