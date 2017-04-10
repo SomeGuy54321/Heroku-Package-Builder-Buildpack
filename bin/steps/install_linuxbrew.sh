@@ -7,14 +7,6 @@ if [ ! -x "$(which brew)" ]; then
     do-debug "Building linuxbrew in $HOME"
     echo -e 'y\n' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)" |& brew_outputhandler
 
-    brew_install_defaults
-
-    do-debug "brew config:"
-    brew config |& indent-debug || true
-
-    do-debug "brew doctor:"
-    brew doctor |& indent-debug || true
-
 else
 
     puts-step "Linuxbrew already installed"
@@ -23,10 +15,13 @@ else
     #git_checks_linuxbrew
     git_rebuild_latest
 
-    do-debug "brew config:"
-    brew config |& indent-debug || true
-
-    do-debug "brew doctor:"
-    brew doctor |& indent-debug || true
-
 fi
+
+do-debug "brew config:"
+brew config |& indent-debug || true
+
+do-debug "brew doctor:"
+brew doctor |& indent-debug || true
+
+# run even if already installed in case the first core-tools install was interrupted
+brew_install_defaults

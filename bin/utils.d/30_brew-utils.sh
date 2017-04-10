@@ -113,6 +113,10 @@ function brew_install_defaults() {
         # gcc & glibc wont install without a newer gawk
         if [ ${PACKAGE_BUILDER_NOINSTALL_GAWK:-0} -ne 1 ]; then  # [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor gawk) -eq 0 ]
             puts-step "Installing gawk"
+            # these dont show up as dependencies but they are
+            brew_do install patchelf
+            brew_do install pkg-config
+            brew_do install xz
             brew_do install gawk
         fi
 
