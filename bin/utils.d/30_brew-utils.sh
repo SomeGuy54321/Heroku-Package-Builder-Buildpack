@@ -42,7 +42,7 @@ function brew_do() {
         local JOB_REDUCE_MAX_TRIES=${4:-$JOB_REDUCE_MAX_TRIES}
 
         # install dependencies incrementally
-        if [ ${ACTION} = "install" ]; then
+        if [ ${ACTION} = "install" ] || [ ${ACTION} = "reinstall" ]; then
             local DEPS_INSTALLED=$(echo -n "$(brew deps --include-build ${PACKAGE} --installed)" | tr '\n' '|')
             local DEPS=$(brew deps -n --include-optional --skip-recommended ${PACKAGE} | grep -vE "$DEPS_INSTALLED")
             if [ ${#DEPS} -gt 0 ]; then
