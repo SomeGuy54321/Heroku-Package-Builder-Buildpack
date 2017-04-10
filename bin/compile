@@ -48,8 +48,8 @@ if [ ${BUILDPACK_XTRACE:-0} -gt 0 ]; then
 fi
 
 # measuring
-do-debug "Number of columns in this terminal window: $(tput cols)"
-do-debug "Number of lines in this terminal window: $(tput lines)"
+do-debug "Number of columns in this terminal window: $(tput -T $TERM cols 2>/dev/null)"
+do-debug "Number of lines in this terminal window: $(tput -T $TERM lines  2>/dev/null)"
 
 export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
 if [ ${PACKAGE_BUILDER_HOMEBREW_VERBOSE} -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose

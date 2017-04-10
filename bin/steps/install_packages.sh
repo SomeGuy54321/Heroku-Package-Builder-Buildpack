@@ -16,8 +16,8 @@ function package_manage() {
     local ACTION=${1/ /}
     local MAIN_VAR="PACKAGE_EXTRAS_"$ACTION"[@]"
 
-    puts-step "Parsing package-extras.yaml"
-    eval $(parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_')
+#    puts-step "Parsing package-extras.yaml"
+#    eval $(parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_')
 
     for package in ${!MAIN_VAR}; do
         if [ $(time_remaining) -gt 60 ]; then
@@ -73,7 +73,12 @@ function main() {
     fi
 
     # the only thing this line does is displays the variables just for debugging, no variables are set
+    do-debug "YAML variables:"
     parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_' |& indent-debug
+
+    puts-step "Parsing package-extras.yaml"
+    eval $(parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_')
+
 
     package_manage install
     package_manage reinstall
