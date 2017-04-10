@@ -14,7 +14,7 @@ function run_user_script() {
 
 function package_manage() {
     local ACTION=${1/ /}
-    local MAIN_VAR="PACKAGE_EXTRAS_${ACTION}[@]"
+    local MAIN_VAR="PACKAGE_EXTRAS_"$ACTION"[@]"
 
     puts-step "Parsing package-extras.yaml"
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
