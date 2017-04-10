@@ -111,7 +111,7 @@ function brew_install_defaults() {
 #        local CHECK
 
         # gcc & glibc wont install without a newer gawk
-        if [ ${PACKAGE_BUILDER_NOINSTALL_GAWK:-0} -ne 1 ]; then  # [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor gawk) -eq 0 ]
+        if [ ${PACKAGE_BUILDER_NOINSTALL_GAWK:-0} -ne 1 ] && [ $(brew_checkfor gawk) -eq 0 ]; then
             puts-step "Installing gawk"
             # these dont show up as dependencies but they are
             brew_do install patchelf
@@ -120,7 +120,7 @@ function brew_install_defaults() {
             brew_do install gawk
         fi
 
-        if [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -ne 1 ]; then  # [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor gcc) -eq 0 ] &&
+        if [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -ne 1 ] && [ $(brew_checkfor gcc) -eq 0 ]; then
             puts-step "Installing GCC"
             # these dont show up as dependencies but they are
             brew_do install binutils
