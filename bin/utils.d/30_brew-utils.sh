@@ -108,7 +108,6 @@ function brew_install_defaults() {
     if [ ${PACKAGE_BUILDER_NOINSTALL_DEFAULTS:-0} -ne 1 ]; then
 
         puts-step "Installing core tools"
-#        local CHECK
 
         # gcc & glibc wont install without a newer gawk
         if [ ${PACKAGE_BUILDER_NOINSTALL_GAWK:-0} -ne 1 ] && [ $(brew_checkfor gawk) -eq 0 ]; then
