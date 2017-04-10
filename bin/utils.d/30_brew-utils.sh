@@ -72,9 +72,12 @@ function brew_do() {
                 BREW_PID=$(jobs -pr | tail -n2 | head -n1); BREW_PID=${BREW_PID/ /}
                 while [ 1 ]; do
                     if [ -f "/proc/$BREW_PID/status" ]; then
-                        if [ $(time_remaining) -gt 0 ]; then
-                            sleep 5
+                        local TIME_REMAINING=$(time_remaining)
+                        if [ ${TIME_REMAINING} -gt 0 ]; then
+                            sleep 10
+                            echo " $(countdown) -----> ${TIME_REMAINING}s"
                         else
+                            puts-warn "Out of time, aborting build."
                             kill -6 $BREW_PID || true
                         fi
                     else
