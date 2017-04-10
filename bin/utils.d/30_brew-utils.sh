@@ -40,7 +40,7 @@ function brew_do() {
     declare -l ACTION=${1/ /}
     local FLAGS=${@:3}
     if [ $(time_remaining) -gt 0 ]; then
-        local JOB_REDUCE_MAX_TRIES=${JOB_REDUCE_MAX_TRIES:-4}
+        local INSTALL_TRY_NUMBER=${INSTALL_TRY_NUMBER:-0}  # takes the INSTALL_TRY_NUMBER from the next highest scope
 
         # install dependencies incrementally
         if [ ${ACTION} = "install" ] || [ ${ACTION} = "reinstall" ]; then
@@ -65,7 +65,6 @@ function brew_do() {
             # start no error block
             (set +e
 
-                #brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler
                 ## This thing does:
                 # 1.) Traps the brew process id
                 # 2.) Sends it to the background
@@ -85,11 +84,13 @@ function brew_do() {
                 BREW_PID=$(jobs -pr | tail -n2 | head -n1); BREW_PID=${BREW_PID/ /}  # get 2nd-to-last pid
                 while [ 1 ]; do
                     if [ -f "/proc/$BREW_PID/status" ]; then  # checks if the process is still active
+
                         local TIME_REMAINING=$(time_remaining)
                         local SLEEP_TIME=30
                         # show time remaining and check for activity more frequently as time runs out
                         if [ ${TIME_REMAINING} -le 120 ]; then SLEEP_TIME=20; fi
                         if [ ${TIME_REMAINING} -le 60 ]; then SLEEP_TIME=10; fi
+                        if [ ${TIME_REMAINING} -le 30 ]; then SLEEP_TIME=5; fi
                         if [ ${TIME_REMAINING} -le 10 ]; then SLEEP_TIME=1; fi
 
                         if [ ${TIME_REMAINING} -gt 0 ]; then
@@ -109,21 +110,20 @@ function brew_do() {
                 # about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
                 BREW_RTN_STATUS=${PIPESTATUS[0]}
 
-                # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
-                # text 'Error: No such keg: ' appeared in the output
-                local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall /tmp/brew_test_results.txt 2>/dev/null || echo 0)
-                export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
+                # brew_outputhandler will write "assume_is_reinstall" to brew_test_results.txt if the text 'Error: No such keg: ' appeared in the output
+                local CHECK_ALREADY_INSTALLED=$(grep --count assume_is_reinstall /tmp/brew_test_results.txt 2>/dev/null || echo 0)
+                INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
 
                 if [ ${CHECK_ALREADY_INSTALLED:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
 
                     # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
-                    if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-1} ]; then
+                    if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-4} ]; then
 
                         retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
                         brew_do $ACTION $PACKAGE $FLAGS
 
                     # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
-                    elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-1} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
+                    elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-4} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
 
                         retry_print $PACKAGE 1
                         brew_do $ACTION $PACKAGE $FLAGS
@@ -136,19 +136,16 @@ function brew_do() {
                             unset INSTALL_TRY_NUMBER
                             set -e
                             exit $?
-
                         else
-
                             puts-warn "Unable to ${ACTION} ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
-
+                            unset INSTALL_TRY_NUMBER
                         fi
                     fi
                 fi
-            set -e)
+            )
         else
-
             puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
-
+            unset INSTALL_TRY_NUMBER
         fi
 
         # reset to exiting if error
@@ -157,8 +154,9 @@ function brew_do() {
     else
 
         puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
-
+        unset INSTALL_TRY_NUMBER
     fi
+    unset INSTALL_TRY_NUMBER
 }
 
 function brew_checkfor() {
@@ -240,6 +238,6 @@ function show_linuxbrew_files() {
 # a package that it can't find.
 function brew_outputhandler() {
 #    local TEST='{if ($0 ~ /Error: No such keg: /) { print "'"$Y"'" > "'"brew_test_results.txt"'"; print $0; } else { print $0; } }'
-    local TEST='{ if ($0 ~ /Error: No such keg: / || $0 ~ /Error: No available formula with the name / || $0 ~ /Error: No formulae found in taps/) { print "is_reinstall" > "/tmp/brew_test_results.txt"; } print $0; system(""); }'
+    local TEST='{ if ($0 ~ /Error: No such keg: / || $0 ~ /Error: No available formula with the name / || $0 ~ /Error: No formulae found in taps/) { print "assume_is_reinstall" > "/tmp/brew_test_results.txt"; } print $0; system(""); }'
     awk "$TEST" | indent
 }

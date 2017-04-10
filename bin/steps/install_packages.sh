@@ -17,7 +17,6 @@ function package_manage() {
     local MAIN_VAR="PACKAGE_EXTRAS_"$ACTION"[@]"
 
     puts-step "Parsing package-extras.yaml"
-    parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_' |& indent-debug
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_')
 
     for package in ${!MAIN_VAR}; do
@@ -72,6 +71,9 @@ function main() {
         dpkg-buildflags --status |& indent-debug || true
         eval $(dpkg-buildflags --export=sh)
     fi
+
+    # the only thing this line does is displays the variables just for debugging, no variables are set
+    parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_' |& indent-debug
 
     package_manage install
     package_manage reinstall
