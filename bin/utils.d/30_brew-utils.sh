@@ -58,44 +58,50 @@ function brew_do() {
             fi
         fi
 
-        # start no error block
-        (set +e
-            puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
-            brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler
+        # this is ugly but the time needs to be checked again since the incremental dependency install loop may
+        # have taken awhile...
+        if [ $(time_remaining) -gt 0 ]; then
+            # start no error block
+            (set +e
+                puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
+                brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler
 
-            # about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
-            BREW_RTN_STATUS=${PIPESTATUS[0]}
-            # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
-            # text 'Error: No such keg: ' appeared in the output
-            local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall /tmp/brew_test_results.txt 2>/dev/null || echo 0)
-            export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
-            if [ ${CHECK_ALREADY_INSTALLED:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
+                # about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
+                BREW_RTN_STATUS=${PIPESTATUS[0]}
+                # brew_outputhandler will write "is_reinstall" to brew_test_results.txt if the
+                # text 'Error: No such keg: ' appeared in the output
+                local CHECK_ALREADY_INSTALLED=$(grep --count is_reinstall /tmp/brew_test_results.txt 2>/dev/null || echo 0)
+                export INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
+                if [ ${CHECK_ALREADY_INSTALLED:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
 
-                # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
-                if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-1} ]; then
+                    # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
+                    if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-1} ]; then
 
-                    retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
-                    brew_do $ACTION $PACKAGE $FLAGS
+                        retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
+                        brew_do $ACTION $PACKAGE $FLAGS
 
-                # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
-                elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-1} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
+                    # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
+                    elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-1} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
 
-                    retry_print $PACKAGE 1
-                    brew_do $ACTION $PACKAGE $FLAGS
+                        retry_print $PACKAGE 1
+                        brew_do $ACTION $PACKAGE $FLAGS
 
-                # else it's failed
-                else
-                    if [ ${PACKAGE_BUILDER_NOBUILDFAIL:-0} -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
-                        fail_print $PACKAGE
-                        unset INSTALL_TRY_NUMBER
-                        set -e
-                        exit $?
+                    # else it's failed
                     else
-                        puts-warn "Unable to install ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
+                        if [ ${PACKAGE_BUILDER_NOBUILDFAIL:-0} -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
+                            fail_print $PACKAGE
+                            unset INSTALL_TRY_NUMBER
+                            set -e
+                            exit $?
+                        else
+                            puts-warn "Unable to install ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
+                        fi
                     fi
                 fi
-            fi
-        set -e)
+            set -e)
+        else
+            puts-warn "Not enough time to install ${PACKAGE}"
+        fi
 
         # reset to exiting if error
         unset INSTALL_TRY_NUMBER
