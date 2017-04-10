@@ -35,7 +35,6 @@ him/her." |& indent
 }
 
 function brew_do() {
-    set +e  # don't exit if error
     declare -l ACTION=${1/ /}
     local PACKAGE=$2
     local FLAGS=${@:3}
@@ -50,7 +49,7 @@ function brew_do() {
                 for dep in ${DEPS}; do
                     IS_INSTALLED=$(brew_checkfor ${dep})
                     if [ $IS_INSTALLED -eq 0 ]; then
-                        brew_do ${ACTION} ${dep}
+                        (set +e; brew_do ${ACTION} ${dep})
                     else
                         puts-step "${dep} has already been installed by Linuxbrew"
                     fi
@@ -59,7 +58,7 @@ function brew_do() {
         fi
 
         puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
-        brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler
+        (set +e; brew ${ACTION} ${PACKAGE} ${FLAGS}) |& brew_outputhandler
 
         # about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
         BREW_RTN_STATUS=${PIPESTATUS[0]}
@@ -98,11 +97,10 @@ function brew_do() {
     else
         puts-warn "Not enough time to install ${PACKAGE}"
     fi
-    set -e
 }
 
 function brew_checkfor() {
-    brew list | grep --count "$1"
+    brew list | grep --count "$1" || true
 }
 
 function brew_install_defaults() {
