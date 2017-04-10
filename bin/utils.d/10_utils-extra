@@ -151,6 +151,12 @@ function indent_notime() {
 
 
 function time_remaining() {
+    local TIME_REMAINING_FLOAT=$(time_remaining_float)
+    declare -i TIME_REMAINING_INT=${TIME_REMAINING_FLOAT/.*/}
+    echo ${TIME_REMAINING_INT}
+}
+
+function time_remaining_float() {
     awk '{printf "%f", $1 - $2}' <<< "${BUILD_MAX_RUNTIME} $(date +'%s.%N')"
 }
 
