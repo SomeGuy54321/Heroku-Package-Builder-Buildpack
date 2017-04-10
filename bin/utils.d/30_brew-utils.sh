@@ -75,6 +75,10 @@ function brew_do() {
                 # https://www.gnu.org/software/libc/manual/html_node/Program-Error-Signals.html#index-SIGABRT
                 # https://www.gnu.org/software/make/manual/html_node/Interrupts.html
                 # https://bash.cyberciti.biz/guide/Sending_signal_to_Processes#kill_-_send_a_signal_to_a_process
+                ## Notes:
+                # if anything in this trap process is f'd up then the whole thing fails
+                # this is the most important part of the whole buildpack
+                # if in doubt just set while [ 0 ] and remove the '&' after the brew line
 
                 puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
@@ -90,7 +94,7 @@ function brew_do() {
 
                         if [ ${TIME_REMAINING} -gt 0 ]; then
                             # print fluffy messages letting them know we're still alive
-                            echo "$(countdown) -----> $(date --date=@${TIME_REMAINING} + '%M:%S') remaining"
+                            echo "$(countdown) ...... $(date --date=@${TIME_REMAINING} +'%M:%S') remaining"
                             sleep ${SLEEP_TIME}
                         else
                             puts-warn "Out of time, aborting build."

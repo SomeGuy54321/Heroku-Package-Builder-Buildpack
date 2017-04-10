@@ -16,7 +16,7 @@ BUILD_DIR=$1
 CACHE_DIR=$2
 
 # Exit if no
-if [ ! -f $BUILD_DIR/package-extras.yaml ]; then
+if [ ! -f $BUILD_DIR/package-extras.yaml ]; then  # && [ ! -f $BUILD_DIR/package-extras.json ]; then
   exit 1
 fi
 
