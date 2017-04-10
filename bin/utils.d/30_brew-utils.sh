@@ -64,27 +64,43 @@ function brew_do() {
         if [ $(time_remaining) -gt 0 ]; then
             # start no error block
             (set +e
-                puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
+
                 #brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler
-                ## TODO: Trap the brew process id > send it to the background > loop checking on time_remaining > if time_remaining==0 then kill brew
-                ## Kill signals https://bash.cyberciti.biz/guide/Sending_signal_to_Processes#kill_-_send_a_signal_to_a_process
+                ## This thing does:
+                # 1.) Traps the brew process id
+                # 2.) Sends it to the background
+                # 3.) Loops checking on time_remaining
+                # 4.) If time_remaining==0 then kill brew with SIGABRT
+                ## Why SIGABRT?
+                # https://www.gnu.org/software/libc/manual/html_node/Program-Error-Signals.html#index-SIGABRT
+                # https://www.gnu.org/software/make/manual/html_node/Interrupts.html
+                # https://bash.cyberciti.biz/guide/Sending_signal_to_Processes#kill_-_send_a_signal_to_a_process
+
+                puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
-                BREW_PID=$(jobs -pr | tail -n2 | head -n1); BREW_PID=${BREW_PID/ /}
+                BREW_PID=$(jobs -pr | tail -n2 | head -n1); BREW_PID=${BREW_PID/ /}  # get 2nd-to-last pid
                 while [ 1 ]; do
-                    if [ -f "/proc/$BREW_PID/status" ]; then
+                    if [ -f "/proc/$BREW_PID/status" ]; then  # checks if the process is still active
                         local TIME_REMAINING=$(time_remaining)
+                        local SLEEP_TIME=30
+                        # show time remaining and check for activity more frequently as time runs out
+                        if [ ${TIME_REMAINING} -le 120 ]; then SLEEP_TIME=20; fi
+                        if [ ${TIME_REMAINING} -le 60 ]; then SLEEP_TIME=10; fi
+                        if [ ${TIME_REMAINING} -le 10 ]; then SLEEP_TIME=1; fi
+
                         if [ ${TIME_REMAINING} -gt 0 ]; then
-                            sleep 10
-                            echo " $(countdown) -----> ${TIME_REMAINING}s"
+                            # print fluffy messages letting them know we're still alive
+                            echo "$(countdown) -----> $(date --date=@${TIME_REMAINING} + '%M:%S') remaining"
+                            sleep ${SLEEP_TIME}
                         else
                             puts-warn "Out of time, aborting build."
-                            kill -6 $BREW_PID || true
+                            kill -6 ${BREW_PID} || true
+                            sleep 5  # wait for the kill signal to work
                         fi
                     else
                         break
                     fi
                 done
-                #
 
                 # about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
                 BREW_RTN_STATUS=${PIPESTATUS[0]}

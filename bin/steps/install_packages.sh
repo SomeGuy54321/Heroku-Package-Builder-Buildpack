@@ -17,7 +17,8 @@ function package_manage() {
     local MAIN_VAR="PACKAGE_EXTRAS_"$ACTION"[@]"
 
     puts-step "Parsing package-extras.yaml"
-    eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
+    parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_' |& indent-debug
+    eval $(parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_')
 
     for package in ${!MAIN_VAR}; do
         if [ $(time_remaining) -gt 60 ]; then

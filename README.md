@@ -94,8 +94,7 @@ NOTES
 TODO
 ====
 - build stuff without relying on linuxbrew
-- better error handling
-  - if brew runs past $PACKAGE_BUILDER_MAX_BUILDTIME kill it
-- allow easier adjustment of build time
-  - easily set buildflags so less time is spent compiling
-  - find perfect jobs number so there aren't forking issues and its fast
+- smart compression selecting
+- smart job number selecting
+- make better yaml parser
+- make json parser
