@@ -14,7 +14,7 @@ function run_user_script() {
 
 function package_manage() {
     local ACTION=${1/ /}
-    local MAIN_VAR="PACKAGE_EXTRAS_${ACTION}[@]"
+    local MAIN_VAR="PACKAGE_EXTRAS_$ACTION[@]"
 
     puts-step "Parsing package-extras.yaml"
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
@@ -68,7 +68,7 @@ function main() {
 
     if [ ${USE_DPKG_BUILDFLAGS} -ne 0 ] && [ -x "$(which dpkg-buildflags)" ]; then
         do-debug "Exporting dpkg-buildflags:"
-        dpkg-buildflags --status |& indent_notime | indent-debug || true
+        dpkg-buildflags --status |& indent-debug || true
         eval $(dpkg-buildflags --export=sh)
     fi
 
