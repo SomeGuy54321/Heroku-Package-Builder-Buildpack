@@ -30,6 +30,7 @@ function compression_level_chooser() {
     local CURR_LEVEL=${2:-$COMPRESSION_LEVEL_DEFAULT}
     local SAFE_JOBS_NUM=${3:-$MAX_JOBS}
     local TIME_LEFT=$(time_remaining)
+    declare -i TIME_LEFT_INT=${TIME_LEFT/.*/}
     local SIZE2COMPRESS=$(du --max-depth=0 $4 2>/dev/null || echo 0)
 
     local USE_THREADS
@@ -47,7 +48,7 @@ function compression_level_chooser() {
     fi
 
     # if < 2min remains then drop the compression level to min
-    if [ ${TIME_LEFT} -le 120 ]; then
+    if [ ${TIME_LEFT_INT} -le 120 ]; then
         echo 0
     # if I've passed in a try number then I'm wanting to decrease it
     elif [ ${TRY_NUM} -gt 0 ]; then
