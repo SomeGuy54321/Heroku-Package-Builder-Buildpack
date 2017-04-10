@@ -26,18 +26,24 @@ function compress_to_cache() {
 }
 
 function compression_level_chooser() {
+    #TODO: Make this smarter, maybe record buildtimes in sqlite database > store it in cache > reread it each run to 'learn lessons' from the last
+    #ARG1
     local TRY_NUM=${1:-0}
+    #ARG2
     local CURR_LEVEL=${2:-$COMPRESSION_LEVEL_DEFAULT}
+    #ARG3
     local SAFE_JOBS_NUM=${3:-$MAX_JOBS}
+    #ARG4
+    #local SIZE2COMPRESS=$(du --summarize $4 2>/dev/null || echo 0)
+    # this is much faster and doesnt print extraneous text
+    #local SIZE2COMPRESS=$(find $4 -printf %k"\n" | awk '{  sum += $1 } END { print sum }' || echo 0)
     local TIME_LEFT=$(time_remaining)
     declare -i TIME_LEFT_INT=${TIME_LEFT/.*/}
-    local SIZE2COMPRESS=$(du --max-depth=0 $4 2>/dev/null || echo 0)
 
     local USE_THREADS
     local USE_COMPRESSION
     local USE_XTREME
     if [ 0 ]; then
-        # need a smart way to choose arguments
         USE_THREADS=${USE_THREADS}
         USE_COMPRESSION=${USE_COMPRESSION}
         USE_XTREME=${USE_XTREME}
