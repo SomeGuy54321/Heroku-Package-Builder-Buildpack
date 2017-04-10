@@ -78,9 +78,7 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_GCC 0
 # setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
 export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 10
 export PACKAGE_BUILDER_MAX_BUILDTIME=$(min ${PACKAGE_BUILDER_MAX_BUILDTIME} 14)
-PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS=$(( ${PACKAGE_BUILDER_MAX_BUILDTIME} * 60 ))
-CURRENT_SECONDS=$(date +'%s')
-export BUILD_MAX_RUNTIME=$((${PACKAGE_BUILDER_MAX_BUILDTIME_SECONDS} + ${CURRENT_SECONDS}))
+export BUILD_MAX_RUNTIME=$(awk '{printf "%f", ($1 * 60.0) + $2}' <<< "${PACKAGE_BUILDER_MAX_BUILDTIME} $(date +'%s.%N')")
 
 
 # use epoch date to hopefully control the order in which the profile.d scripts are executed
