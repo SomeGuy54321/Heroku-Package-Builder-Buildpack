@@ -13,9 +13,11 @@ function run_user_script() {
 }
 
 function package_manage() {
-    local ACTION="${1}"
-    local PREFIX="${2:-PACKAGE_EXTRAS_}"
-    local MAIN_VAR="${PREFIX}${ACTION}[@]"
+    local ACTION=${1/ /}
+    local MAIN_VAR="PACKAGE_EXTRAS_${ACTION}[@]"
+
+    puts-step "Parsing package-extras.yaml"
+    eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
 
     for package in ${!MAIN_VAR}; do
         if [ $(time_remaining) -gt 60 ]; then
@@ -70,15 +72,9 @@ function main() {
         eval $(dpkg-buildflags --export=sh)
     fi
 
-    puts-step "Parsing package-extras.yaml"
-#    for var in $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_"); do
-#        export $var
-#    done
-    export eval $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
-
-    package_manage install 'PACKAGE_EXTRAS_'
-    package_manage reinstall 'PACKAGE_EXTRAS_'
-    package_manage uninstall 'PACKAGE_EXTRAS_'
+    package_manage install
+    package_manage reinstall
+    package_manage uninstall
 
     # delete all but the latest downloads of installed packages, or older than 30 days
     puts-step "Running brew cleanup"
