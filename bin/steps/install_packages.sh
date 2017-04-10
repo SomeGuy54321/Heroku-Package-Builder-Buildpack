@@ -71,7 +71,9 @@ function main() {
     fi
 
     puts-step "Parsing package-extras.yaml"
-    eval export $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_")
+    for var in $(parse_yaml $BUILD_DIR/package-extras.yaml "PACKAGE_EXTRAS_"); do
+        export $var
+    done
 
     package_manage install 'PACKAGE_EXTRAS_'
     package_manage reinstall 'PACKAGE_EXTRAS_'
