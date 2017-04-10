@@ -11,7 +11,7 @@ function countdown() {
     local ELAPSED=$(awk '{printf "%f", $1 - $2}' <<< "$CURR_TIME $START_TIME")
     declare -i ELAPSED_INT=${ELAPSED/.*/}
     declare -i BUILD_MAX_RUNTIME_INT=${BUILD_MAX_RUNTIME/.*/}
-    if [ ${ELAPSED_INT:-0} -ge ${BUILD_MAX_RUNTIME_INT:-900} ]; then
+    if [ ${ELAPSED_INT:-0} -gt ${BUILD_MAX_RUNTIME_INT:-900} ]; then
         COLOR_PRE='\033[31;1;148m';
         COLOR_POST='\033[39m';
     fi
