@@ -43,7 +43,8 @@ function brew_do() {
 
         # install dependencies incrementally
         if [ ${ACTION} = "install" ]; then
-            local DEPS=$(brew deps ${PACKAGE})
+            local DEPS_INSTALLED=$(echo -n "$(brew deps --include-build ${PACKAGE} --installed)" | tr '\n' '|')
+            local DEPS=$(brew deps -n --include-optional --skip-recommended ${PACKAGE} | grep -vE "$DEPS_INSTALLED")
             if [ ${#DEPS} -gt 0 ]; then
                 puts-step "Incrementally installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | sed 's/ /, /g')"
                 for dep in ${DEPS}; do
