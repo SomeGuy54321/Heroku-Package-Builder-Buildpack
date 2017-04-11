@@ -71,7 +71,7 @@ function brew_do() {
 
                     puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                     brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
-                    declare -i BREW_PID=$(jobs -p)
+                    declare -i BREW_PID=$(jobs -p | tail -n1)
                     brew_watch ${BREW_PID}
                     #jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
                     #wait ${BREW_PID}  # this is exported from brew_watch and returns the same status as the brew process did
@@ -154,6 +154,8 @@ function brew_watch() {
     declare -i RTN_STATUS
     declare -i KILL_RETRIES=0
     declare -i BREW_PID=$1
+    declare -i SLEEP_TIME=30
+    declare -i LAST_SLEEP_TIME=${SLEEP_TIME}
 
     do-debug "BREW_PID=$BREW_PID"
     do-debug "jobs -l:"
@@ -162,17 +164,20 @@ function brew_watch() {
     while [ $(kill -0 ${BREW_PID} |& grep --count .) -eq 0 ]; do  # checks if the process is still active
 
         local TIME_REMAINING=$(time_remaining)
-        local SLEEP_TIME=30
-        # show time remaining and check for activity more frequently as time runs out
-        if [ ${TIME_REMAINING} -le 120 ]; then SLEEP_TIME=20; fi
-        if [ ${TIME_REMAINING} -le 60 ]; then SLEEP_TIME=10; fi
-        if [ ${TIME_REMAINING} -le 30 ]; then SLEEP_TIME=5; fi
-        if [ ${TIME_REMAINING} -le 10 ]; then SLEEP_TIME=1; fi
 
         if [ ${TIME_REMAINING} -gt 0 ]; then
-            # print fluffy messages letting them know we're still alive
-            sleep ${SLEEP_TIME}  # do sleep first so it doesnt immediately print a message
-            echo "$(countdown) ...... $(date --date=@$(( $TIME_REMAINING - $SLEEP_TIME )) +'%M:%S') remaining"
+            if [ ${TIME_REMAINING} -le ${LAST_SLEEP_TIME} ]; then
+                ## Removed the actual sleep so we exit ASAP
+                #sleep ${SLEEP_TIME}  # do sleep first so it doesnt immediately print a message
+                ## print fluffy messages letting them know we're still alive
+                # show time remaining and check for activity more frequently as time runs out
+                echo "$(countdown) ...... $(date --date=@$TIME_REMAINING +'%M:%S') remaining"
+                if [ ${TIME_REMAINING} -le 120 ]; then SLEEP_TIME=20; fi
+                if [ ${TIME_REMAINING} -le 60 ]; then SLEEP_TIME=10; fi
+                if [ ${TIME_REMAINING} -le 30 ]; then SLEEP_TIME=5; fi
+                if [ ${TIME_REMAINING} -le 10 ]; then SLEEP_TIME=1; fi
+                LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
+            fi
         else
             case $KILL_RETRIES in
             0)
