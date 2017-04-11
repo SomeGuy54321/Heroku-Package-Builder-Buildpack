@@ -68,12 +68,12 @@ function brew_do() {
             if [ $(time_remaining) -gt 0 ]; then
                 # start no error block
                 (set +e
-
                     puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                     brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
                     declare -i BREW_PID=$(jobs -p | tail -n1)
                     brew_watch ${BREW_PID}
                     local BREW_RTN_STATUS=$?
+                )
 
                     INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
                     ## brew_outputhandler will write one of the following to /tmp/brew_test_results.txt:
@@ -123,7 +123,6 @@ function brew_do() {
                             #unset INSTALL_TRY_NUMBER
                         fi
                     fi  # see if the package actually exists and if the ACTION failed for some reason
-                )
             else  # ran out of time
                 puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
             fi  # check if theres time left for actual ACTION
