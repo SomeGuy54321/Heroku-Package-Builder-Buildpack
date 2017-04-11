@@ -79,7 +79,6 @@ function main() {
     puts-step "Parsing package-extras.yaml"
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_')
 
-
     package_manage install
     package_manage reinstall
     package_manage uninstall

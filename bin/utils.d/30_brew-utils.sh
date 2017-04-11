@@ -73,24 +73,27 @@ function brew_do() {
                     brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
                     declare -i BREW_PID=$(jobs -p | tail -n1)
                     brew_watch ${BREW_PID}
-                    #jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
-                    #wait ${BREW_PID}  # this is exported from brew_watch and returns the same status as the brew process did
                     local BREW_RTN_STATUS=$?
 
                     INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
                     ## brew_outputhandler will write one of the following to /tmp/brew_test_results.txt:
                     # "nonexistent_package"
                     # "clean_and_retry"
-                    local CHECK_NONEXISTENT_PACKAGE=$(grep --count nonexistent_package /tmp/brew_test_results.txt 2>/dev/null || echo 0)
-                    local CHECK_CLEAN_RETRY=$(grep --count clean_and_retry /tmp/brew_test_results.txt 2>/dev/null || echo 0)
+                    local CHECK_NONEXISTENT_PACKAGE=$(grep --count nonexistent_package "/tmp/brew_test_results.txt" || echo 0)
+                    local CHECK_CLEAN_RETRY=$(grep --count clean_and_retry "/tmp/brew_test_results.txt" || echo 0)
 
-                    if [ ${CHECK_NONEXISTENT_PACKAGE:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
+                    do-debug "BREW_RTN_STATUS=$BREW_RTN_STATUS"
+                    do-debug "CHECK_NONEXISTENT_PACKAGE=$CHECK_NONEXISTENT_PACKAGE"
+                    do-debug "CHECK_CLEAN_RETRY=$CHECK_CLEAN_RETRY"
+                    do-debug "INSTALL_TRY_NUMBER=$INSTALL_TRY_NUMBER"
+
+                    if [ ${CHECK_NONEXISTENT_PACKAGE:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -gt 0 ]; then
 
                         if [ ${CHECK_CLEAN_RETRY} -gt 0 ]; then
 
-                            # there may have been an error with the build, this happened once when using an archived gcc build
-                            # to continue building gcc left off from the previous buildpack build ya..
-                            brew cleanup -s $PACKAGE
+                            # there may have been an error with the build
+                            # when im restarting a failed gcc build I get 'Error: File exists @ syserr_fail2_in'
+                            brew cleanup -s ${PACKAGE}
 
                         fi
 
@@ -205,7 +208,7 @@ function brew_watch() {
     do-debug "wait return status = $WAIT_RTN_STATUS"
     RTN_STATUS=${RTN_STATUS:-$WAIT_RTN_STATUS}
     do-debug "Leaving brew_watch with RTN_STATUS = $RTN_STATUS"
-    return ${RTN_STATUS}
+    return $RTN_STATUS
 }
 
 function brew_checkfor() {
@@ -303,8 +306,6 @@ function brew_outputhandler() {
         print $0;
         system("");
     }'
-
-    #local TEST='{ if ($0 ~ /Error: No such keg: / || $0 ~ /Error: No available formula with the name / || $0 ~ /Error: No formulae found in taps/) { print "assume_is_reinstall" > "/tmp/brew_test_results.txt"; } print $0; system(""); }'
 
     awk "$TEST" | indent
 }

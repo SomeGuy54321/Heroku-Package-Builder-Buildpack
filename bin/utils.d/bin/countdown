@@ -4,7 +4,7 @@
 # needs to be in its own script to be re-executed on each sed call
 function countdown() {
     #local COLOR_PRE="\e[1G"  # bash backspace
-    local COLOR_PRE="\e[1G\e[K"  # bash backspace + clear backspace
+    local COLOR_PRE="\e[1G\e[K"  # bash backspace + clear backspace https://coderwall.com/p/gvevca/pretty-output-from-remote-git
     #local COLOR_PRE=""
     local COLOR_POST=""
     local START_TIME=${BUILD_START_TIME:-$(date +'%s.%N')}
