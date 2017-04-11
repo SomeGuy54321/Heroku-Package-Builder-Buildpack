@@ -16,17 +16,18 @@ function job_reduce_increment() {
 }
 
 function retry_print() {
-    local PACKAGE="$1"
-    local NUM_JOBS=$2
-    puts-warn "Installation of $PACKAGE failed using $HOMEBREW_MAKE_JOBS processor cores"
+    local ACTION=$1
+    local PACKAGE="$2"
+    local NUM_JOBS=$3
+    puts-warn "$(proper_word ${ACTION})ation of ${PACKAGE} failed using $HOMEBREW_MAKE_JOBS processor cores"
     export HOMEBREW_MAKE_JOBS=${NUM_JOBS}
-    puts-step "Retrying installation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores" |& indent
+    puts-step "Retrying ${ACTION}ation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores" |& indent
 }
 
 function fail_print() {
     local ACTION=$1
     local PACKAGE=$2
-    puts-warn "Unable to install $PACKAGE even at $HOMEBREW_MAKE_JOBS job(s)."
+    puts-warn "Unable to ${ACTION} $PACKAGE even at $HOMEBREW_MAKE_JOBS job(s)."
     echo "This build will now fail. Sorry about that.
 Perhaps consider removing $PACKAGE from your brew-extras.yaml file and retrying.
 If that doesn't work then remove this buildpack from your build and let the
@@ -90,13 +91,13 @@ function brew_do() {
                     # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
                     if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-4} ]; then
 
-                        retry_print $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
+                        retry_print $ACTION $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
                         brew_do $ACTION $PACKAGE $FLAGS
 
                     # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
                     elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-4} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
 
-                        retry_print $PACKAGE 1
+                        retry_print $ACTION $PACKAGE 1
                         brew_do $ACTION $PACKAGE $FLAGS
 
                     # else it's failed

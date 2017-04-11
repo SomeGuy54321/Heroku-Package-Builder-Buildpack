@@ -246,3 +246,11 @@ function reset_shell_default() {
     ;;
     esac
 }
+
+function proper_word() {
+    local STR="$1"
+    declare -u STRU="${STR:0:1}"
+    local STRN=${#STR}
+    declare -l STRL="${STR:1:$STRN}"
+    echo "${STRU}${STRL}"
+}
