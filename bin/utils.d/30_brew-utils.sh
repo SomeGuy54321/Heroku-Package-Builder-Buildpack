@@ -159,8 +159,8 @@ function brew_watch() {
 
             if [ ${TIME_REMAINING} -gt 0 ]; then
                 # print fluffy messages letting them know we're still alive
-                echo "$(countdown) ...... $(date --date=@${TIME_REMAINING} +'%M:%S') remaining"
-                sleep ${SLEEP_TIME}
+                sleep ${SLEEP_TIME}  # do sleep first so it doesnt immediately print a message
+                echo "$(countdown) ...... $(date --date=@$(( $TIME_REMAINING - $SLEEP_TIME )) +'%M:%S') remaining"
             else
                 case $KILL_RETRIES in
                 0)
@@ -181,6 +181,7 @@ function brew_watch() {
                 KILL_RETRIES=$(( $KILL_RETRIES + 1 ))
             fi
     done
+    do-debug "Leaving brew_watch"
     return ${RTN_STATUS}
 }
 
