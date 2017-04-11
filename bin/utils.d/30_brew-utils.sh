@@ -37,11 +37,11 @@ him/her." |& indent
 
 function brew_do() {
 
-    local PACKAGE=$2
+    local PACKAGE=${2/ /}
     declare -l ACTION=${1/ /}
     local FLAGS=${@:3}
     if [ $(time_remaining) -gt 0 ]; then
-        if [ ${ACTION} == "install" ] && [ $(brew_checkfor ${PACKAGE}) -eq 0 ]; then
+        if [ ${ACTION} == "install" ] && [ $(brew_checkfor ${PACKAGE}) -gt 0 ]; then
                 puts-step "${PACKAGE} has already been installed by Linuxbrew"
         else
             local INSTALL_TRY_NUMBER=${INSTALL_TRY_NUMBER:-0}  # takes the INSTALL_TRY_NUMBER from the next highest scope
