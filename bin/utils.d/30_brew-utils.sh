@@ -69,7 +69,7 @@ function brew_do() {
                 puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
                 jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
-                wait ${BREW_PID}  # this is exported from brew_watch and returns the same status as the brew process did
+                #wait ${BREW_PID}  # this is exported from brew_watch and returns the same status as the brew process did
                 local BREW_RTN_STATUS=$?
 
                 INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
@@ -145,9 +145,11 @@ function brew_watch() {
     # this is the most important part of the whole buildpack
     ## about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
 
-    export BREW_PID=$1  # get PID from 'jobs -x' in brew_do
-    local RTN_STATUS=0
-    local KILL_RETRIES=0
+    declare -xi BREW_PID=${1}  # get PID from 'jobs -x' in brew_do
+    declare -i RTN_STATUS
+    declare -i KILL_RETRIES=0
+    local PROC_IS_ACTIVE_NUM=$(ps --no-headers --cols 1 --rows 1 -p ${BREW_PID} 2>/dev/null)
+    local PROC_IS_ACTIVE_START_NUM
     while [ -f "/proc/$BREW_PID/status" ]; do  # checks if the process is still active
             local TIME_REMAINING=$(time_remaining)
             local SLEEP_TIME=30
@@ -165,15 +167,15 @@ function brew_watch() {
                 case $KILL_RETRIES in
                 0)
                     puts-warn "Out of time, aborting build with SIGTERM"
-                    kill -s SIGTERM ${BREW_PID} || true
+                    (set -x; kill -SIGTERM ${BREW_PID} || true)
                 ;;
                 1)
-                    puts-warn "             aborting build with SIGINT"
-                    kill -s SIGINT ${BREW_PID} || true
+                    puts-warn "Aborting build with SIGINT"
+                    (set -x; kill -SIGINT ${BREW_PID} || true)
                 ;;
                 *)
-                    puts-warn "             aborting build with SIGKILL"
-                    kill -s SIGKILL ${BREW_PID} || true
+                    puts-warn "Aborting build with SIGKILL"
+                    (set -x; kill -SIGKILL ${BREW_PID} || true)
                 ;;
                 esac
                 sleep 5  # wait for the kill signal to work
@@ -181,6 +183,10 @@ function brew_watch() {
                 KILL_RETRIES=$(( $KILL_RETRIES + 1 ))
             fi
     done
+
+    do-debug "Waiting on brew return status"
+    wait $BREW_PID
+    RTN_STATUS=${RTN_STATUS:-$?}
     do-debug "Leaving brew_watch"
     return ${RTN_STATUS}
 }
