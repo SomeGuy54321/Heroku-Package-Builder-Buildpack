@@ -90,19 +90,32 @@ function brew_do() {
                     if [ ${CHECK_NONEXISTENT_PACKAGE:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -gt 0 ]; then
 
                         if [ ${CHECK_CLEAN_RETRY} -gt 0 ]; then
+                            case ${INSTALL_TRY_NUMBER} in
+                            1)
+                                puts-warn "Got a weird error. Running a possible remedy."
+                                do-debug "This remedy was built when I had a failed gcc build, which was"
+                                echo     "then archived, then upon decompressing and trying to restart the" |& indent-debug
+                                echo     "build I'd get 'Error: File exists @ syserr_fail2_in'" |& indent-debug
 
-                            puts-warn "Got a weird error. Running some possible remedies."
-
-                            do-debug "This remedy was built when I had a failed gcc build, which was"
-                            echo     "then archived, then upon decompressing and trying to restart the" |& indent-debug
-                            echo     "build I'd get 'Error: File exists @ syserr_fail2_in'" |& indent-debug
-
-                            do-debug "Running brew cleanup -s ${PACKAGE}"
-                            brew cleanup -s ${PACKAGE} |& indent-debug
-
-                            do-debug "Running brew link --overwrite --force ${PACKAGE}"
-                            brew link --overwrite --force ${PACKAGE} |& indent-debug
-
+                                do-debug "Running brew link --overwrite --force ${PACKAGE}"
+                                brew link --overwrite --force ${PACKAGE} |& indent-debug
+                            ;;
+                            2)
+                                puts-warn "Got another weird error. Running another possible remedy."
+                                do-debug "Running brew cleanup -s ${PACKAGE}"
+                                brew cleanup -s ${PACKAGE} |& indent-debug
+                            ;;
+                            3)
+                                puts-warn "Another weird error. Resorting to more drastic measures."
+                                do-debug "Running brew uninstall ${PACKAGE}"
+                                brew uninstall ${PACKAGE} |& indent-debug
+                            ;;
+                            *)
+                                puts-warn "Weird error again. Last ditch effort to fix this."
+                                do-debug "Running brew uninstall --force --ignore-dependencies ${PACKAGE}"
+                                brew uninstall --force --ignore-dependencies ${PACKAGE} |& indent-debug
+                            ;;
+                            esac
                         fi
 
                         # if we haven't exhausted our job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
