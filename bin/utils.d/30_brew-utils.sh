@@ -68,8 +68,9 @@ function brew_do() {
 
                 puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
-                jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
-                export BREW_PID=$!
+                declare -i BREW_PID=$!
+                brew_watch ${BREW_PID}
+                #jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
                 #wait ${BREW_PID}  # this is exported from brew_watch and returns the same status as the brew process did
                 local BREW_RTN_STATUS=$?
 
@@ -151,7 +152,7 @@ function brew_watch() {
     #declare -xi BREW_PID=$(jobs -l | grep -E '\[[0-9]+\]\+' | cut -d'+' -f2 | sed 's/^\s*\([0-9]\+\).\+/\1/')
     declare -i RTN_STATUS
     declare -i KILL_RETRIES=0
-
+    declare -i BREW_PID=$1
     echo "BREW_PID=$BREW_PID"
     echo "\$1=$1"
     echo "\$@=$@"
@@ -206,8 +207,10 @@ function brew_watch() {
 
     do-debug "Waiting on brew return status"
     wait $BREW_PID
-    RTN_STATUS=${RTN_STATUS:-$?}
-    do-debug "Leaving brew_watch"
+    WAIT_RTN_STATUS=$?
+    do-debug "wait return status = $WAIT_RTN_STATUS"
+    RTN_STATUS=${RTN_STATUS:-$WAIT_RTN_STATUS}
+    do-debug "Leaving brew_watch with RTN_STATUS = $RTN_STATUS"
     return ${RTN_STATUS}
 }
 
