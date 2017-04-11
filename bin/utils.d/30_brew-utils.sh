@@ -151,37 +151,40 @@ function brew_watch() {
     local PROC_IS_ACTIVE_NUM=$(ps --no-headers --cols 1 --rows 1 -p ${BREW_PID} 2>/dev/null)
     local PROC_IS_ACTIVE_START_NUM
     while [ -f "/proc/$BREW_PID/status" ]; do  # checks if the process is still active
-            local TIME_REMAINING=$(time_remaining)
-            local SLEEP_TIME=30
-            # show time remaining and check for activity more frequently as time runs out
-            if [ ${TIME_REMAINING} -le 120 ]; then SLEEP_TIME=20; fi
-            if [ ${TIME_REMAINING} -le 60 ]; then SLEEP_TIME=10; fi
-            if [ ${TIME_REMAINING} -le 30 ]; then SLEEP_TIME=5; fi
-            if [ ${TIME_REMAINING} -le 10 ]; then SLEEP_TIME=1; fi
 
-            if [ ${TIME_REMAINING} -gt 0 ]; then
-                # print fluffy messages letting them know we're still alive
-                sleep ${SLEEP_TIME}  # do sleep first so it doesnt immediately print a message
-                echo "$(countdown) ...... $(date --date=@$(( $TIME_REMAINING - $SLEEP_TIME )) +'%M:%S') remaining"
-            else
-                case $KILL_RETRIES in
-                0)
-                    puts-warn "Out of time, aborting build with SIGTERM"
-                    (set -x; kill -SIGTERM ${BREW_PID} || true)
-                ;;
-                1)
-                    puts-warn "Aborting build with SIGINT"
-                    (set -x; kill -SIGINT ${BREW_PID} || true)
-                ;;
-                *)
-                    puts-warn "Aborting build with SIGKILL"
-                    (set -x; kill -SIGKILL ${BREW_PID} || true)
-                ;;
-                esac
-                sleep 5  # wait for the kill signal to work
-                RTN_STATUS=0  # so it doesn't retry in brew_do
-                KILL_RETRIES=$(( $KILL_RETRIES + 1 ))
-            fi
+        (set +x; cat "/proc/$BREW_PID/status" || true)
+
+        local TIME_REMAINING=$(time_remaining)
+        local SLEEP_TIME=30
+        # show time remaining and check for activity more frequently as time runs out
+        if [ ${TIME_REMAINING} -le 120 ]; then SLEEP_TIME=20; fi
+        if [ ${TIME_REMAINING} -le 60 ]; then SLEEP_TIME=10; fi
+        if [ ${TIME_REMAINING} -le 30 ]; then SLEEP_TIME=5; fi
+        if [ ${TIME_REMAINING} -le 10 ]; then SLEEP_TIME=1; fi
+
+        if [ ${TIME_REMAINING} -gt 0 ]; then
+            # print fluffy messages letting them know we're still alive
+            sleep ${SLEEP_TIME}  # do sleep first so it doesnt immediately print a message
+            echo "$(countdown) ...... $(date --date=@$(( $TIME_REMAINING - $SLEEP_TIME )) +'%M:%S') remaining"
+        else
+            case $KILL_RETRIES in
+            0)
+                puts-warn "Out of time, aborting build with SIGTERM"
+                (set -x; kill -SIGTERM ${BREW_PID} || true)
+            ;;
+            1)
+                puts-warn "Aborting build with SIGINT"
+                (set -x; kill -SIGINT ${BREW_PID} || true)
+            ;;
+            *)
+                puts-warn "Aborting build with SIGKILL"
+                (set -x; kill -SIGKILL ${BREW_PID} || true)
+            ;;
+            esac
+            sleep 5  # wait for the kill signal to work
+            RTN_STATUS=0  # so it doesn't retry in brew_do
+            KILL_RETRIES=$(( $KILL_RETRIES + 1 ))
+        fi
     done
 
     do-debug "Waiting on brew return status"
