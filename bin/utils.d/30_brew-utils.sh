@@ -21,7 +21,7 @@ function retry_print() {
     local NUM_JOBS=$3
     puts-warn "$(proper_word ${ACTION})ation of ${PACKAGE} failed using $HOMEBREW_MAKE_JOBS processor cores"
     export HOMEBREW_MAKE_JOBS=${NUM_JOBS}
-    puts-step "Retrying ${ACTION}ation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores" |& indent
+    puts-step "Retrying ${ACTION}ation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores"
 }
 
 function fail_print() {
@@ -151,7 +151,7 @@ function brew_watch() {
     while [ $(jobs -p | grep --count ${BREW_PID}) -ne 0 ]; do  # checks if the process is still active
 
 #        cat "/proc/$BREW_PID/status" || true
-#        jobs -l
+        jobs -l
 
         local TIME_REMAINING=$(time_remaining)
         local SLEEP_TIME=30
