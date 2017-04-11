@@ -69,6 +69,7 @@ function brew_do() {
                 puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
                 jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
+                export BREW_PID=$!
                 #wait ${BREW_PID}  # this is exported from brew_watch and returns the same status as the brew process did
                 local BREW_RTN_STATUS=$?
 
@@ -147,7 +148,7 @@ function brew_watch() {
     ## about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
 
     # the jobs -x thing is passing the wrong process sometimes, this gets it directly
-    declare -xi BREW_PID=$(jobs -l | grep -E '\[[0-9]+\]\+' | cut -d'+' -f2 | sed 's/^\s*\([0-9]\+\).\+/\1/')
+    #declare -xi BREW_PID=$(jobs -l | grep -E '\[[0-9]+\]\+' | cut -d'+' -f2 | sed 's/^\s*\([0-9]\+\).\+/\1/')
     declare -i RTN_STATUS
     declare -i KILL_RETRIES=0
 
@@ -159,7 +160,7 @@ function brew_watch() {
     echo "jobs -p"
     jobs -p
 
-    while [ $(jobs -l | grep --count ${BREW_PID}) -ne 0 ]; do  # checks if the process is still active
+    while [ $(kill -0 ${BREW_PID} |& grep --count .) -eq 0 ]; do  # checks if the process is still active
 
         local TIME_REMAINING=$(time_remaining)
         local SLEEP_TIME=30
