@@ -68,14 +68,13 @@ function brew_do() {
             if [ $(time_remaining) -gt 0 ]; then
 
                 # start no error block
-                local BREW_RTN_STATUS
                 (set +e
                 puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
                 declare -i BREW_PID=$(jobs -p | tail -n1)
                 brew_watch ${BREW_PID}
-                BREW_RTN_STATUS=$?
                 )
+                local BREW_RTN_STATUS=$?
 
                 INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
                 ## brew_outputhandler will write one of the following to /tmp/brew_test_results.txt:
