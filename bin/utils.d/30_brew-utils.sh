@@ -147,8 +147,8 @@ function brew_watch() {
 
     export BREW_PID=$1  # get PID from 'jobs -x' in brew_do
     local RTN_STATUS=0
+    local KILL_RETRIES=0
     while [ -f "/proc/$BREW_PID/status" ]; do  # checks if the process is still active
-
             local TIME_REMAINING=$(time_remaining)
             local SLEEP_TIME=30
             # show time remaining and check for activity more frequently as time runs out
@@ -162,13 +162,26 @@ function brew_watch() {
                 echo "$(countdown) ...... $(date --date=@${TIME_REMAINING} +'%M:%S') remaining"
                 sleep ${SLEEP_TIME}
             else
-                puts-warn "Out of time, aborting build."
-                kill -15 ${BREW_PID} || true
+                case $KILL_RETRIES in
+                0)
+                    puts-warn "Out of time, aborting build with SIGTERM"
+                    kill -s SIGTERM ${BREW_PID} || true
+                ;;
+                1)
+                    puts-warn "             aborting build with SIGINT"
+                    kill -s SIGINT ${BREW_PID} || true
+                ;;
+                *)
+                    puts-warn "             aborting build with SIGKILL"
+                    kill -s SIGKILL ${BREW_PID} || true
+                ;;
+                esac
                 sleep 5  # wait for the kill signal to work
+                RTN_STATUS=0  # so it doesn't retry in brew_do
+                KILL_RETRIES=$(( $KILL_RETRIES + 1 ))
             fi
-
     done
-    #return ${RTN_STATUS}
+    return ${RTN_STATUS}
 }
 
 function brew_checkfor() {

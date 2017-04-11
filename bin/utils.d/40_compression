@@ -35,8 +35,8 @@ function compression_level_chooser() {
     local SAFE_JOBS_NUM=${3:-$MAX_JOBS}
     #ARG4
     #local SIZE2COMPRESS=$(du --summarize $4 2>/dev/null || echo 0)
-    # this is much faster and doesnt print extraneous text
-    #local SIZE2COMPRESS=$(find $4 -printf %k"\n" | awk '{  sum += $1 } END { print sum }' || echo 0)
+    # this is much faster and doesnt print extraneous text, prints in kilobytes
+    local SIZE2COMPRESS=$(find ${4:-$HOME/.linuxbrew $HOME/.cache} -printf %k"\n" 2>/dev/null | awk '{  sum += $1 } END { print sum }' || echo 0)
     local TIME_LEFT=$(time_remaining)
     declare -i TIME_LEFT_INT=${TIME_LEFT/.*/}
 
@@ -53,8 +53,8 @@ function compression_level_chooser() {
         #   --memlimit=X (same as --memlimit-compress=X and --memlimit-decompress=X)
     fi
 
-    # if < 2min remains then drop the compression level to min
-    if [ ${TIME_LEFT_INT} -le 120 ]; then
+    # if < 2min remains then drop the compression level to min, or if >500mb
+    if [ ${TIME_LEFT_INT} -le 120 ] || [ ${SIZE2COMPRESS} -gt 500000 ]; then
         echo 0
     # if I've passed in a try number then I'm wanting to decrease it
     elif [ ${TRY_NUM} -gt 0 ]; then
