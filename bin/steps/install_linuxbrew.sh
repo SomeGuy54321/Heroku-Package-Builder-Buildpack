@@ -12,10 +12,11 @@ else
     puts-step "Linuxbrew already installed"
     do-debug "\$(which brew)=$(which brew)"
 
-    # we dont archive the .git dirs so we need to rebuild them
+    puts-step "Reconfiguring Linuxbrew"
     git_rebuild_latest
 
-    # sometimes there's broken symlinks
+    puts-step "Cleaning Linuxbrew"
+    do-debug "Running 'brew prune'"
     brew prune
 
 fi
