@@ -130,6 +130,7 @@ function brew_do() {
 }
 
 function brew_watch() {
+
     ## This thing does:
     # 1.) Traps the brew process id
     # 2.) Sends it to the background
@@ -148,10 +149,13 @@ function brew_watch() {
     declare -xi BREW_PID=${1}  # get PID from 'jobs -x' in brew_do
     declare -i RTN_STATUS
     declare -i KILL_RETRIES=0
-    while [ $(jobs -p | grep --count ${BREW_PID}) -ne 0 ]; do  # checks if the process is still active
 
-#        cat "/proc/$BREW_PID/status" || true
-        jobs -l
+    echo "BREW_PID=$BREW_PID"
+    echo "\$1=$1"
+    echo "jobs -l"
+    jobs -l
+
+    while [ $(jobs -p | grep --count ${BREW_PID}) -ne 0 ]; do  # checks if the process is still active
 
         local TIME_REMAINING=$(time_remaining)
         local SLEEP_TIME=30
