@@ -68,7 +68,7 @@ function brew_do() {
 
                 puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
-                declare -i BREW_PID=$!
+                declare -i BREW_PID=$(jobs -p)
                 brew_watch ${BREW_PID}
                 #jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
                 #wait ${BREW_PID}  # this is exported from brew_watch and returns the same status as the brew process did
@@ -153,14 +153,8 @@ function brew_watch() {
     declare -i RTN_STATUS
     declare -i KILL_RETRIES=0
     declare -i BREW_PID=$1
-    echo "BREW_PID=$BREW_PID"
-    echo "\$1=$1"
-    echo "\$@=$@"
-    echo "jobs -l"
-    jobs -l
-    echo "jobs -p"
-    jobs -p
 
+    do-debug "BREW_PID=$BREW_PID"
     while [ $(kill -0 ${BREW_PID} |& grep --count .) -eq 0 ]; do  # checks if the process is still active
 
         local TIME_REMAINING=$(time_remaining)
@@ -194,15 +188,6 @@ function brew_watch() {
             RTN_STATUS=0  # so it doesn't retry in brew_do
             KILL_RETRIES=$(( $KILL_RETRIES + 1 ))
         fi
-
-        echo "BREW_PID=$BREW_PID"
-        echo "\$1=$1"
-        echo "\$@=$@"
-        echo "jobs -l"
-        jobs -l
-        echo "jobs -p"
-        jobs -p
-
     done
 
     do-debug "Waiting on brew return status"
