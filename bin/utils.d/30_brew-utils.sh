@@ -148,12 +148,10 @@ function brew_watch() {
     declare -xi BREW_PID=${1}  # get PID from 'jobs -x' in brew_do
     declare -i RTN_STATUS
     declare -i KILL_RETRIES=0
-    local PROC_IS_ACTIVE_NUM=$(ps --no-headers --cols 1 --rows 1 -p ${BREW_PID} 2>/dev/null)
-    local PROC_IS_ACTIVE_START_NUM
-    while [ -f "/proc/$BREW_PID/status" ]; do  # checks if the process is still active
+    while [ $(jobs -p | grep --count ${BREW_PID}) -ne 0 ]; do  # checks if the process is still active
 
-        cat "/proc/$BREW_PID/status" || true
-        jobs -l
+#        cat "/proc/$BREW_PID/status" || true
+#        jobs -l
 
         local TIME_REMAINING=$(time_remaining)
         local SLEEP_TIME=30
