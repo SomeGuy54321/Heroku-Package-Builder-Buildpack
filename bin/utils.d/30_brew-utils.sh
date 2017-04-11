@@ -249,7 +249,8 @@ function show_linuxbrew_files() {
 # creating this (originally) so install_packages.sh doesn't keep trying to install
 # a package that it can't find.
 function brew_outputhandler() {
-    local TEST='{
+    local TEST='
+    {
         if($0 ~ /Error: No such keg: /) {
             print "nonexistent_package" > "/tmp/brew_test_results.txt";
         }
@@ -261,8 +262,10 @@ function brew_outputhandler() {
         }
         else if($0 ~ /Error: File exists /) {
             print "clean_and_retry" > "/tmp/brew_test_results.txt";
+        }
         print $0;
-        system(""); }'
+        system("");
+    }'
 
     #local TEST='{ if ($0 ~ /Error: No such keg: / || $0 ~ /Error: No available formula with the name / || $0 ~ /Error: No formulae found in taps/) { print "assume_is_reinstall" > "/tmp/brew_test_results.txt"; } print $0; system(""); }'
 
