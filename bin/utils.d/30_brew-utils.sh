@@ -91,9 +91,17 @@ function brew_do() {
 
                         if [ ${CHECK_CLEAN_RETRY} -gt 0 ]; then
 
-                            # there may have been an error with the build
-                            # when im restarting a failed gcc build I get 'Error: File exists @ syserr_fail2_in'
-                            brew cleanup -s ${PACKAGE}
+                            puts-warn "Got a weird error. Running some possible remedies."
+
+                            do-debug "This remedy was built when I had a failed gcc build, which was"
+                            echo     "then archived, then upon decompressing and trying to restart the" |& indent-debug
+                            echo     "build I'd get 'Error: File exists @ syserr_fail2_in'" |& indent-debug
+
+                            do-debug "Running brew cleanup -s ${PACKAGE}"
+                            brew cleanup -s ${PACKAGE} |& indent-debug
+
+                            do-debug "Running brew link --overwrite --force ${PACKAGE}"
+                            brew link --overwrite --force ${PACKAGE} |& indent-debug
 
                         fi
 

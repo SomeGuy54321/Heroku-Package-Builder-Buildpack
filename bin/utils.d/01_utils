@@ -31,7 +31,7 @@ function puts-step (){
 # Buildpack Warnings.
 function puts-warn (){
     # echo " !     $@"
-    RE='s/^/ !     /; e countdown;'
+    RE='s/^/ !      /; e countdown;'
     echo $@ | sed $SED_FLAG "$RE"
 }
 
