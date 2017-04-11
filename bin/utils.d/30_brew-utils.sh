@@ -80,38 +80,40 @@ function brew_do() {
                 local CHECK_NONEXISTENT_PACKAGE=$(grep --count nonexistent_package /tmp/brew_test_results.txt 2>/dev/null || echo 0)
                 local CHECK_CLEAN_RETRY=$(grep --count clean_and_retry /tmp/brew_test_results.txt 2>/dev/null || echo 0)
 
-                if [ ${CHECK_CLEAN_RETRY} -gt 0 ]; then
+                if [ ${CHECK_NONEXISTENT_PACKAGE:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
 
-                    # there may have been an error with the build, this happened once when using an archived gcc build
-                    # to continue building gcc left off from the previous buildpack build ya..
-                    brew cleanup -s $PACKAGE
+                    if [ ${CHECK_CLEAN_RETRY} -gt 0 ]; then
 
-                elif [ ${CHECK_NONEXISTENT_PACKAGE:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
+                        # there may have been an error with the build, this happened once when using an archived gcc build
+                        # to continue building gcc left off from the previous buildpack build ya..
+                        brew cleanup -s $PACKAGE
 
-                    # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
+                    fi
+
+                    # if we haven't exhausted our job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
                     if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-4} ]; then
 
                         retry_print $ACTION $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
                         brew_do $ACTION $PACKAGE $FLAGS
 
                     # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
-                    elif [ ${INSTALL_TRY_NUMBER:-1} -eq $(( ${JOB_REDUCE_MAX_TRIES:-4} + 1 )) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
+                    elif [ ${INSTALL_TRY_NUMBER:-1} -eq $((${JOB_REDUCE_MAX_TRIES:-4} + 1)) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
 
                         retry_print $ACTION $PACKAGE 1
                         brew_do $ACTION $PACKAGE $FLAGS
 
                     # else it's failed
-                    else
-                        if [ ${PACKAGE_BUILDER_NOBUILDFAIL:-0} -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
+                    elif [ ${PACKAGE_BUILDER_NOBUILDFAIL:-0} -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
 
                             fail_print ${ACTION} ${PACKAGE}
                             #unset INSTALL_TRY_NUMBER
                             set -e
                             exit ${BREW_RTN_STATUS}
-                        else
-                            puts-warn "Unable to ${ACTION} ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
-                            #unset INSTALL_TRY_NUMBER
-                        fi
+
+                    # else it's failed and we dont care
+                    else
+                        puts-warn "Unable to ${ACTION} ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
+                        #unset INSTALL_TRY_NUMBER
                     fi
                 fi
             )
