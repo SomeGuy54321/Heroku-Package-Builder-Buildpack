@@ -17,7 +17,7 @@ else
 
     puts-step "Cleaning Linuxbrew"
     do-debug "Running 'brew prune'"
-    brew prune
+    brew prune |& indent
 
 fi
 
