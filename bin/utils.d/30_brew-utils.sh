@@ -41,89 +41,90 @@ function brew_do() {
     declare -l ACTION=${1/ /}
     local FLAGS=${@:3}
     if [ $(time_remaining) -gt 0 ]; then
-        local INSTALL_TRY_NUMBER=${INSTALL_TRY_NUMBER:-0}  # takes the INSTALL_TRY_NUMBER from the next highest scope
-
-        # install dependencies incrementally
-        if [ ${ACTION} = "install" ] || [ ${ACTION} = "reinstall" ]; then
-            local DEPS_INSTALLED=$(echo -n "$(brew deps --include-build ${PACKAGE} --installed)" | tr '\n' '|')
-            local DEPS=$(brew deps -n --include-optional --skip-recommended ${PACKAGE} | grep -vE "$DEPS_INSTALLED")
-            if [ ${#DEPS} -gt 0 ]; then
-                puts-step "Incrementally installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | sed 's/ /, /g')"
-                for dep in ${DEPS}; do
-                    IS_INSTALLED=$(brew_checkfor ${dep})
-                    if [ $IS_INSTALLED -eq 0 ]; then
-                        brew_do ${ACTION} ${dep}
-                    else
-                        puts-step "${dep} has already been installed by Linuxbrew"
-                    fi
-                done
-            fi
-        fi
-
-        # this is ugly but the time needs to be checked again since the incremental dependency install loop may
-        # have taken awhile...
-        if [ $(time_remaining) -gt 0 ]; then
-            # start no error block
-            (set +e
-
-                puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
-                brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
-                declare -i BREW_PID=$(jobs -p)
-                brew_watch ${BREW_PID}
-                #jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
-                #wait ${BREW_PID}  # this is exported from brew_watch and returns the same status as the brew process did
-                local BREW_RTN_STATUS=$?
-
-                INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
-                ## brew_outputhandler will write one of the following to /tmp/brew_test_results.txt:
-                # "nonexistent_package"
-                # "clean_and_retry"
-                local CHECK_NONEXISTENT_PACKAGE=$(grep --count nonexistent_package /tmp/brew_test_results.txt 2>/dev/null || echo 0)
-                local CHECK_CLEAN_RETRY=$(grep --count clean_and_retry /tmp/brew_test_results.txt 2>/dev/null || echo 0)
-
-                if [ ${CHECK_NONEXISTENT_PACKAGE:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
-
-                    if [ ${CHECK_CLEAN_RETRY} -gt 0 ]; then
-
-                        # there may have been an error with the build, this happened once when using an archived gcc build
-                        # to continue building gcc left off from the previous buildpack build ya..
-                        brew cleanup -s $PACKAGE
-
-                    fi
-
-                    # if we haven't exhausted our job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
-                    if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-4} ]; then
-
-                        retry_print $ACTION $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
-                        brew_do $ACTION $PACKAGE $FLAGS
-
-                    # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
-                    elif [ ${INSTALL_TRY_NUMBER:-1} -eq $((${JOB_REDUCE_MAX_TRIES:-4} + 1)) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
-
-                        retry_print $ACTION $PACKAGE 1
-                        brew_do $ACTION $PACKAGE $FLAGS
-
-                    # else it's failed
-                    elif [ ${PACKAGE_BUILDER_NOBUILDFAIL:-0} -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
-
-                            fail_print ${ACTION} ${PACKAGE}
-                            #unset INSTALL_TRY_NUMBER
-                            set -e
-                            exit ${BREW_RTN_STATUS}
-
-                    # else it's failed and we dont care
-                    else
-                        puts-warn "Unable to ${ACTION} ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
-                        #unset INSTALL_TRY_NUMBER
-                    fi
-                fi
-            )
+        if [ ${ACTION} = "install" ] && [ $(brew_checkfor ${PACKAGE}) -eq 0 ]; then
+                puts-step "${PACKAGE} has already been installed by Linuxbrew"
         else
-            puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
-            #unset INSTALL_TRY_NUMBER
-        fi
-        # reset to exiting if error
-        #unset INSTALL_TRY_NUMBER
+            local INSTALL_TRY_NUMBER=${INSTALL_TRY_NUMBER:-0}  # takes the INSTALL_TRY_NUMBER from the next highest scope
+
+            # install dependencies incrementally
+            if [ ${ACTION} = "install" ] || [ ${ACTION} = "reinstall" ]; then
+                local DEPS_INSTALLED=$(echo -n "$(brew deps --include-build ${PACKAGE} --installed)" | tr '\n' '|')
+                local DEPS=$(brew deps -n --include-optional --skip-recommended ${PACKAGE} | grep -vE "$DEPS_INSTALLED")
+                if [ ${#DEPS} -gt 0 ]; then
+                    puts-step "Incrementally installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | sed 's/ /, /g')"
+                    for dep in ${DEPS}; do
+                        IS_INSTALLED=$(brew_checkfor ${dep})
+                        if [ $IS_INSTALLED -eq 0 ]; then
+                            brew_do ${ACTION} ${dep}
+                        else
+                            puts-step "${dep} has already been installed by Linuxbrew"
+                        fi
+                    done
+                fi
+            fi
+
+            # this is ugly but the time needs to be checked again since the incremental dependency install loop may
+            # have taken awhile...
+            if [ $(time_remaining) -gt 0 ]; then
+                # start no error block
+                (set +e
+
+                    puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
+                    brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
+                    declare -i BREW_PID=$(jobs -p)
+                    brew_watch ${BREW_PID}
+                    #jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
+                    #wait ${BREW_PID}  # this is exported from brew_watch and returns the same status as the brew process did
+                    local BREW_RTN_STATUS=$?
+
+                    INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
+                    ## brew_outputhandler will write one of the following to /tmp/brew_test_results.txt:
+                    # "nonexistent_package"
+                    # "clean_and_retry"
+                    local CHECK_NONEXISTENT_PACKAGE=$(grep --count nonexistent_package /tmp/brew_test_results.txt 2>/dev/null || echo 0)
+                    local CHECK_CLEAN_RETRY=$(grep --count clean_and_retry /tmp/brew_test_results.txt 2>/dev/null || echo 0)
+
+                    if [ ${CHECK_NONEXISTENT_PACKAGE:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
+
+                        if [ ${CHECK_CLEAN_RETRY} -gt 0 ]; then
+
+                            # there may have been an error with the build, this happened once when using an archived gcc build
+                            # to continue building gcc left off from the previous buildpack build ya..
+                            brew cleanup -s $PACKAGE
+
+                        fi
+
+                        # if we haven't exhausted our job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
+                        if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-4} ]; then
+
+                            retry_print $ACTION $PACKAGE $(max 1 $(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) )))
+                            brew_do $ACTION $PACKAGE $FLAGS
+
+                        # if we're at our INSTALL_TRY_NUMBER and we're still not on single threading try that before giving up
+                        elif [ ${INSTALL_TRY_NUMBER:-1} -eq $((${JOB_REDUCE_MAX_TRIES:-4} + 1)) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
+
+                            retry_print $ACTION $PACKAGE 1
+                            brew_do $ACTION $PACKAGE $FLAGS
+
+                        # else it's failed
+                        elif [ ${PACKAGE_BUILDER_NOBUILDFAIL:-0} -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
+
+                                fail_print ${ACTION} ${PACKAGE}
+                                #unset INSTALL_TRY_NUMBER
+                                set -e
+                                exit ${BREW_RTN_STATUS}
+
+                        # else it's failed and we dont care
+                        else
+                            puts-warn "Unable to ${ACTION} ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
+                            #unset INSTALL_TRY_NUMBER
+                        fi
+                    fi  # see if the package actually exists and if the ACTION failed for some reason
+                )
+            else  # ran out of time
+                puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
+            fi  # check if theres time left for actual ACTION
+        fi  # check if ACTION=install and the package is already installed
     else
         puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
         #unset INSTALL_TRY_NUMBER
