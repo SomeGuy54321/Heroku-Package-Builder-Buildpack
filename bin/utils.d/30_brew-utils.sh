@@ -152,7 +152,8 @@ function brew_watch() {
     local PROC_IS_ACTIVE_START_NUM
     while [ -f "/proc/$BREW_PID/status" ]; do  # checks if the process is still active
 
-        (set +x; cat "/proc/$BREW_PID/status" || true)
+        cat "/proc/$BREW_PID/status" || true
+        jobs -l
 
         local TIME_REMAINING=$(time_remaining)
         local SLEEP_TIME=30
