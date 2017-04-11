@@ -10,9 +10,8 @@ JOB_REDUCE_MAX_TRIES=4
 export HOMEBREW_MAKE_JOBS=$(grep --count ^processor /proc/cpuinfo || echo 1)
 
 function job_reduce_increment() {
-    local MAX_TRIES=$1
+    local MAX_TRIES=${1:-$JOB_REDUCE_MAX_TRIES}
     local MAX_JOBS=$(grep --count ^processor /proc/cpuinfo || echo 1)
-    if [ ${#MAX_TRIES} -eq 0 ]; then MAX_TRIES=$JOB_REDUCE_MAX_TRIES; fi
     max 1 $(( $MAX_JOBS / MAX_JOBS ))
 }
 
@@ -20,12 +19,13 @@ function retry_print() {
     local PACKAGE="$1"
     local NUM_JOBS=$2
     puts-warn "Installation of $PACKAGE failed using $HOMEBREW_MAKE_JOBS processor cores"
-    export HOMEBREW_MAKE_JOBS=$NUM_JOBS
+    export HOMEBREW_MAKE_JOBS=${NUM_JOBS}
     puts-step "Retrying installation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores" |& indent
 }
 
 function fail_print() {
-    local PACKAGE="$1"
+    local ACTION=$1
+    local PACKAGE=$2
     puts-warn "Unable to install $PACKAGE even at $HOMEBREW_MAKE_JOBS job(s)."
     echo "This build will now fail. Sorry about that.
 Perhaps consider removing $PACKAGE from your brew-extras.yaml file and retrying.
@@ -65,56 +65,27 @@ function brew_do() {
             # start no error block
             (set +e
 
-                ## This thing does:
-                # 1.) Traps the brew process id
-                # 2.) Sends it to the background
-                # 3.) Loops checking on time_remaining
-                # 4.) If time_remaining==0 then kill brew with SIGABRT
-                ## Why SIGABRT?
-                # https://www.gnu.org/software/libc/manual/html_node/Program-Error-Signals.html#index-SIGABRT
-                # https://www.gnu.org/software/make/manual/html_node/Interrupts.html
-                # https://bash.cyberciti.biz/guide/Sending_signal_to_Processes#kill_-_send_a_signal_to_a_process
-                ## Notes:
-                # if anything in this trap process is f'd up then the whole thing fails
-                # this is the most important part of the whole buildpack
-                # if in doubt just set while [ 0 ] and remove the '&' after the brew line
-
+                brew_actually_do $ACTION $PACKAGE $FLAGS
                 puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
-                BREW_PID=$(jobs -pr | tail -n2 | head -n1); BREW_PID=${BREW_PID/ /}  # get 2nd-to-last pid
-                while [ 1 ]; do
-                    if [ -f "/proc/$BREW_PID/status" ]; then  # checks if the process is still active
+                jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
+                wait ${BREW_PID}  # this is exported from brew_watch and returns the same status as the brew process did
+                local BREW_RTN_STATUS=$?
 
-                        local TIME_REMAINING=$(time_remaining)
-                        local SLEEP_TIME=30
-                        # show time remaining and check for activity more frequently as time runs out
-                        if [ ${TIME_REMAINING} -le 120 ]; then SLEEP_TIME=20; fi
-                        if [ ${TIME_REMAINING} -le 60 ]; then SLEEP_TIME=10; fi
-                        if [ ${TIME_REMAINING} -le 30 ]; then SLEEP_TIME=5; fi
-                        if [ ${TIME_REMAINING} -le 10 ]; then SLEEP_TIME=1; fi
-
-                        if [ ${TIME_REMAINING} -gt 0 ]; then
-                            # print fluffy messages letting them know we're still alive
-                            echo "$(countdown) ...... $(date --date=@${TIME_REMAINING} +'%M:%S') remaining"
-                            sleep ${SLEEP_TIME}
-                        else
-                            puts-warn "Out of time, aborting build."
-                            kill -6 ${BREW_PID} || true
-                            sleep 5  # wait for the kill signal to work
-                        fi
-                    else
-                        break
-                    fi
-                done
-
-                # about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
-                BREW_RTN_STATUS=${PIPESTATUS[0]}
-
-                # brew_outputhandler will write "assume_is_reinstall" to brew_test_results.txt if the text 'Error: No such keg: ' appeared in the output
-                local CHECK_ALREADY_INSTALLED=$(grep --count assume_is_reinstall /tmp/brew_test_results.txt 2>/dev/null || echo 0)
                 INSTALL_TRY_NUMBER=$(( $INSTALL_TRY_NUMBER + 1 ))
+                ## brew_outputhandler will write one of the following to /tmp/brew_test_results.txt:
+                # "nonexistent_package"
+                # "clean_and_retry"
+                local CHECK_NONEXISTENT_PACKAGE=$(grep --count nonexistent_package /tmp/brew_test_results.txt 2>/dev/null || echo 0)
+                local CHECK_CLEAN_RETRY=$(grep --count clean_and_retry /tmp/brew_test_results.txt 2>/dev/null || echo 0)
 
-                if [ ${CHECK_ALREADY_INSTALLED:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
+                if [ ${CHECK_CLEAN_RETRY} -gt 0 ]; then
+
+                    # there may have been an error with the build, this happened once when using an archived gcc build
+                    # to continue building gcc left off from the previous buildpack build ya..
+                    brew cleanup -s $PACKAGE
+
+                elif [ ${CHECK_NONEXISTENT_PACKAGE:-0} -eq 0 ] && [ ${BREW_RTN_STATUS} -ne 0 ]; then
 
                     # if we haven't exhausted out job-reduce tries then decrement HOMEBREW_MAKE_JOBS and try again
                     if [ ${INSTALL_TRY_NUMBER:-1} -le ${JOB_REDUCE_MAX_TRIES:-4} ]; then
@@ -132,31 +103,70 @@ function brew_do() {
                     else
                         if [ ${PACKAGE_BUILDER_NOBUILDFAIL:-0} -eq 0 ] && [ "$ACTION" != "uninstall" ]; then
 
-                            fail_print $PACKAGE
-                            unset INSTALL_TRY_NUMBER
+                            fail_print ${ACTION} ${PACKAGE}
+                            #unset INSTALL_TRY_NUMBER
                             set -e
-                            exit $?
+                            exit ${BREW_RTN_STATUS}
                         else
                             puts-warn "Unable to ${ACTION} ${PACKAGE}. Continuing since PACKAGE_BUILDER_NOBUILDFAIL > 0 or you're doing an uninstall."
-                            unset INSTALL_TRY_NUMBER
+                            #unset INSTALL_TRY_NUMBER
                         fi
                     fi
                 fi
             )
         else
             puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
-            unset INSTALL_TRY_NUMBER
+            #unset INSTALL_TRY_NUMBER
         fi
-
         # reset to exiting if error
-        unset INSTALL_TRY_NUMBER
-
+        #unset INSTALL_TRY_NUMBER
     else
-
         puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
-        unset INSTALL_TRY_NUMBER
+        #unset INSTALL_TRY_NUMBER
     fi
-    unset INSTALL_TRY_NUMBER
+    #unset INSTALL_TRY_NUMBER
+}
+
+function brew_watch() {
+    ## This thing does:
+    # 1.) Traps the brew process id
+    # 2.) Sends it to the background
+    # 3.) Loops checking on time_remaining
+    # 4.) If time_remaining==0 then kill brew with SIGTERM
+    ## Why SIGTERM?
+    # http://stackoverflow.com/a/690631/4106215
+    # https://www.gnu.org/software/libc/manual/html_node/Program-Error-Signals.html#index-SIGABRT
+    # https://www.gnu.org/software/make/manual/html_node/Interrupts.html
+    # https://bash.cyberciti.biz/guide/Sending_signal_to_Processes#kill_-_send_a_signal_to_a_process
+    ## Notes:
+    # if anything in this trap process is f'd up then the whole thing fails
+    # this is the most important part of the whole buildpack
+    ## about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
+
+    export BREW_PID=$1  # get PID from 'jobs -x' in brew_do
+    local RTN_STATUS=0
+    while [ -f "/proc/$BREW_PID/status" ]; do  # checks if the process is still active
+
+            local TIME_REMAINING=$(time_remaining)
+            local SLEEP_TIME=30
+            # show time remaining and check for activity more frequently as time runs out
+            if [ ${TIME_REMAINING} -le 120 ]; then SLEEP_TIME=20; fi
+            if [ ${TIME_REMAINING} -le 60 ]; then SLEEP_TIME=10; fi
+            if [ ${TIME_REMAINING} -le 30 ]; then SLEEP_TIME=5; fi
+            if [ ${TIME_REMAINING} -le 10 ]; then SLEEP_TIME=1; fi
+
+            if [ ${TIME_REMAINING} -gt 0 ]; then
+                # print fluffy messages letting them know we're still alive
+                echo "$(countdown) ...... $(date --date=@${TIME_REMAINING} +'%M:%S') remaining"
+                sleep ${SLEEP_TIME}
+            else
+                puts-warn "Out of time, aborting build."
+                kill -15 ${BREW_PID} || true
+                sleep 5  # wait for the kill signal to work
+            fi
+
+    done
+    #return ${RTN_STATUS}
 }
 
 function brew_checkfor() {
@@ -237,7 +247,23 @@ function show_linuxbrew_files() {
 # creating this (originally) so install_packages.sh doesn't keep trying to install
 # a package that it can't find.
 function brew_outputhandler() {
-#    local TEST='{if ($0 ~ /Error: No such keg: /) { print "'"$Y"'" > "'"brew_test_results.txt"'"; print $0; } else { print $0; } }'
-    local TEST='{ if ($0 ~ /Error: No such keg: / || $0 ~ /Error: No available formula with the name / || $0 ~ /Error: No formulae found in taps/) { print "assume_is_reinstall" > "/tmp/brew_test_results.txt"; } print $0; system(""); }'
+    local TEST='{
+        if($0 ~ /Error: No such keg: /) {
+            print "nonexistent_package" > "/tmp/brew_test_results.txt";
+        }
+        else if($0 ~ /Error: No available formula with the name /) {
+            print "nonexistent_package" > "/tmp/brew_test_results.txt";
+        }
+        else if($0 ~ /Error: No formulae found in taps/) {
+            print "nonexistent_package" > "/tmp/brew_test_results.txt";
+        }
+        else if($0 ~ /Error: File exists /) {
+            print "clean_and_retry" > "/tmp/brew_test_results.txt";
+        print $0;
+        system("");
+    }'
+
+    #local TEST='{ if ($0 ~ /Error: No such keg: / || $0 ~ /Error: No available formula with the name / || $0 ~ /Error: No formulae found in taps/) { print "assume_is_reinstall" > "/tmp/brew_test_results.txt"; } print $0; system(""); }'
+
     awk "$TEST" | indent
 }
