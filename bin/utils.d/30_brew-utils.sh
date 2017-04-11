@@ -152,6 +152,7 @@ function brew_watch() {
 
     echo "BREW_PID=$BREW_PID"
     echo "\$1=$1"
+    echo "\$@=$@"
     echo "jobs -l"
     jobs -l
 
