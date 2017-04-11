@@ -79,8 +79,8 @@ function brew_do() {
                     ## brew_outputhandler will write one of the following to /tmp/brew_test_results.txt:
                     # "nonexistent_package"
                     # "clean_and_retry"
-                    local CHECK_NONEXISTENT_PACKAGE=$(grep --count nonexistent_package "/tmp/brew_test_results.txt" || echo 0)
-                    local CHECK_CLEAN_RETRY=$(grep --count clean_and_retry "/tmp/brew_test_results.txt" || echo 0)
+                    local CHECK_NONEXISTENT_PACKAGE=$(grep -Zsqc nonexistent_package "/tmp/brew_test_results.txt" && echo -n 1 || echo -n 0)
+                    local CHECK_CLEAN_RETRY=$(grep -Zsqc clean_and_retry "/tmp/brew_test_results.txt" && echo -n 1 || echo -n 0)
 
                     do-debug "BREW_RTN_STATUS=$BREW_RTN_STATUS"
                     do-debug "CHECK_NONEXISTENT_PACKAGE=$CHECK_NONEXISTENT_PACKAGE"
@@ -203,12 +203,12 @@ function brew_watch() {
     done
 
     do-debug "Waiting on brew return status"
-    wait $BREW_PID
+    wait ${BREW_PID}
     WAIT_RTN_STATUS=$?
     do-debug "wait return status = $WAIT_RTN_STATUS"
     RTN_STATUS=${RTN_STATUS:-$WAIT_RTN_STATUS}
     do-debug "Leaving brew_watch with RTN_STATUS = $RTN_STATUS"
-    return $RTN_STATUS
+    return ${RTN_STATUS}
 }
 
 function brew_checkfor() {
