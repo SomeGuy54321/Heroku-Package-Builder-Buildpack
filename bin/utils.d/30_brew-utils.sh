@@ -66,7 +66,6 @@ function brew_do() {
             # start no error block
             (set +e
 
-                brew_actually_do $ACTION $PACKAGE $FLAGS
                 puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
                 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
                 jobs -x 'brew_watch' %+  # sends the PID of the last job started to brew_watch
@@ -263,8 +262,7 @@ function brew_outputhandler() {
         else if($0 ~ /Error: File exists /) {
             print "clean_and_retry" > "/tmp/brew_test_results.txt";
         print $0;
-        system("");
-    }'
+        system(""); }'
 
     #local TEST='{ if ($0 ~ /Error: No such keg: / || $0 ~ /Error: No available formula with the name / || $0 ~ /Error: No formulae found in taps/) { print "assume_is_reinstall" > "/tmp/brew_test_results.txt"; } print $0; system(""); }'
 
