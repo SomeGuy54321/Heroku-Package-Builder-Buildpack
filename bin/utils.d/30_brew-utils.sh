@@ -146,7 +146,8 @@ function brew_watch() {
     # this is the most important part of the whole buildpack
     ## about brilliant PIPESTATUS: http://stackoverflow.com/a/1221870/4106215
 
-    declare -xi BREW_PID=${1}  # get PID from 'jobs -x' in brew_do
+    # the jobs -x thing is passing the wrong process sometimes, this gets it directly
+    declare -xi BREW_PID=$(jobs -l | grep -E '\[[0-9]+\]\+' | cut -d'+' -f2 | sed 's/^\s*\([0-9]\+\).\+/\1/')
     declare -i RTN_STATUS
     declare -i KILL_RETRIES=0
 
@@ -154,10 +155,11 @@ function brew_watch() {
     echo "\$1=$1"
     echo "\$@=$@"
     echo "jobs -l"
-    echo "jobs -p"
     jobs -l
+    echo "jobs -p"
+    jobs -p
 
-    while [ $(jobs -p | grep --count ${BREW_PID}) -ne 0 ]; do  # checks if the process is still active
+    while [ $(jobs -l | grep --count ${BREW_PID}) -ne 0 ]; do  # checks if the process is still active
 
         local TIME_REMAINING=$(time_remaining)
         local SLEEP_TIME=30
