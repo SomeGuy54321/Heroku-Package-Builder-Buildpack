@@ -155,6 +155,9 @@ function brew_watch() {
     declare -i BREW_PID=$1
 
     do-debug "BREW_PID=$BREW_PID"
+    do-debug "jobs -l:"
+    jobs -l |& indent-debug
+
     while [ $(kill -0 ${BREW_PID} |& grep --count .) -eq 0 ]; do  # checks if the process is still active
 
         local TIME_REMAINING=$(time_remaining)
