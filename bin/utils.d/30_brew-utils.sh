@@ -154,6 +154,7 @@ function brew_watch() {
     echo "\$1=$1"
     echo "\$@=$@"
     echo "jobs -l"
+    echo "jobs -p"
     jobs -l
 
     while [ $(jobs -p | grep --count ${BREW_PID}) -ne 0 ]; do  # checks if the process is still active
