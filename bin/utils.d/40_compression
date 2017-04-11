@@ -36,8 +36,8 @@ function compression_level_chooser() {
     #ARG4
     #local SIZE2COMPRESS=$(du --summarize $4 2>/dev/null || echo 0)
     # this is much faster and doesnt print extraneous text, prints in kilobytes
-    local SIZE2COMPRESS=$(find ${4:-$HOME/.linuxbrew $HOME/.cache} -printf %k"\n" 2>/dev/null | awk '{  sum += $1 } END { print sum }' || echo 0)
-    do-debug "SIZE2COMPRESS: ${SIZE2COMPRESS[*]}"
+    local SIZE2COMPRESS=$(find ${4:-$HOME/.linuxbrew $HOME/.cache} -printf %k"\n" 2>/dev/null | awk '{ sum += $1 } END { print sum }' || echo 0)
+    do-debug "SIZE2COMPRESS: ${SIZE2COMPRESS}"
     local TIME_LEFT=$(time_remaining)
     declare -i TIME_LEFT_INT=${TIME_LEFT/.*/}
 
