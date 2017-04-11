@@ -192,6 +192,15 @@ function brew_watch() {
             RTN_STATUS=0  # so it doesn't retry in brew_do
             KILL_RETRIES=$(( $KILL_RETRIES + 1 ))
         fi
+
+        echo "BREW_PID=$BREW_PID"
+        echo "\$1=$1"
+        echo "\$@=$@"
+        echo "jobs -l"
+        jobs -l
+        echo "jobs -p"
+        jobs -p
+
     done
 
     do-debug "Waiting on brew return status"
