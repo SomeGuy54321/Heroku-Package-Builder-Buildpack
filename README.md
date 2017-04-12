@@ -60,8 +60,8 @@ YAML Setup
 
 CONFIG VARS
 ===========
-__*PACKAGE_BUILDER_NOBUILDFAIL*__ (1 or 0)<br>
-Do not fail the whole build if a single package fails to install
+__*PACKAGE_BUILDER_BUILDFAIL*__ (1 or 0)<br>
+Fail the whole build if a single package fails to install
 
 __*PACKAGE_BUILDER_HOMEBREW_VERBOSE*__ (1 or 0)<br>
 If =1, print all make output to build log

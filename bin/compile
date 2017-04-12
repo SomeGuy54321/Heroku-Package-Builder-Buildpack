@@ -44,6 +44,7 @@ export_configvar BUILDPACK_XTRACE 0  # print all commands to log
 # set prompts
 if [ ${BUILDPACK_XTRACE:-0} -gt 0 ]; then
     #export PS4='$(countdown)       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+    export PS4='$(countdown)       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
     set -o xtrace
 fi
 
@@ -63,7 +64,7 @@ do-debug "PREV_BUILDPACK_PATH when starting: '${PREV_BUILDPACK_PATH}'"
 # get things from CONFIG_DIR
 export_configvar USE_DPKG_BUILDFLAGS 1
 export_configvar BUILDCACHE ".heroku"
-export_configvar PACKAGE_BUILDER_NOBUILDFAIL 0  # dont fail if a package fails to install
+export_configvar PACKAGE_BUILDER_BUILDFAIL 0  # dont fail if a package fails to install
 export_configvar HOMEBREW_NO_ANALYTICS 0
 export_configvar PACKAGE_BUILDER_REINSTALL_LINUXBREW 0
 export_configvar PACKAGE_BUILDER_NOINSTALL_GAWK 0
