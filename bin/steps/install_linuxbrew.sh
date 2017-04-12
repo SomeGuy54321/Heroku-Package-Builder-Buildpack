@@ -12,7 +12,7 @@ else
     puts-step "Linuxbrew already installed"
     do-debug "\$(which brew)=$(which brew)"
 
-    puts-step "Reconfiguring Linuxbrew"
+    puts-step "Restoring Linuxbrew"
     git_rebuild_latest
 
     puts-step "Cleaning Linuxbrew"

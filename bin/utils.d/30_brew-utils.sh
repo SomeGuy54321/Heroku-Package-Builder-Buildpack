@@ -133,7 +133,7 @@ function brew_do() {
                     do-debug "CHECKERR_NONEXISTENT_PACKAGE is '$CHECKERR_NONEXISTENT_PACKAGE'"
 
                     local CHECKERR_FILEEXISTS=$(brew_checkerror fileexists_error)
-                    do-debug "CHECKERR_CLEAN_RETRY is '$CHECKERR_FILEEXISTS'"
+                    do-debug "CHECKERR_FILEEXISTS is '$CHECKERR_FILEEXISTS'"
 
                     local CHECKERR_SYSERRFAIL2IN=$(brew_checkerror syserrfail2in_error)
                     do-debug "CHECKERR_SYSERRFAIL2IN is '$CHECKERR_SYSERRFAIL2IN'"
@@ -147,7 +147,7 @@ function brew_do() {
 
                     ## start brew errorhandling
                     # check if the error was from the package not existing
-                    if [ ${BREW_RTN_STATUS} -gt 0 ] && [ ${CHECKERR_NONEXISTENT_PACKAGE:-0} -eq 0 ] && [ ${CHECKERR_ISINSTALLED} -eq 0 ]; then
+                    if [ ${BREW_RTN_STATUS} -gt 0 ] && [ ${CHECKERR_NONEXISTENT_PACKAGE} -eq 0 ] && [ ${CHECKERR_ISINSTALLED} -eq 0 ]; then
                         INSTALL_TRY_NUMBER=$(( INSTALL_TRY_NUMBER + 1 ))
                         puts-warn "$(proper_word ${ACTION})ation of ${PACKAGE} failed. Trying some things to fix it."
 
@@ -514,19 +514,19 @@ function brew_outputhandler() {
         if($0 ~ /Error: No such keg: /) {
             print "nonexistent_package_error" >> "/tmp/brew_test_results.txt";
         }
-        else if($0 ~ /Error: No available formula with the name /) {
+        if($0 ~ /Error: No available formula with the name /) {
             print "nonexistent_package_error" >> "/tmp/brew_test_results.txt";
         }
-        else if($0 ~ /Error: No formulae found in taps/) {
+        if($0 ~ /Error: No formulae found in taps/) {
             print "nonexistent_package_error" >> "/tmp/brew_test_results.txt";
         }
-        else if($0 ~ /Warning: .+ already installed/) {
+        if($0 ~ /Warning: .+ already installed/) {
             print "already_installed" >> "/tmp/brew_test_results.txt";
         }
-        else if($0 ~ /syserr_fail2_in/) {
+        if($0 ~ /syserr_fail2_in/) {
             print "syserrfail2in_error" >> "/tmp/brew_test_results.txt";
         }
-        else if($0 ~ /Error: File exists /) {
+        if($0 ~ /Error: File exists /) {
             print "fileexists_error" >> "/tmp/brew_test_results.txt";
         }
         print $0;
