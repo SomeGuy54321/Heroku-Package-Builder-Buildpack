@@ -332,8 +332,17 @@ function brew_watch() {
 
     ## Instructions here continued from step (3) in brew_do
     # 3a.)
-    declare -i BREW_PID_SENT=$1
+    local DOLLAR_EXCLAMATION="$!"
+    local BREW_PID_SENT="$1"
     declare -i BREW_PID=$(jobs -p | tail -n1)
+    local ALL_ARGS="$@"
+
+    do-debug "DOLLAR_EXCLAMATION=$DOLLAR_EXCLAMATION"
+    do-debug "ALL_ARGS=$ALL_ARGS"
+    do-debug "BREW_PID_SENT=$BREW_PID_SENT"
+    do-debug "BREW_PID=$BREW_PID"
+    do-debug "jobs -l:"
+    jobs -l |& indent-debug
 
     # 3b.)
     declare -i RTN_STATUS
@@ -341,10 +350,6 @@ function brew_watch() {
     declare -i SLEEP_TIME=30
     declare -i LAST_SLEEP_TIME=${SLEEP_TIME}
 
-    do-debug "BREW_PID_SENT=$BREW_PID_SENT"
-    do-debug "BREW_PID=$BREW_PID"
-    do-debug "jobs -l:"
-    jobs -l |& indent-debug
 
     # 3c.)
     while [ $(kill -0 ${BREW_PID} |& grep --count .) -eq 0 ]; do  # checks if the process is still active
