@@ -89,10 +89,11 @@ function brew_do() {
                     brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
 
                     # 3.)
-                    declare -i BREW_PID=$(jobs -p | tail -n1)
+                    jobs -x brew_watch %+
+                    #declare -i BREW_PID=$(jobs -p | tail -n1)
 
                     # 4.)
-                    brew_watch ${BREW_PID}
+                    #brew_watch ${BREW_PID}
 
                     # 5.)
                     local BREW_RTN_STATUS=$?
@@ -127,6 +128,7 @@ function brew_do() {
                     # "nonexistent_package_error"
                     # "fileexists_error"
                     # "syserrfail2in_error"
+                    # "already_installed"
                     local CHECKERR_NONEXISTENT_PACKAGE=$(brew_checkerror nonexistent_package_error)
                     do-debug "CHECKERR_NONEXISTENT_PACKAGE is '$CHECKERR_NONEXISTENT_PACKAGE'"
 
@@ -136,9 +138,13 @@ function brew_do() {
                     local CHECKERR_SYSERRFAIL2IN=$(brew_checkerror syserrfail2in_error)
                     do-debug "CHECKERR_SYSERRFAIL2IN is '$CHECKERR_SYSERRFAIL2IN'"
 
+                    local CHECKERR_ISINSTALLED=$(brew_checkerror already_installed)
+                    do-debug "CHECKERR_ISINSTALLED is '$CHECKERR_ISINSTALLED'"
+
+
                     ## start brew errorhandling
                     # check if the error was from the package not existing
-                    if [ ${BREW_RTN_STATUS} -gt 0 ] && [ ${CHECKERR_NONEXISTENT_PACKAGE:-0} -eq 0 ]; then
+                    if [ ${BREW_RTN_STATUS} -gt 0 ] && [ ${CHECKERR_NONEXISTENT_PACKAGE:-0} -eq 0 ] && [ ${CHECKERR_ISINSTALLED} -eq 0 ]; then
                         INSTALL_TRY_NUMBER=$(( INSTALL_TRY_NUMBER + 1 ))
                         puts-warn "$(proper_word ${ACTION})ation of ${PACKAGE} failed. Trying some things to fix it."
 
@@ -308,7 +314,8 @@ function brew_watch() {
 
     ## Instructions here continued from step (3) in brew_do
     # 3a.)
-    declare -i BREW_PID=$1
+    declare -i BREW_PID_SENT=$1
+    declare -i BREW_PID=$(jobs -p | tail -n1)
 
     # 3b.)
     declare -i RTN_STATUS
@@ -316,6 +323,7 @@ function brew_watch() {
     declare -i SLEEP_TIME=30
     declare -i LAST_SLEEP_TIME=${SLEEP_TIME}
 
+    do-debug "BREW_PID_SENT=$BREW_PID_SENT"
     do-debug "BREW_PID=$BREW_PID"
     do-debug "jobs -l:"
     jobs -l |& indent-debug
@@ -484,6 +492,9 @@ function brew_outputhandler() {
         }
         else if($0 ~ /Error: No formulae found in taps/) {
             print "nonexistent_package_error" >> "/tmp/brew_test_results.txt";
+        }
+        else if($0 ~ /Warning: .+ already installed/) {
+            print "already_installed" >> "/tmp/brew_test_results.txt";
         }
         else if($0 ~ /syserr_fail2_in/) {
             print "syserrfail2in_error" >> "/tmp/brew_test_results.txt";
