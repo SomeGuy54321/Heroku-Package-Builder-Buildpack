@@ -419,7 +419,7 @@ function brew_watch() {
 
     # 3d.)
     do-debug "Waiting on brew return status"
-    wait ${BREW_PID} |& indent-debug
+    waitpid ${BREW_PID} #|& indent-debug
     local WAIT_RTN_STATUS=$?
     do-debug "wait return status = $WAIT_RTN_STATUS"
 
