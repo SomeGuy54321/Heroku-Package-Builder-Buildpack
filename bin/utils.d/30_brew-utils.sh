@@ -333,12 +333,15 @@ function brew_watch() {
     ## Instructions here continued from step (3) in brew_do
     # 3a.)
     local DOLLAR_EXCLAMATION="$!"
+    local DOLLAR_AT="$@"
+    local DOLLAR_HASH="$#"
+
     local BREW_PID_SENT="$1"
     declare -i BREW_PID=$(jobs -p | tail -n1)
-    local ALL_ARGS="$@"
 
     do-debug "DOLLAR_EXCLAMATION=$DOLLAR_EXCLAMATION"
-    do-debug "ALL_ARGS=$ALL_ARGS"
+    do-debug "DOLLAR_AT=$DOLLAR_AT"
+    do-debug "DOLLAR_HASH=$DOLLAR_HASH"
     do-debug "BREW_PID_SENT=$BREW_PID_SENT"
     do-debug "BREW_PID=$BREW_PID"
     do-debug "jobs -l:"
