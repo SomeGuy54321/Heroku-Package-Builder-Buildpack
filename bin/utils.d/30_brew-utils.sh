@@ -153,34 +153,34 @@ function brew_do() {
 
                         ## start handling of 'Error: File exists '
                         if [ ${CHECKERR_FILEEXISTS} -gt 0 ]; then
+
+#                            ## start handling of 'Error: File exists @ syserr_fail2_in'
+#                            if [ ${CHECKERR_SYSERRFAIL2IN} -gt 0 ] && [ ${SYSERRFAIL2IN_RETRIES} -lt 2 ]; then
+#                                SYSERRFAIL2IN_RETRIES=$(( SYSERRFAIL2IN_RETRIES + 1 ))
+#
+#                                # SYSERRFAIL2IN_RETRIES will first enter ==0, then by the time it gets here it's ==1
+#                                case ${SYSERRFAIL2IN_RETRIES} in
+#                                1)
+#                                    puts-warn "Got the weird ruby error 'syserr_fail2_in'. Jumping to uninstall ${PACKAGE}."
+#                                    do-debug "Running 'brew uninstall ${PACKAGE}'"
+#                                    brew uninstall ${PACKAGE} |& indent-debug
+#                                    puts-step "Retrying ${ACTION}ation of $PACKAGE"
+#                                    brew_do $ACTION $PACKAGE $FLAGS
+#                                ;;
+#                                2)
+#                                    puts-warn "Still got the weird ruby error 'syserr_fail2_in'. Forcefully uninstalling ${PACKAGE}."
+#                                    do-debug "Running 'brew uninstall --force --ignore-dependencies ${PACKAGE}'"
+#                                    brew uninstall --force --ignore-dependencies ${PACKAGE} |& indent-debug
+#                                    puts-step "Retrying ${ACTION}ation of $PACKAGE"
+#                                    brew_do $ACTION $PACKAGE $FLAGS
+#                                ;;
+#                                esac
+#                            ## end handling of 'Error: File exists @ syserr_fail2_in'
+#
+#                            ## if it's a 'Error: File exists ' error and not a 'Error: File exists @ syserr_fail2_in', or
+#                            # if we've done all we can for the 'Error: File exists @ syserr_fail2_in' error we get here
+#                            else
                             FILE_EXISTS_RETRIES=$(( FILE_EXISTS_RETRIES + 1 ))
-
-                            ## start handling of 'Error: File exists @ syserr_fail2_in'
-                            if [ ${CHECKERR_SYSERRFAIL2IN} -gt 0 ] && [ ${SYSERRFAIL2IN_RETRIES} -lt 2 ]; then
-                                SYSERRFAIL2IN_RETRIES=$(( SYSERRFAIL2IN_RETRIES + 1 ))
-
-                                # SYSERRFAIL2IN_RETRIES will first enter ==0, then by the time it gets here it's ==1
-                                case ${SYSERRFAIL2IN_RETRIES} in
-                                1)
-                                    puts-warn "Got the weird ruby error 'syserr_fail2_in'. Jumping to uninstall ${PACKAGE}."
-                                    do-debug "Running 'brew uninstall ${PACKAGE}'"
-                                    brew uninstall ${PACKAGE} |& indent-debug
-                                    puts-step "Retrying ${ACTION}ation of $PACKAGE"
-                                    brew_do $ACTION $PACKAGE $FLAGS
-                                ;;
-                                2)
-                                    puts-warn "Still got the weird ruby error 'syserr_fail2_in'. Forcefully uninstalling ${PACKAGE}."
-                                    do-debug "Running 'brew uninstall --force --ignore-dependencies ${PACKAGE}'"
-                                    brew uninstall --force --ignore-dependencies ${PACKAGE} |& indent-debug
-                                    puts-step "Retrying ${ACTION}ation of $PACKAGE"
-                                    brew_do $ACTION $PACKAGE $FLAGS
-                                ;;
-                                esac
-                            ## end handling of 'Error: File exists @ syserr_fail2_in'
-
-                            ## if it's a 'Error: File exists ' error and not a 'Error: File exists @ syserr_fail2_in', or
-                            # if we've done all we can for the 'Error: File exists @ syserr_fail2_in' error we get here
-                            else
                                 case ${FILE_EXISTS_RETRIES} in
                                 1)
                                     puts-warn "Got a weird ruby error. Running a possible remedy."
@@ -215,7 +215,7 @@ function brew_do() {
                                     brew_do $ACTION $PACKAGE $FLAGS
                                 ;;
                                 esac
-                            fi
+#                            fi
                             ## end handling of 'Error: File exists ' and 'Error: File exists @ syserr_fail2_in'
                         ## end handling of 'Error: File exists '
 
