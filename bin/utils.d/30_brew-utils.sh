@@ -141,6 +141,9 @@ function brew_do() {
                     local CHECKERR_ISINSTALLED=$(brew_checkerror already_installed)
                     do-debug "CHECKERR_ISINSTALLED is '$CHECKERR_ISINSTALLED'"
 
+                    do-debug "Clearing errorfile"
+                    brew_clearerrorfile
+
 
                     ## start brew errorhandling
                     # check if the error was from the package not existing
@@ -273,8 +276,23 @@ function brew_do() {
                         ## end seeing if the package actually exists and if the ACTION failed for some reason
                     # we're at 'else' because brew_wait didnt return any error signals
                     else
-                        # clear the errorfile so there arent false positives for the next package
-                        brew_clearerrorfile
+                        ## start confirming $ACTION was successful
+                        if [ $((CHECKERR_NONEXISTENT_PACKAGE + CHECKERR_ISINSTALLED)) -eq 0 ]; then
+                            if [ "${ACTION}" == "install" ] || [ "${ACTION}" == "reinstall" ]; then
+                                if [ $(brew_checkfor ${PACKAGE}) -gt 0 ]; then
+                                    puts-step "Successfully ${ACTION}ed ${PACKAGE}"
+                                else
+                                    puts-warn "Unsuccessful ${ACTION}ation of ${PACKAGE}..."
+                                fi
+                            elif [ "${ACTION}" == "uninstall" ]; then
+                                if [ $(brew_checkfor ${PACKAGE}) -eq 0 ]; then
+                                    puts-step "Successfully ${ACTION}ed ${PACKAGE}"
+                                else
+                                    puts-warn "Unsuccessful ${ACTION}ation of ${PACKAGE}..."
+                                fi
+                            fi
+                        fi
+                        ## end confirming $ACTION was successful
                     fi
                     ## end brew errorhandling
 #UNCOMMENT_UNCOMMENT_UNCOMMENT_UNCOMMENT_UNCOMMENT
