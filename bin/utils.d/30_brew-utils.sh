@@ -351,7 +351,8 @@ function brew_watch() {
     declare -i RTN_STATUS
     declare -i KILL_RETRIES=0
     declare -i SLEEP_TIME=30
-    declare -i LAST_SLEEP_TIME=${SLEEP_TIME}
+    declare -i TIME_REMAINING=$(time_remaining)
+    declare -i LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
 
 
     # 3c.)
