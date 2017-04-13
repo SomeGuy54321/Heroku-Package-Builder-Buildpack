@@ -327,9 +327,14 @@ function proc_watcher() {
         [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo "DEBUG: $@" || return $?
     }
 
-    echo "Running '$@' in ${FUNCNAME[0]}"
-    $@ |& brew_outputhandler &  # <-- raw execute whatever was passed <-- <-- <--
-    jobs -x assign_job_vars %+
+    echo "Running \"$@\" in ${FUNCNAME[0]}"
+    if [ 1 ]; then
+        ORIG_XTRACE=$(shopt -po xtrace)
+        set -o xtrace
+        $@ |& brew_outputhandler &  # <-- raw execute whatever was passed <-- <-- <--
+        jobs -x assign_job_vars %+
+        ${ORIG_XTRACE}
+    fi
 
     # 3c.)
     while [ $(pid_exists) -eq 0 ]; do  # checks if the process is still active
