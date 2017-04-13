@@ -365,6 +365,7 @@ function proc_watcher() {
     if [ 1 ]; then  # false ] && [ -x "$(which $1)" ]; then
         set -x
             $@ &  # raw execute whatever was passed
+            echo !!
             jobs -x assign_jobid_var %+
             do-debug "JOB_ID=$JOB_ID"
             sleep 600
