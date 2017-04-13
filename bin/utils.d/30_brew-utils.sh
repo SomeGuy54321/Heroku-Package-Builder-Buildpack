@@ -353,16 +353,20 @@ function proc_watcher() {
 
     declare -i DOLLAR_QUESTION_PID
     declare -i JOB_PID
+    declare -i JOB_ID
     declare -i RTN_STATUS=$?
     declare -i KILL_RETRIES=0
     declare -i SLEEP_TIME=30
     declare -i TIME_REMAINING=$(time_remaining)
     declare -i LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
     pid_exists() { echo $(kill -0 ${JOB_PID} |& grep --count .); }
+    assign_jobid_var() { JOB_ID=$1; }
 
     if [ 1 ]; then  # false ] && [ -x "$(which $1)" ]; then
         set -x
             $@ &  # raw execute whatever was passed
+            jobs -x assign_jobid_var %+
+            do-debug "JOB_ID=$JOB_ID"
             sleep 600
         set +x
         DOLLAR_QUESTION_PID=$!
