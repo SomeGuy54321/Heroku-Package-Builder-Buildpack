@@ -360,7 +360,7 @@ function proc_watcher() {
     declare -i LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
     pid_exists() { echo $(kill -0 ${JOB_PID} |& grep --count .); }
 
-    if [ ]; then  # false ] && [ -x "$(which $1)" ]; then
+    if [ 1 ]; then  # false ] && [ -x "$(which $1)" ]; then
         set -x
             $@ &  # raw execute whatever was passed
             sleep 600
