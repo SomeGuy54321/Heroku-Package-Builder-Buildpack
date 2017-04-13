@@ -324,15 +324,16 @@ function proc_watcher() {
     }
     # these are necessary because any indentation is done when this function is called
     echo_debug() {
-        [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo "DEBUG: $@" || return $?
+        [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo -en "\e[1GDEBUG: " && echo "$@" || return $?
     }
 
-    echo Running \""$@"\" in ${FUNCNAME[0]}
+    echo_debug Running "'"$@"'" in ${FUNCNAME[0]}
     if [ 1 ]; then
-        #ORIG_XTRACE=$(shopt -po xtrace)
-        (set -x; "$@")# |& brew_outputhandler &)  # <-- raw execute whatever was passed <-- <-- <--
+        ORIG_XTRACE=$(shopt -po xtrace)
+        set -x
+        "$@"  # <--<--<-- raw execute whatever was passed <--<--<--
         jobs -x assign_job_vars %+
-        #${ORIG_XTRACE}
+        "${ORIG_XTRACE}"
     fi
 
     # 3c.)
@@ -359,7 +360,7 @@ function proc_watcher() {
                     1) KILLSIG=SIGINT  ;;
                     2) KILLSIG=SIGABRT ;;
                     3) KILLSIG=SIGQUIT ;;
-                    *) echo "! Something's way wrong. Killing the program altogether with SIGKILL."
+                    *) echo "! Something's way wrong. Killing the $1 altogether with SIGKILL."
                        kill -SIGKILL %${JOB_ID} #&
                        RTN_STATUS=$?
                        sleep 5
@@ -380,7 +381,7 @@ function proc_watcher() {
     done
 
     # 3d.)
-    echo_debug "Waiting on brew return status"
+    echo_debug "Waiting on $1 return status"
     wait %${JOB_ID}
     declare -i WAIT_RTN_STATUS=$?
     echo_debug "WAIT_RTN_STATUS=$WAIT_RTN_STATUS"
