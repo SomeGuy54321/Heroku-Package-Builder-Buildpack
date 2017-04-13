@@ -89,15 +89,15 @@ function brew_do() {
                     brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler &
 
                     # 3.)
-                    jobs -x brew_watch %+
+                    jobs -x proc_watcher %+
                     #declare -i BREW_PID=$(jobs -p | tail -n1)
 
                     # 4.)
-                    #brew_watch ${BREW_PID}
+                    #proc_watcher ${BREW_PID}
 
                     # 5.)
                     local BREW_RTN_STATUS=$?
-                    do-debug "Received from brew_watch BREW_RTN_STATUS is '$BREW_RTN_STATUS'"
+                    do-debug "Received from proc_watcher BREW_RTN_STATUS is '$BREW_RTN_STATUS'"
                     ####################################################################################################
 
 
@@ -147,40 +147,44 @@ function brew_do() {
 
                     ## start brew errorhandling
                     # check if the error was from the package not existing
-                    if [ ${BREW_RTN_STATUS} -gt 0 ] && [ ${CHECKERR_NONEXISTENT_PACKAGE} -eq 0 ] && [ ${CHECKERR_ISINSTALLED} -eq 0 ]; then
+                    if [ ${BREW_RTN_STATUS} -gt 0 ] && \
+                       [ ${CHECKERR_NONEXISTENT_PACKAGE} -eq 0 ] && \
+                       [ ${CHECKERR_ISINSTALLED} -eq 0 ] && \
+                       [ $(time_remaining) -gt 0 ];
+                    then
                         INSTALL_TRY_NUMBER=$(( INSTALL_TRY_NUMBER + 1 ))
                         puts-warn "$(proper_word ${ACTION})ation of ${PACKAGE} failed. Trying some things to fix it."
 
                         ## start handling of 'Error: File exists '
                         if [ ${CHECKERR_FILEEXISTS} -gt 0 ]; then
 
-#                            ## start handling of 'Error: File exists @ syserr_fail2_in'
-#                            if [ ${CHECKERR_SYSERRFAIL2IN} -gt 0 ] && [ ${SYSERRFAIL2IN_RETRIES} -lt 2 ]; then
-#                                SYSERRFAIL2IN_RETRIES=$(( SYSERRFAIL2IN_RETRIES + 1 ))
-#
-#                                # SYSERRFAIL2IN_RETRIES will first enter ==0, then by the time it gets here it's ==1
-#                                case ${SYSERRFAIL2IN_RETRIES} in
-#                                1)
-#                                    puts-warn "Got the weird ruby error 'syserr_fail2_in'. Jumping to uninstall ${PACKAGE}."
-#                                    do-debug "Running 'brew uninstall ${PACKAGE}'"
-#                                    brew uninstall ${PACKAGE} |& indent-debug
-#                                    puts-step "Retrying ${ACTION}ation of $PACKAGE"
-#                                    brew_do $ACTION $PACKAGE $FLAGS
-#                                ;;
-#                                2)
-#                                    puts-warn "Still got the weird ruby error 'syserr_fail2_in'. Forcefully uninstalling ${PACKAGE}."
-#                                    do-debug "Running 'brew uninstall --force --ignore-dependencies ${PACKAGE}'"
-#                                    brew uninstall --force --ignore-dependencies ${PACKAGE} |& indent-debug
-#                                    puts-step "Retrying ${ACTION}ation of $PACKAGE"
-#                                    brew_do $ACTION $PACKAGE $FLAGS
-#                                ;;
-#                                esac
-#                            ## end handling of 'Error: File exists @ syserr_fail2_in'
-#
-#                            ## if it's a 'Error: File exists ' error and not a 'Error: File exists @ syserr_fail2_in', or
-#                            # if we've done all we can for the 'Error: File exists @ syserr_fail2_in' error we get here
-#                            else
-                            FILE_EXISTS_RETRIES=$(( FILE_EXISTS_RETRIES + 1 ))
+                            ## start handling of 'Error: File exists @ syserr_fail2_in'
+                            if [ ${CHECKERR_SYSERRFAIL2IN} -gt 0 ] && [ ${SYSERRFAIL2IN_RETRIES} -lt 2 ]; then
+                                SYSERRFAIL2IN_RETRIES=$(( SYSERRFAIL2IN_RETRIES + 1 ))
+
+                                # SYSERRFAIL2IN_RETRIES will first enter ==0, then by the time it gets here it's ==1
+                                case ${SYSERRFAIL2IN_RETRIES} in
+                                1)
+                                    puts-warn "Got the weird ruby error 'syserr_fail2_in'. Jumping to uninstall ${PACKAGE}."
+                                    do-debug "Running 'brew uninstall ${PACKAGE}'"
+                                    brew uninstall ${PACKAGE} |& indent-debug
+                                    puts-step "Retrying ${ACTION}ation of $PACKAGE"
+                                    brew_do $ACTION $PACKAGE $FLAGS
+                                ;;
+                                2)
+                                    puts-warn "Still got the weird ruby error 'syserr_fail2_in'. Forcefully uninstalling ${PACKAGE}."
+                                    do-debug "Running 'brew uninstall --force --ignore-dependencies ${PACKAGE}'"
+                                    brew uninstall --force --ignore-dependencies ${PACKAGE} |& indent-debug
+                                    puts-step "Retrying ${ACTION}ation of $PACKAGE"
+                                    brew_do $ACTION $PACKAGE $FLAGS
+                                ;;
+                                esac
+                            ## end handling of 'Error: File exists @ syserr_fail2_in'
+
+                            ## if it's a 'Error: File exists ' error and not a 'Error: File exists @ syserr_fail2_in', or
+                            # if we've done all we can for the 'Error: File exists @ syserr_fail2_in' error we get here
+                            else
+                                FILE_EXISTS_RETRIES=$(( FILE_EXISTS_RETRIES + 1 ))
                                 case ${FILE_EXISTS_RETRIES} in
                                 1)
                                     puts-warn "Got a weird ruby error. Running a possible remedy."
@@ -215,7 +219,7 @@ function brew_do() {
                                     brew_do $ACTION $PACKAGE $FLAGS
                                 ;;
                                 esac
-#                            fi
+                            fi
                             ## end handling of 'Error: File exists ' and 'Error: File exists @ syserr_fail2_in'
                         ## end handling of 'Error: File exists '
 
@@ -278,19 +282,31 @@ function brew_do() {
                     else
                         ## start confirming $ACTION was successful
                         if [ $((CHECKERR_NONEXISTENT_PACKAGE + CHECKERR_ISINSTALLED)) -eq 0 ]; then
-                            if [ "${ACTION}" == "install" ] || [ "${ACTION}" == "reinstall" ]; then
-                                if [ $(brew_checkfor ${PACKAGE}) -gt 0 ]; then
-                                    puts-step "Successfully ${ACTION}ed ${PACKAGE}"
-                                else
-                                    puts-warn "Unsuccessful ${ACTION}ation of ${PACKAGE}..."
+                            ## start see if we exited with an error
+                            if [ ${BREW_RTN_STATUS} -eq 0 ]; then
+                                ## start displaying different things depending on $ACTION
+                                if [ "${ACTION}" == "install" ] || [ "${ACTION}" == "reinstall" ]; then
+                                    ## start check the new $PACKAGE is available if doing re/install
+                                    if [ $(brew_checkfor ${PACKAGE}) -gt 0 ]; then
+                                        puts-step "Successfully ${ACTION}ed ${PACKAGE}"
+                                    else
+                                        puts-warn "Unsuccessful ${ACTION}ation of ${PACKAGE}..."
+                                    fi
+                                    ## end check the new $PACKAGE is available if doing re/install
+                                elif [ "${ACTION}" == "uninstall" ]; then
+                                    ## start check the new $PACKAGE is *not* available if doing uninstall
+                                    if [ $(brew_checkfor ${PACKAGE}) -eq 0 ]; then
+                                        puts-step "Successfully ${ACTION}ed ${PACKAGE}"
+                                    else
+                                        puts-warn "Unsuccessful ${ACTION}ation of ${PACKAGE}..."
+                                    fi
+                                    ## end check the new $PACKAGE is *not* available if doing uninstall
                                 fi
-                            elif [ "${ACTION}" == "uninstall" ]; then
-                                if [ $(brew_checkfor ${PACKAGE}) -eq 0 ]; then
-                                    puts-step "Successfully ${ACTION}ed ${PACKAGE}"
-                                else
-                                    puts-warn "Unsuccessful ${ACTION}ation of ${PACKAGE}..."
-                                fi
+                                ## end displaying different things depending on $ACTION
+                            else
+                                puts-warn "Leaving the ${ACTION} with an error code. You may need to log in to your app to see if everything worked out."
                             fi
+                            ## end see if we exited with an error
                         fi
                         ## end confirming $ACTION was successful
                     fi
@@ -310,7 +326,7 @@ function brew_do() {
     fi
 }
 
-function brew_watch() {
+function proc_watcher() {
 
     ## This thing does:
     # 1.) Traps the brew process id
@@ -328,22 +344,25 @@ function brew_watch() {
     ## About brilliant PIPESTATUS:
     # http://stackoverflow.com/a/1221870/4106215
     ## The jobs -x thing is passing the wrong process sometimes, this gets it directly
-    # declare -xi BREW_PID=$(jobs -l | grep -E '\[[0-9]+\]\+' | cut -d'+' -f2 | sed 's/^\s*\([0-9]\+\).\+/\1/')
+    # declare -xi JOB_PID=$(jobs -l | grep -E '\[[0-9]+\]\+' | cut -d'+' -f2 | sed 's/^\s*\([0-9]\+\).\+/\1/')
 
     ## Instructions here continued from step (3) in brew_do
     # 3a.)
-    local DOLLAR_EXCLAMATION="$!"
-    local DOLLAR_AT="$@"
-    local DOLLAR_HASH="$#"
 
-    local BREW_PID_SENT="$1"
-    declare -i BREW_PID=$(jobs -p | tail -n1)
+# TODO: Make this function accept a command with arguments so any program can be used with it
 
-    do-debug "DOLLAR_EXCLAMATION=$DOLLAR_EXCLAMATION"
-    do-debug "DOLLAR_AT=$DOLLAR_AT"
-    do-debug "DOLLAR_HASH=$DOLLAR_HASH"
-    do-debug "BREW_PID_SENT=$BREW_PID_SENT"
-    do-debug "BREW_PID=$BREW_PID"
+    declare -i JOB_PID
+
+    if [ false ] && if [ -x "$(which $1)" ]; then
+        $@ &  # raw execute whatever was passed
+    fi
+
+#    local JOB_PID_SENT="$1"
+#    do-debug "JOB_PID_SENT=$JOB_PID_SENT"
+
+    JOB_PID=$(jobs -p | tail -n1)
+    do-debug "JOB_PID=$JOB_PID"
+
     do-debug "jobs -l:"
     jobs -l |& indent-debug
 
@@ -354,9 +373,8 @@ function brew_watch() {
     declare -i TIME_REMAINING=$(time_remaining)
     declare -i LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
 
-
     # 3c.)
-    while [ $(kill -0 ${BREW_PID} |& grep --count .) -eq 0 ]; do  # checks if the process is still active
+    while [ $(kill -0 ${JOB_PID} |& grep --count .) -eq 0 ]; do  # checks if the process is still active
         local TIME_REMAINING=$(time_remaining)
 
         # 3c-i.)
@@ -387,30 +405,29 @@ function brew_watch() {
             # 3c-ii-1.)
             case ${KILL_RETRIES} in
             0)
-                puts-warn "Out of time, aborting build with SIGTERM"
-                kill -SIGTERM ${BREW_PID}
+                puts-warn "Out of time, aborting with SIGTERM"
+                kill -SIGTERM ${JOB_PID}
             ;;
             1)
-                puts-warn "Aborting build with SIGINT"
-                (set -x; kill -SIGINT ${BREW_PID})
+                puts-warn "Aborting with SIGINT"
+                (set -x; kill -SIGINT ${JOB_PID})
             ;;
             2)
-                puts-warn "Aborting build with SIGABRT"
-                (set -x; kill -SIGABRT ${BREW_PID})
+                puts-warn "Aborting with SIGABRT"
+                (set -x; kill -SIGABRT ${JOB_PID})
             ;;
             3)
-                puts-warn "Aborting build with SIGKILL"
-                (set -x; kill -SIGKILL ${BREW_PID})
+                puts-warn "Aborting with SIGKILL"
+                (set -x; kill -SIGKILL ${JOB_PID})
             ;;
             *)
-                puts-warn "Something's way wrong. Aborting the build altogether."
-                (set -x; kill -SIGKILL ${BREW_PID})
-                RTN_STATUS=$?
+                puts-warn "Something's way wrong. Killing the program altogether."
+                (set -x; kill -SIGKILL ${JOB_PID})
             ;;
             esac
 
             # 3c-ii-2.)
-            RTN_STATUS=0  # so it doesn't retry in brew_do
+#            RTN_STATUS=0  # so it doesn't retry in brew_do
 
             # 3c-ii-3.)
             sleep 5  # wait for the kill signal to work
@@ -421,13 +438,13 @@ function brew_watch() {
     # 3d.)
     do-debug "Waiting on brew return status"
     wait %+ #|& indent-debug
-    #wait ${BREW_PID} #|& indent-debug
+    #wait ${JOB_PID} #|& indent-debug
     local WAIT_RTN_STATUS=$?
     do-debug "wait return status = $WAIT_RTN_STATUS"
 
     # 3e.)
     RTN_STATUS=${RTN_STATUS:-$WAIT_RTN_STATUS}
-    do-debug "Leaving brew_watch with RTN_STATUS = $RTN_STATUS"
+    do-debug "Leaving ${FUNCNAME[0]} with RTN_STATUS = $RTN_STATUS"
     return ${RTN_STATUS}
 }
 

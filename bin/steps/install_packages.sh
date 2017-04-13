@@ -85,7 +85,7 @@ function main() {
 
     # delete all but the latest downloads of installed packages, or older than 30 days
     puts-step "Running brew cleanup"
-    brew cleanup --prune=30 |& indent |& brew_quiet
+    brew cleanup |& indent |& brew_quiet
 }
 
 main
