@@ -327,7 +327,7 @@ function proc_watcher() {
         [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo "DEBUG: $@" || return $?
     }
 
-    echo "Running \"$@\" in ${FUNCNAME[0]}"
+    echo Running \""$@"\" in ${FUNCNAME[0]}
     if [ 1 ]; then
         #ORIG_XTRACE=$(shopt -po xtrace)
         (set -x; "$@")# |& brew_outputhandler &)  # <-- raw execute whatever was passed <-- <-- <--
