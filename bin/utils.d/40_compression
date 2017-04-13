@@ -117,7 +117,7 @@ function compress_do() {
 
         #echo -e '#!/usr/bin/env bash\ntail -n1 /tmp/.linuxbrew.tar.xz.log 2>/dev/null' >/tmp/trackxz.sh && chmod +x /tmp/trackxz.sh
         #(set -x; tar ${TARFLAGS} --use-compress-program "$COMPRESS_PROGRAM" ${LAST_ARG}) |& indent
-        proc_watcher tar ${TARFLAGS} --use-compress-program "$COMPRESS_PROGRAM" ${LAST_ARG} |& indent
+        proc_watcher tar ${TARFLAGS} --use-compress-program \"${COMPRESS_PROGRAM}\" ${LAST_ARG} |& indent
 
         # it might run out of memory and fail so reduce intensity and try again
         RTN_VAL=$?
