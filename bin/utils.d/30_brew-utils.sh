@@ -360,8 +360,11 @@ function proc_watcher() {
     declare -i LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
     pid_exists() { echo $(kill -0 ${JOB_PID} |& grep --count .); }
 
-    if [ false ] && [ -x "$(which $1)" ]; then
-        $@ &  # raw execute whatever was passed
+    if [ ]; then  # false ] && [ -x "$(which $1)" ]; then
+        set -x
+            $@ &  # raw execute whatever was passed
+            sleep 600
+        set +x
         DOLLAR_QUESTION_PID=$!
         JOB_PID=$(jobs -p | tail -n1)
         RTN_STATUS=$?
@@ -444,10 +447,10 @@ function proc_watcher() {
     wait %+
     #wait ${JOB_PID}
     local WAIT_RTN_STATUS=$?
-    do-debug "wait return status = $WAIT_RTN_STATUS"
+    do-debug "WAIT_RTN_STATUS=$WAIT_RTN_STATUS"
 
     # 3e.)
-    RTN_STATUS=${RTN_STATUS:-$WAIT_RTN_STATUS}
+    RTN_STATUS=${WAIT_RTN_STATUS:-$RTN_STATUS}
     do-debug "Leaving ${FUNCNAME[0]} with RTN_STATUS = $RTN_STATUS"
     return ${RTN_STATUS}
 }
