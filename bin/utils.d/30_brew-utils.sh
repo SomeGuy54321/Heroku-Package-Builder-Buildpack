@@ -353,7 +353,7 @@ function proc_watcher() {
 
     declare -i JOB_PID
 
-    if [ false ] && if [ -x "$(which $1)" ]; then
+    if [ false ] && [ -x "$(which $1)" ]; then
         $@ &  # raw execute whatever was passed
     fi
 
@@ -437,8 +437,8 @@ function proc_watcher() {
 
     # 3d.)
     do-debug "Waiting on brew return status"
-    wait %+ #|& indent-debug
-    #wait ${JOB_PID} #|& indent-debug
+    wait %+
+    #wait ${JOB_PID}
     local WAIT_RTN_STATUS=$?
     do-debug "wait return status = $WAIT_RTN_STATUS"
 
