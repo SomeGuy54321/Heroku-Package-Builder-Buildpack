@@ -106,8 +106,9 @@ function print-env() {
 indent-debug() {
     #RE="s/^/       /"
     if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
-        indent #sed $SED_FLAG "$RE"
+        indent
     fi
+    return ${PIPESTATUS[0]}
 }
 
 
@@ -302,7 +303,7 @@ function proc_watcher() {
     # 3a.)
     declare -i JOB_PID JOB_ID RTN_STATUS KILL_RETRIES=0 SLEEP_TIME=30
     declare -i TIME_REMAINING=$(time_remaining)
-    declare -i LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
+    declare -i LAST_SLEEP_TIME=$((TIME_REMAINING - SLEEP_TIME))
 
     set_sleep_time() {
         [ ${TIME_REMAINING} -le 120 ] && SLEEP_TIME=20 || \
@@ -315,7 +316,7 @@ function proc_watcher() {
         JOB_ID=$1
         JOB_PID=$(jobs -p %${JOB_ID})
         echo_debug "jobs -l:"
-        jobs -l |& indent-debug
+        jobs -l
         echo_debug "JOB_ID=$JOB_ID"
         echo_debug "JOB_PID=$JOB_PID"
     }
@@ -324,10 +325,11 @@ function proc_watcher() {
     }
     # these are necessary because any indentation is done when this function is called
     echo_debug() {
-        [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo -en "\e[1GDEBUG: " && echo "$@" || return $?
+        [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo "DEBUG: $@" || true
+        return ${PIPESTATUS[0]}
     }
 
-    echo_debug Running "'"$@"'" in ${FUNCNAME[0]}
+    #echo_debug Running "$@" in ${FUNCNAME[0]}
     if [ 1 ]; then
         ORIG_XTRACE=$(shopt -po xtrace)
         set -x

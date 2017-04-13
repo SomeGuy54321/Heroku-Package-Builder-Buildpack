@@ -13,6 +13,7 @@ indent() {
     RE='s/^/        /; e countdown;' && \
     sed ${SED_FLAG} "$RE"            || \
     sed ${SED_FLAG} 's/^/        /'
+    return ${PIPESTATUS[0]}
 }
 
 # Buildpack Steps.

@@ -72,6 +72,7 @@ function job_reduce_increment() {
 }
 
 function compress_do() {
+    ORIG_ERREXIT=$(shopt -po errexit)
     set +e  # don't exit if error
 
     declare -l DO_WHAT="$1"
@@ -105,7 +106,7 @@ function compress_do() {
         DO_WHAT_LABEL="Compressing";
     else
         echo "Need to specify the tar action at compress_do"
-        set -e
+        "$ORIG_ERREXIT"  # set to original errexit value
         return 1
     fi
 
@@ -117,13 +118,14 @@ function compress_do() {
 
         #echo -e '#!/usr/bin/env bash\ntail -n1 /tmp/.linuxbrew.tar.xz.log 2>/dev/null' >/tmp/trackxz.sh && chmod +x /tmp/trackxz.sh
         #(set -x; tar ${TARFLAGS} --use-compress-program "$COMPRESS_PROGRAM" ${LAST_ARG}) |& indent
-        proc_watcher tar ${TARFLAGS} --use-compress-program "${COMPRESS_PROGRAM}" ${LAST_ARG} |& indent
+        (set -x; proc_watcher tar ${TARFLAGS} --use-compress-program "${COMPRESS_PROGRAM}" ${LAST_ARG}) |& indent
 
         # it might run out of memory and fail so reduce intensity and try again
         RTN_VAL=$?
-        if [ $RTN_VAL -gt 0 ] && [ $TRY_NUM -le $MAX_TRIES ]; then
-            TRY_NUM=$(( $TRY_NUM + 1 ))
-            JOBS=$(max 1 $(( ${JOBS} - ${THREADS_REDUCE_INCREMENT} )))
+        if [ ${RTN_VAL} -gt 0 ] && [ $TRY_NUM -le $MAX_TRIES ]; then
+            puts-step "$DO_WHAT_LABEL failed. Trying some remedies."
+            let ++TRY_NUM
+            JOBS=$( max 1 $((JOBS - THREADS_REDUCE_INCREMENT)) )
             COMP_LEVEL=$(compression_level_chooser ${TRY_NUM})
             # remove extreme compression
             COMPRESS_PROGRAM=${COMPRESS_PROGRAM/--extreme/}
@@ -132,10 +134,10 @@ function compress_do() {
             # rethink compression level
             COMPRESS_PROGRAM=$(echo ${COMPRESS_PROGRAM} | sed -e "s/\s\?-[0-9]\b\s\?/ -${COMP_LEVEL:-9} /")
         else
-            set -e  # exit if error
+            "$ORIG_ERREXIT"  # set to original errexit value
             return ${RTN_VAL}
-            break
+            #break
         fi
     done
-    set -e  # exit if error
+    "$ORIG_ERREXIT"  # set to original errexit value
 }

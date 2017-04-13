@@ -420,6 +420,7 @@ function brew_outputhandler() {
         system("");
     }'
     awk "$TEST" | indent
+    return ${PIPESTATUS[0]}
 }
 
 
