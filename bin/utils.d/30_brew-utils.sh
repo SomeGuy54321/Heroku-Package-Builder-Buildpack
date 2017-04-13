@@ -351,30 +351,33 @@ function proc_watcher() {
 
 # TODO: Make this function accept a command with arguments so any program can be used with it
 
+    declare -i DOLLAR_QUESTION_PID
     declare -i JOB_PID
-
-    if [ false ] && [ -x "$(which $1)" ]; then
-        $@ &  # raw execute whatever was passed
-    fi
-
-#    local JOB_PID_SENT="$1"
-#    do-debug "JOB_PID_SENT=$JOB_PID_SENT"
-
-    JOB_PID=$(jobs -p | tail -n1)
-    do-debug "JOB_PID=$JOB_PID"
-
-    do-debug "jobs -l:"
-    jobs -l |& indent-debug
-
-    # 3b.)
-    declare -i RTN_STATUS
+    declare -i RTN_STATUS=$?
     declare -i KILL_RETRIES=0
     declare -i SLEEP_TIME=30
     declare -i TIME_REMAINING=$(time_remaining)
     declare -i LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
+    pid_exists() { echo $(kill -0 ${JOB_PID} |& grep --count .); }
+
+    if [ false ] && [ -x "$(which $1)" ]; then
+        $@ &  # raw execute whatever was passed
+        DOLLAR_QUESTION_PID=$!
+        JOB_PID=$(jobs -p | tail -n1)
+        RTN_STATUS=$?
+    else
+        JOB_PID=$(jobs -p | tail -n1)
+    fi
+
+    do-debug "jobs -l:"
+    jobs -l |& indent-debug
+
+    do-debug "DOLLAR_QUESTION_PID=$DOLLAR_QUESTION_PID"
+    do-debug "JOB_PID=$JOB_PID"
+    do-debug "RTN_STATUS=$RTN_STATUS"
 
     # 3c.)
-    while [ $(kill -0 ${JOB_PID} |& grep --count .) -eq 0 ]; do  # checks if the process is still active
+    while [ $(pid_exists) -eq 0 ]; do  # checks if the process is still active
         local TIME_REMAINING=$(time_remaining)
 
         # 3c-i.)
@@ -382,13 +385,9 @@ function proc_watcher() {
 
             # 3c-i-1.)
             if [ ${TIME_REMAINING} -le ${LAST_SLEEP_TIME} ]; then
-                ## Removed the actual sleep so we exit ASAP
-                #sleep ${SLEEP_TIME}  # do sleep first so it doesnt immediately print a message
-                ## print fluffy messages letting them know we're still alive
-                # show time remaining and check for activity more frequently as time runs out
 
                 # 3c-i-1a.)
-                echo "$(countdown) ...... $(date --date=@$TIME_REMAINING +'%M:%S') remaining"
+                echo "$(countdown) ...... $(date --date=@$TIME_REMAINING +'%M:%S') until abort"
 
                 # 3c-i-1a.)
                 if [ ${TIME_REMAINING} -le 120 ]; then SLEEP_TIME=20; fi
@@ -403,35 +402,40 @@ function proc_watcher() {
         # 3c-ii.)
         else
             # 3c-ii-1.)
-            case ${KILL_RETRIES} in
-            0)
-                puts-warn "Out of time, aborting with SIGTERM"
-                kill -SIGTERM ${JOB_PID}
-            ;;
-            1)
-                puts-warn "Aborting with SIGINT"
-                (set -x; kill -SIGINT ${JOB_PID})
-            ;;
-            2)
-                puts-warn "Aborting with SIGABRT"
-                (set -x; kill -SIGABRT ${JOB_PID})
-            ;;
-            3)
-                puts-warn "Aborting with SIGKILL"
-                (set -x; kill -SIGKILL ${JOB_PID})
-            ;;
-            *)
-                puts-warn "Something's way wrong. Killing the program altogether."
-                (set -x; kill -SIGKILL ${JOB_PID})
-            ;;
-            esac
+            while [ 1 ]; do
+                case ${KILL_RETRIES} in
+                0) puts-warn "Out of time, aborting with SIGTERM"
+                   kill -SIGTERM ${JOB_PID} #&
+                   RTN_STATUS=$?
+                ;;
+                1) puts-warn "Aborting with SIGINT"
+                   kill -SIGINT ${JOB_PID} #&
+                   RTN_STATUS=$?
+                ;;
+                2) puts-warn "Aborting with SIGABRT"
+                   kill -SIGABRT ${JOB_PID} #&
+                   RTN_STATUS=$?
+                ;;
+                3) puts-warn "Aborting with SIGKILL"
+                   kill -SIGKILL ${JOB_PID} #&
+                   RTN_STATUS=$?
+                ;;
+                *) puts-warn "Something's way wrong. Killing the program altogether."
+                   kill -SIGKILL ${JOB_PID} #&
+                   RTN_STATUS=$?
+                   sleep 5
+                   return ${RTN_STATUS}
+                ;;
+                esac
 
-            # 3c-ii-2.)
-#            RTN_STATUS=0  # so it doesn't retry in brew_do
-
-            # 3c-ii-3.)
-            sleep 5  # wait for the kill signal to work
-            KILL_RETRIES=$(( $KILL_RETRIES + 1 ))
+                # 3c-ii-2.)
+                if [ $(pid_exists) -gt 0 ]; then
+                    KILL_RETRIES=$(( $KILL_RETRIES + 1 ))
+                    sleep 5  # wait for the kill signal to work
+                else
+                    return ${RTN_STATUS}
+                fi
+            done
         fi
     done
 
