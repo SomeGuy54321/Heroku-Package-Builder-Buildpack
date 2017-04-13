@@ -86,7 +86,7 @@ function brew_do() {
                     ## This is the most important part of the Linuxbrew part of the buildpack. Step-by-step:
                     # TODO: document the hard part of brew_do
                     # 1.)
-                    #puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
+                    puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
 
                     # 2.)
                     proc_watcher brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler
