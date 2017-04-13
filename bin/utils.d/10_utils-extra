@@ -329,11 +329,10 @@ function proc_watcher() {
 
     echo "Running \"$@\" in ${FUNCNAME[0]}"
     if [ 1 ]; then
-        ORIG_XTRACE=$(shopt -po xtrace)
-        set -o xtrace
-        $@ |& brew_outputhandler &  # <-- raw execute whatever was passed <-- <-- <--
+        #ORIG_XTRACE=$(shopt -po xtrace)
+        (set -x; $@ |& brew_outputhandler &)  # <-- raw execute whatever was passed <-- <-- <--
         jobs -x assign_job_vars %+
-        ${ORIG_XTRACE}
+        #${ORIG_XTRACE}
     fi
 
     # 3c.)
