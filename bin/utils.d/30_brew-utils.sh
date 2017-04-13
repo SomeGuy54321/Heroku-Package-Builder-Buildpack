@@ -9,17 +9,20 @@ JOB_REDUCE_MAX_TRIES=4
 # gradually reduce the jobs number
 export HOMEBREW_MAKE_JOBS=$(grep --count ^processor /proc/cpuinfo || echo 1)
 
+
 function job_reduce_increment() {
     local MAX_TRIES=${1:-$JOB_REDUCE_MAX_TRIES}
     local MAX_JOBS=$(grep --count ^processor /proc/cpuinfo || echo 1)
     max 1 $(( $MAX_JOBS / MAX_JOBS ))
 }
 
+
 function brew_reducejobs() {
     declare -i NEWJOBS=${1:-$(( $HOMEBREW_MAKE_JOBS - $(job_reduce_increment) ))}
     NEWJOBS=$(max 1 ${NEWJOBS})
     export HOMEBREW_MAKE_JOBS=${NEWJOBS}
 }
+
 
 function fail_print() {
     local ACTION=$1
@@ -32,6 +35,7 @@ retrying. If that doesn't work then remove this buildpack from your build
 and let the current buildpack maintainer know by copy-pasting this buildlog
 into a Gitlab/Github issue, or sending an email to him/her." |& indent
 }
+
 
 function brew_do() {
 
@@ -77,19 +81,18 @@ function brew_do() {
             if [ $(time_remaining) -gt 0 ]; then
 
                 ## start no error block
-#UNCOMMENT_UNCOMMENT_UNCOMMENT_UNCOMMENT_UNCOMMENT
                 (set +e
                     ####################################################################################################
                     ## This is the most important part of the Linuxbrew part of the buildpack. Step-by-step:
                     # TODO: document the hard part of brew_do
                     # 1.)
-                    puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
+                    #puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
 
                     # 2.)
-                    proc_watcher brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler #&
+                    proc_watcher brew ${ACTION} ${PACKAGE} ${FLAGS} |& indent-debug
 
                     # 3.)
-                    jobs -x proc_watcher %+
+                    #jobs -x proc_watcher %+
                     #declare -i BREW_PID=$(jobs -p | tail -n1)
 
                     # 4.)
@@ -227,32 +230,7 @@ function brew_do() {
                         else
                             JOB_REDUCE_TRIES=$(( JOB_REDUCE_TRIES + 1 ))
 
-#                            ## start checking that we haven't exhausted our job_reduce tries
-#                            if [ ${JOB_REDUCE_TRIES:-1} -le ${JOB_REDUCE_MAX_TRIES:-4} ]; then
-#
-#                                brew_reducejobs
-#                                puts-step "Retrying ${ACTION}ation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores"
-#                                brew_do $ACTION $PACKAGE $FLAGS
-#
-#                            # if we're at our JOB_REDUCE_TRIES and we're still not on single threading try that before giving up
-#                            elif [ ${JOB_REDUCE_TRIES:-1} -eq $((${JOB_REDUCE_MAX_TRIES:-4} + 1)) ] && [ ${HOMEBREW_MAKE_JOBS:-1} -ne 1 ]; then
-#
-#                                brew_reducejobs 1
-#                                puts-step "Retrying ${ACTION}ation of $PACKAGE with $HOMEBREW_MAKE_JOBS cores"
-#                                brew_do $ACTION $PACKAGE $FLAGS
-#
-#                            # else it's failed and we dont care
-#                            elif [ ${PACKAGE_BUILDER_BUILDFAIL:-0} -gt 0 ] && [ "$ACTION" != "uninstall" ]; then
-#
-#                                    fail_print ${ACTION} ${PACKAGE}
-#                                    set -e
-#                                    exit ${BREW_RTN_STATUS}
-#
-#                            # else it's failed and we care
-#                            else
-#                                puts-warn "Unable to ${ACTION} ${PACKAGE}. Continuing since PACKAGE_BUILDER_BUILDFAIL==0 or you're doing an uninstall."
-#                            fi
-#                            ## end checking that we haven't exhausted our job_reduce tries
+                            ## start checking that we haven't exhausted our job_reduce tries
                             case ${JOB_REDUCE_TRIES} in
                                 [0-$(( JOB_REDUCE_MAX_TRIES - 1 ))])
                                     brew_reducejobs
@@ -276,16 +254,20 @@ function brew_do() {
                                     fi
                                 ;;
                             esac
+                            ## end checking that we haven't exhausted our job_reduce tries
                         fi
                         ## end seeing if the package actually exists and if the ACTION failed for some reason
                     # we're at 'else' because brew_wait didnt return any error signals
                     else
                         ## start confirming $ACTION was successful
                         if [ $((CHECKERR_NONEXISTENT_PACKAGE + CHECKERR_ISINSTALLED)) -eq 0 ]; then
+
                             ## start see if we exited with an error
                             if [ ${BREW_RTN_STATUS} -eq 0 ]; then
+
                                 ## start displaying different things depending on $ACTION
                                 if [ "${ACTION}" == "install" ] || [ "${ACTION}" == "reinstall" ]; then
+
                                     ## start check the new $PACKAGE is available if doing re/install
                                     if [ $(brew_checkfor ${PACKAGE}) -gt 0 ]; then
                                         puts-step "Successfully ${ACTION}ed ${PACKAGE}"
@@ -293,7 +275,9 @@ function brew_do() {
                                         puts-warn "Unsuccessful ${ACTION}ation of ${PACKAGE}..."
                                     fi
                                     ## end check the new $PACKAGE is available if doing re/install
+
                                 elif [ "${ACTION}" == "uninstall" ]; then
+
                                     ## start check the new $PACKAGE is *not* available if doing uninstall
                                     if [ $(brew_checkfor ${PACKAGE}) -eq 0 ]; then
                                         puts-step "Successfully ${ACTION}ed ${PACKAGE}"
@@ -301,8 +285,10 @@ function brew_do() {
                                         puts-warn "Unsuccessful ${ACTION}ation of ${PACKAGE}..."
                                     fi
                                     ## end check the new $PACKAGE is *not* available if doing uninstall
+
                                 fi
                                 ## end displaying different things depending on $ACTION
+
                             else
                                 puts-warn "Leaving the ${ACTION} with an error code. You may need to log in to your app to see if everything worked out."
                             fi
@@ -311,7 +297,6 @@ function brew_do() {
                         ## end confirming $ACTION was successful
                     fi
                     ## end brew errorhandling
-#UNCOMMENT_UNCOMMENT_UNCOMMENT_UNCOMMENT_UNCOMMENT
                 )
                 ## end no error block
             # ran out of time
@@ -326,143 +311,11 @@ function brew_do() {
     fi
 }
 
-function proc_watcher() {
-
-    ## This thing does:
-    # 1.) Traps the brew process id
-    # 2.) Sends it to the background
-    # 3.) Loops checking on time_remaining
-    # 4.) If time_remaining==0 then kill brew with SIGTERM
-    ## Why SIGTERM?
-    # http://stackoverflow.com/a/690631/4106215
-    # https://www.gnu.org/software/libc/manual/html_node/Program-Error-Signals.html#index-SIGABRT
-    # https://www.gnu.org/software/make/manual/html_node/Interrupts.html
-    # https://bash.cyberciti.biz/guide/Sending_signal_to_Processes#kill_-_send_a_signal_to_a_process
-    ## Notes:
-    # if anything in this trap process is f'd up then the whole thing fails
-    # this is the most important part of the whole buildpack
-    ## About brilliant PIPESTATUS:
-    # http://stackoverflow.com/a/1221870/4106215
-    ## The jobs -x thing is passing the wrong process sometimes, this gets it directly
-    # declare -xi JOB_PID=$(jobs -l | grep -E '\[[0-9]+\]\+' | cut -d'+' -f2 | sed 's/^\s*\([0-9]\+\).\+/\1/')
-
-    ## Instructions here continued from step (3) in brew_do
-    # 3a.)
-
-# TODO: Make this function accept a command with arguments so any program can be used with it
-
-    declare -i DOLLAR_QUESTION_PID
-    declare -i JOB_PID
-    declare -i JOB_ID
-    declare -i RTN_STATUS=$?
-    declare -i KILL_RETRIES=0
-    declare -i SLEEP_TIME=30
-    declare -i TIME_REMAINING=$(time_remaining)
-    declare -i LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
-    pid_exists() { echo $(kill -0 ${JOB_PID} |& grep --count .); }
-    assign_jobid_var() { JOB_ID=$1; }
-
-    if [ 1 ]; then  # false ] && [ -x "$(which $1)" ]; then
-        set -x
-            #$@ &  # raw execute whatever was passed
-            echo "$@"
-            jobs -x assign_jobid_var %+
-            do-debug "JOB_ID=$JOB_ID"
-            sleep 600
-        set +x
-        DOLLAR_QUESTION_PID=$!
-        JOB_PID=$(jobs -p | tail -n1)
-        RTN_STATUS=$?
-    else
-        JOB_PID=$(jobs -p | tail -n1)
-    fi
-
-    do-debug "jobs -l:"
-    jobs -l |& indent-debug
-
-    do-debug "DOLLAR_QUESTION_PID=$DOLLAR_QUESTION_PID"
-    do-debug "JOB_PID=$JOB_PID"
-    do-debug "RTN_STATUS=$RTN_STATUS"
-
-    # 3c.)
-    while [ $(pid_exists) -eq 0 ]; do  # checks if the process is still active
-        local TIME_REMAINING=$(time_remaining)
-
-        # 3c-i.)
-        if [ ${TIME_REMAINING} -gt 0 ]; then
-
-            # 3c-i-1.)
-            if [ ${TIME_REMAINING} -le ${LAST_SLEEP_TIME} ]; then
-
-                # 3c-i-1a.)
-                echo "$(countdown) ...... $(date --date=@$TIME_REMAINING +'%M:%S') until abort"
-
-                # 3c-i-1a.)
-                if [ ${TIME_REMAINING} -le 120 ]; then SLEEP_TIME=20; fi
-                if [ ${TIME_REMAINING} -le 60 ]; then SLEEP_TIME=10; fi
-                if [ ${TIME_REMAINING} -le 30 ]; then SLEEP_TIME=5; fi
-                if [ ${TIME_REMAINING} -le 10 ]; then SLEEP_TIME=1; fi
-
-                # 3c-i-1a.)
-                LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
-            fi
-
-        # 3c-ii.)
-        else
-            # 3c-ii-1.)
-            while [ 1 ]; do
-                case ${KILL_RETRIES} in
-                0) puts-warn "Out of time, aborting with SIGTERM"
-                   kill -SIGTERM ${JOB_PID} #&
-                   RTN_STATUS=$?
-                ;;
-                1) puts-warn "Aborting with SIGINT"
-                   kill -SIGINT ${JOB_PID} #&
-                   RTN_STATUS=$?
-                ;;
-                2) puts-warn "Aborting with SIGABRT"
-                   kill -SIGABRT ${JOB_PID} #&
-                   RTN_STATUS=$?
-                ;;
-                3) puts-warn "Aborting with SIGKILL"
-                   kill -SIGKILL ${JOB_PID} #&
-                   RTN_STATUS=$?
-                ;;
-                *) puts-warn "Something's way wrong. Killing the program altogether."
-                   kill -SIGKILL ${JOB_PID} #&
-                   RTN_STATUS=$?
-                   sleep 5
-                   return ${RTN_STATUS}
-                ;;
-                esac
-
-                # 3c-ii-2.)
-                if [ $(pid_exists) -gt 0 ]; then
-                    KILL_RETRIES=$(( $KILL_RETRIES + 1 ))
-                    sleep 5  # wait for the kill signal to work
-                else
-                    return ${RTN_STATUS}
-                fi
-            done
-        fi
-    done
-
-    # 3d.)
-    do-debug "Waiting on brew return status"
-    wait %+
-    #wait ${JOB_PID}
-    local WAIT_RTN_STATUS=$?
-    do-debug "WAIT_RTN_STATUS=$WAIT_RTN_STATUS"
-
-    # 3e.)
-    RTN_STATUS=${WAIT_RTN_STATUS:-$RTN_STATUS}
-    do-debug "Leaving ${FUNCNAME[0]} with RTN_STATUS = $RTN_STATUS"
-    return ${RTN_STATUS}
-}
 
 function brew_checkfor() {
     brew list | grep --count "$1" || true
 }
+
 
 function brew_install_defaults() {
     # install core tools
@@ -486,25 +339,27 @@ function brew_install_defaults() {
             brew_do install binutils
             brew_do install linux-headers
             brew_do install glibc
-            brew_do install gcc '--with-glibc' # --with-java --with-jit --with-multilib --with-nls'
+            brew_do install gcc
         fi
 
-#        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor ruby) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-0} -ne 1 ]; then
-#            puts-step "Installing Ruby"
-#            brew_do install ruby '--with-libffi'
-#        fi
-#
-#        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor perl) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-0} -ne 1 ]; then
-#            puts-step "Installing Perl"
-#            brew_do install perl #'--without-test'
-#        fi
-#
-#        if [ $(time_remaining) -gt 0 ] && [ $(brew_checkfor python3) -eq 0 ] && [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-0} -ne 1 ]; then
-#            puts-step "Installing Python3"
-#            brew_do install python3 '--with-tcl-tk --with-quicktest'
-#        fi
+        ## These are disabled for now, they take a while to install
+        if [ ${PACKAGE_BUILDER_NOINSTALL_RUBY:-1} -ne 1 ] && [ $(brew_checkfor ruby) -eq 0 ]; then
+            puts-step "Installing Ruby"
+            brew_do install ruby --with-libffi
+        fi
+
+        if [ ${PACKAGE_BUILDER_NOINSTALL_PERL:-1} -ne 1 ] && [ $(brew_checkfor perl) -eq 0 ]; then
+            puts-step "Installing Perl"
+            brew_do install perl --without-test
+        fi
+
+        if [ ${PACKAGE_BUILDER_NOINSTALL_PYTHON:-1} -ne 1 ] && [ $(brew_checkfor python3) -eq 0 ]; then
+            puts-step "Installing Python3"
+            brew_do install python3 --with-tcl-tk --with-quicktest
+        fi
     fi
 }
+
 
 # makes the brew output not show lines starting with '  ==>'
 function brew_quiet() {
@@ -525,6 +380,7 @@ function show_linuxbrew() {
     ls -Flah $HOME/.linuxbrew/Cellar | indent-debug || true
 }
 
+
 function show_linuxbrew_files() {
     show_files $BUILD_DIR/.cache
     show_files $BUILD_DIR/.linuxbrew
@@ -534,6 +390,7 @@ function show_linuxbrew_files() {
     show_files $CACHE_DIR/.linuxbrew
     show_linuxbrew
 }
+
 
 # creating this (originally) so install_packages.sh doesn't keep trying to install
 # a package that it can't find.
@@ -565,6 +422,7 @@ function brew_outputhandler() {
     awk "$TEST" | indent
 }
 
+
 function brew_checkerror() {
     CHECKFOR="$1"
     ERRORFILE="${2:-/tmp/brew_test_results.txt}"
@@ -582,6 +440,7 @@ function brew_checkerror() {
     return 0
     # grep -Zsqc "${CHECKFOR}" "${ERRORFILE}" && echo -n 1 || echo -n 0
 }
+
 
 function brew_clearerrorfile() {
     ERRORFILE="${1:-/tmp/brew_test_results.txt}"

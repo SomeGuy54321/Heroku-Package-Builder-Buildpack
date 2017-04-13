@@ -10,40 +10,43 @@ export PATH="$(dirname $BASH_SOURCE)/bin:$PATH"
 
 # Syntax sugar.
 indent() {
-    # consider different annotations for stdout and stderr
-    # http://stackoverflow.com/a/9113604/4106215
-    # Things I've tried
-    #     RE="s/^/\x1B[1G       /"
-    #     RE="s/^/\r       /"
-    #     RE="s/^/countdown 0 \"$@\"/e"
-    #     RE="s/^/ $(countdown)      /"
-    RE='s/^/        /; e countdown;'
-    sed $SED_FLAG "$RE"
+    RE='s/^/        /; e countdown;' && \
+    sed ${SED_FLAG} "$RE"            || \
+    sed ${SED_FLAG} 's/^/        /'
 }
 
 # Buildpack Steps.
 function puts-step (){
-    # echo " -----> $@"
-    RE='s/^/ -----> /; e countdown;'
-    echo $@ | sed $SED_FLAG "$RE"
+    RE='s/^/ -----> /; e countdown;' && \
+    echo $@ | sed ${SED_FLAG} "$RE"  || \
+    echo " -----> $@"
 }
 
 # Buildpack Warnings.
 function puts-warn (){
-    # echo " !     $@"
-    RE='s/^/ !      /; e countdown;'
-    echo $@ | sed $SED_FLAG "$RE"
+    RE='s/^/ !      /; e countdown;' && \
+    echo $@ | sed ${SED_FLAG} "$RE"  || \
+    echo " !     $@"
 }
 
 # Buildpack Commands.
 puts-cmd() {
-  echo "     $ $@"
+    RE='s/^/      $ /; e countdown;' && \
+    echo $@ | sed ${SED_FLAG} "$RE"  || \
+    echo "     $ $@"
+}
+
+# Waiting for stuff
+puts-wait() {
+    RE='s/^/ ...... /; e countdown;' && \
+    echo $@ | sed ${SED_FLAG} "$RE"  || \
+    echo " ..... $@"
 }
 
 # Usage: $ set-env key value
 function set-env (){
     do-debug "Adding 'export $1=$2' to $PROFILE_PATH"
-    echo "export $1=$2" >> $PROFILE_PATH
+    echo "export $1=$2" >> ${PROFILE_PATH}
 }
 
 # Usage: $ set-default-env key value

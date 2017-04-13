@@ -80,6 +80,7 @@ function parse_yaml() {
     | sed 's/_=/+=/g'
 }
 
+
 function set-default-configvar() {
     local this_var=$1  # no spaces in var name
     local this_val="$2"
@@ -93,12 +94,14 @@ function set-default-configvar() {
     fi
 }
 
+
 function print-env() {
     echo ""
     puts-step "Current environment:"
     env | sort |& indent
     echo ""
 }
+
 
 indent-debug() {
     #RE="s/^/       /"
@@ -107,11 +110,13 @@ indent-debug() {
     fi
 }
 
+
 function do-debug() {
     if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
         puts-step "DEBUG: $@"
     fi
 }
+
 
 # print a lot of stuff
 function debug_heavy() {
@@ -120,21 +125,25 @@ function debug_heavy() {
     set -o posix && set | sort | grep -E "HOMEBREW|PATH|HOME|APP_DIR|PACKAGE_EXTRAS" |& indent
 }
 
+
 function min() {
     A=$(( ${1:-1} * 1)); B=$(( ${2:-1} * 1))
     python3 -c "print(min("$A","$B"))"
 }
+
 
 function max() {
     A=$(( ${1:-1} * 1)); B=$(( ${2:-1} * 1));
     python3 -c "print(max("$A","$B"))"
 }
 
+
 function time_elapsed() {
     ELAPSED=$(awk '{printf "%f", $1 - $2}' <<< "$(date +'%s.%N') ${BUILD_START_TIME}")
     echo $(date --date=@$ELAPSED +'%M:%S:%2N') $@
     unset ELAPSED
 }
+
 
 # Syntax sugar.
 function indent_notime() {
@@ -156,9 +165,11 @@ function time_remaining() {
     echo ${TIME_REMAINING_INT}
 }
 
+
 function time_remaining_float() {
     awk '{printf "%f", $1 - $2}' <<< "${BUILD_MAX_RUNTIME} $(date +'%s.%N')"
 }
+
 
 # Get things from CONFIG_DIR
 # arg1 = file to check for, cat contents if found
@@ -174,11 +185,13 @@ get-configvar() {
     fi
 }
 
+
 function unexport_configvar() {
     VAR="$1"
     do-debug "Unsetting $VAR"
     unset ${VAR}; unset VAR
 }
+
 
 # https://devcenter.heroku.com/articles/buildpack-api#bin-compile-summary
 function export_env_dir() {
@@ -194,6 +207,7 @@ function export_env_dir() {
   fi
 }
 
+
 # export_all_configvars & export_configvar are modified versions of Heroku's export_env_dir
 function export_configvar() {
     #set +e  # don't exit if error
@@ -206,6 +220,7 @@ function export_configvar() {
       :
     do-debug "$VAR=${!VAR}"
 }
+
 
 function export_all_configvars() {
   env_dir=$1
@@ -220,6 +235,7 @@ function export_all_configvars() {
   fi
 }
 
+
 function unexport_all_configvars() {
     for f in $(ls -A ${CONFIG_DIR}); do
         unexport_configvar ${f}
@@ -227,12 +243,14 @@ function unexport_all_configvars() {
     unset f
 }
 
+
 function change_shell_default() {
     # doesnt work
     export ORIG_SHELLOPTS=$SHELLOPTS
     export ORIG_BASHOPTS=$BASHOPTS
     export ORIG_PS4=$PS4
 }
+
 
 function reset_shell_default() {
     # doesnt work
@@ -247,10 +265,117 @@ function reset_shell_default() {
     esac
 }
 
+
 function proper_word() {
     local STR="$1"
     declare -u STRU="${STR:0:1}"
     local STRN=${#STR}
     declare -l STRL="${STR:1:$STRN}"
     echo "${STRU}${STRL}"
+}
+
+
+function proc_watcher() {
+
+    ## This thing does:
+    # 1.) Traps the brew process id
+    # 2.) Sends it to the background
+    # 3.) Loops checking on time_remaining
+    # 4.) If time_remaining==0 then kill brew with SIGTERM
+    ## Why SIGTERM?
+    # http://stackoverflow.com/a/690631/4106215
+    # https://www.gnu.org/software/libc/manual/html_node/Program-Error-Signals.html#index-SIGABRT
+    # https://www.gnu.org/software/make/manual/html_node/Interrupts.html
+    # https://bash.cyberciti.biz/guide/Sending_signal_to_Processes#kill_-_send_a_signal_to_a_process
+    ## Notes:
+    # if anything in this trap process is f'd up then the whole thing fails
+    # this is the most important part of the whole buildpack
+    ## About brilliant PIPESTATUS:
+    # http://stackoverflow.com/a/1221870/4106215
+    ## The jobs -x thing is passing the wrong process sometimes, this gets it directly
+    # declare -xi JOB_PID=$(jobs -l | grep -E '\[[0-9]+\]\+' | cut -d'+' -f2 | sed 's/^\s*\([0-9]\+\).\+/\1/')
+
+    ## Instructions here continued from step (3) in brew_do
+    # 3a.)
+    declare -i JOB_PID JOB_ID RTN_STATUS KILL_RETRIES=0 SLEEP_TIME=30
+    declare -i TIME_REMAINING=$(time_remaining)
+    declare -i LAST_SLEEP_TIME=$(( $TIME_REMAINING - $SLEEP_TIME ))
+
+    set_sleep_time() {
+        [ ${TIME_REMAINING} -le 120 ] && SLEEP_TIME=20 || \
+        [ ${TIME_REMAINING} -le 60  ] && SLEEP_TIME=10 || \
+        [ ${TIME_REMAINING} -le 30  ] && SLEEP_TIME=5  || \
+        [ ${TIME_REMAINING} -le 10  ] && SLEEP_TIME=1  || true
+        LAST_SLEEP_TIME=$((TIME_REMAINING - SLEEP_TIME))
+    }
+    assign_job_vars() {  # used in 'jobs -x'
+        JOB_ID=$1
+        JOB_PID=$(jobs -p %${JOB_ID})
+        do-debug "jobs -l:"
+        jobs -l |& indent-debug
+        do-debug "JOB_ID=$JOB_ID"
+        do-debug "JOB_PID=$JOB_PID"
+    }
+    pid_exists() {
+        echo $(kill -0 %${JOB_ID} |& grep --count .)
+    }
+
+    puts-step "Running '$@' in ${FUNCNAME[0]}"
+    $@ |& brew_outputhandler &  # <-- raw execute whatever was passed <-- <-- <--
+    jobs -x assign_job_vars %+
+
+    # 3c.)
+    while [ $(pid_exists) -eq 0 ]; do  # checks if the process is still active
+        local TIME_REMAINING=$(time_remaining)
+
+        # 3c-i.)
+        if [ ${TIME_REMAINING} -gt 0 -a ${TIME_REMAINING} -le ${LAST_SLEEP_TIME} ]; then
+
+            # 3c-i-1.)
+            puts-wait "$(date --date=@${TIME_REMAINING} +'%M:%S') until abort"
+            set_sleep_time
+
+        # 3c-ii.)
+        elif [ ${TIME_REMAINING} -le 0 ]; then
+
+            # 3c-ii-1.)
+            puts-warn 'Out of time!!'
+            declare -u KILLSIG
+            while [ 1 ]; do
+
+                case ${KILL_RETRIES} in
+                    0) KILLSIG=SIGTERM ;;
+                    1) KILLSIG=SIGINT  ;;
+                    2) KILLSIG=SIGABRT ;;
+                    3) KILLSIG=SIGQUIT ;;
+                    *) puts-warn "Something's way wrong. Killing the program altogether with SIGKILL."
+                       kill -SIGKILL %${JOB_ID} #&
+                       RTN_STATUS=$?
+                       sleep 5
+                       return ${RTN_STATUS}
+                    ;;
+                esac
+
+                puts-warn "Aborting with $KILLSIG"
+                kill -${KILLSIG} %${JOB_ID} #&
+                RTN_STATUS=$?
+
+                # 3c-ii-2.)
+                [ $(pid_exists) -gt 0 ] && let ++KILL_RETRIES || return ${RTN_STATUS}
+                sleep 5  # wait for the kill signal to work
+
+            done
+        fi
+    done
+
+    # 3d.)
+    do-debug "Waiting on brew return status"
+    wait %${JOB_ID}
+    declare -i WAIT_RTN_STATUS=$?
+    do-debug "WAIT_RTN_STATUS=$WAIT_RTN_STATUS"
+
+    # 3e.)
+    RTN_STATUS=${WAIT_RTN_STATUS:-$RTN_STATUS}
+    do-debug "Leaving ${FUNCNAME[0]} with RTN_STATUS = $RTN_STATUS"
+    return ${RTN_STATUS}
 }
