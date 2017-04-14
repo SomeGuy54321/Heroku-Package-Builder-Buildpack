@@ -356,7 +356,7 @@ function proc_watcher() {
 
     #if [ 1 ]; then
         [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && local ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
-        { "$@"; echo -n "$?" >"$RTN_STATUS_TMPFILE" } &  # <--<--<-- raw execute in background whatever was passed <--<--<--
+        { "$@"; echo -n $? >"${RTN_STATUS_TMPFILE}"; } &  # <--<--<-- raw execute in background whatever was passed <--<--<--
         JOB_PID_DOLL_EXCLAM=$!
         ${ORIG_XTRACE} #2>/dev/null || true
     #fi
