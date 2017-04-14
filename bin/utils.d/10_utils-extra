@@ -335,7 +335,9 @@ function proc_watcher() {
     puts_warn_local() { echo "!      $@"; }
     wait_for_result_local() {
         local X=$(cat "${RTN_STATUS_TMPFILE}")
-        while [ ${#X} -eq 0 ]; do X=$(cat "${RTN_STATUS_TMPFILE}"); sleep 1; done
+        while [ ${#X} -eq 0 ]; do
+            X=$(cat "${RTN_STATUS_TMPFILE}")  #; sleep 1
+        done
         echo -n ${X}
     }
     var_debug_local() {
