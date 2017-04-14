@@ -330,7 +330,7 @@ function proc_watcher() {
     }
 
     "$@"  # <--<--<-- raw execute whatever was passed <--<--<--
-    jobs -x assign_job_vars %+
+    jobs -x 'assign_job_vars' %+
 
     # 3c.)
     while [ $(pid_exists) -eq 0 ]; do  # checks if the process is still active
