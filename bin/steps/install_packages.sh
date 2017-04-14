@@ -47,10 +47,12 @@ function package_manage() {
 
             # multiple scripts can run
             local CONFIG_VAR="PACKAGE_EXTRAS_config_${package}[@]"
-            for script in ${!CONFIG_VAR}; do
-                run_user_script "$BUILD_DIR/$script"
-                unset script
-            done
+            if [ $(time_remaining) -gt 0 ]; then
+                for script in ${!CONFIG_VAR}; do
+                    run_user_script "$BUILD_DIR/$script"
+                    unset script
+                done
+            fi
         else
             REMAINING_PACKAGES="$package\n$REMAINING_PACKAGES"
         fi
