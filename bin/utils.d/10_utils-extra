@@ -339,8 +339,10 @@ function proc_watcher() {
     puts_warn_local() { echo "!      $@"; }
     wait_for_result_local() {
         local X=$(cat "${RTN_STATUS_TMPFILE}")
-        while [ ${#X} -eq 0 ] && [ $(time_remaining) -gt 0 ]; do
-            X=$(cat "${RTN_STATUS_TMPFILE}")  ; sleep 1
+        while [ ${#X} -eq 0 ]; do
+            if [ $(time_remaining) -gt 0 ] || [ ${ENFORCE_TIME_LIMIT} -eq 0 ]; then
+                X=$(cat "${RTN_STATUS_TMPFILE}"); sleep 1
+            fi
         done
         [ $(time_remaining) -le 0 ] && X=1 || true
         echo -n ${X}
@@ -370,10 +372,10 @@ function proc_watcher() {
     fi
     jobs -x 'assign_job_vars' %+
 
-    #var_debug_local
+    var_debug_local
 
     # 3c.)
-    while [ ! $(cat "${RTN_STATUS_TMPFILE}") ]; do  # [ $(pid_exists) -gt 0 ] || [ $(jobs_running) -gt 0 ]; do  # [ $(wait_for_result_local) -eq 0 ]
+    while [ ! $(cat "${RTN_STATUS_TMPFILE}") ]; do
 
         local TIME_LEFT=$(time_remaining)
         if [ ${TIME_LEFT} -gt 0 ] || [ ${ENFORCE_TIME_LIMIT} -eq 0 ]; then
@@ -399,7 +401,7 @@ function proc_watcher() {
                     1) KILLSIG=SIGINT  ;;
                     2) KILLSIG=SIGABRT ;;
                     3) KILLSIG=SIGQUIT ;;
-                    *) puts_warn_local "Something's way wrong. Killing $1 altogether with SIGKILL."
+                    *) puts_warn_local "Something's way wrong. Killing $2 altogether with SIGKILL."
                        kill -SIGKILL %${JOB_ID} &
                        RTN_STATUS=$?
                        sleep 5
@@ -426,7 +428,7 @@ function proc_watcher() {
     var_debug_local
 
     # 3d.)
-    do_debug_local "Waiting on $1 return status"
+    do_debug_local "Waiting on $2 return status"
     declare -i JOB_RESULT=$(wait_for_result_local)
     rm -f "${RTN_STATUS_TMPFILE}" &>/dev/null; unset RTN_STATUS_TMPFILE
     do_debug_local "JOB_RESULT=$JOB_RESULT"
