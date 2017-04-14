@@ -397,28 +397,48 @@ function proc_watcher() {
                 # FIXME: this hangs and doesnt exit
                 do_debug_local "KILL_RETRIES=$KILL_RETRIES"
                 case ${KILL_RETRIES:-0} in
-                    0) KILLSIG=SIGTERM ;;
-                    1) KILLSIG=SIGINT  ;;
-                    2) KILLSIG=SIGABRT ;;
-                    3) KILLSIG=SIGQUIT ;;
-                    *) puts_warn_local "Something's way wrong. Killing $2 altogether with SIGKILL."
-                       kill -SIGKILL %${JOB_ID} &
-                       RTN_STATUS=$?
-                       sleep 5
-                       return ${RTN_STATUS}
+                    0)
+                        KILLSIG=SIGINT  ;;
+                    1)
+                        KILLSIG=SIGABRT ;;
+                    2)
+                        KILLSIG=SIGTERM ;;
+                    3)
+                        KILLSIG=SIGQUIT ;;
+                    3)
+                        KILLSIG=SIGSTOP ;;  # only SIGSTOP and SIGKILL cannot be ignored
+                    *)
+                        puts_warn_local "Something's way wrong. Killing $2 altogether with SIGKILL."
+                        killpg -SIGKILL %${JOB_ID} &
+                        RTN_STATUS=$?
+                        sleep 5
+                        return ${RTN_STATUS}
                     ;;
                 esac
 
                 puts_warn_local "Aborting with $KILLSIG"
-                { kill -${KILLSIG} %${JOB_ID} || kill -${KILLSIG} ${JOB_PID}; } &
+                { killpg -${KILLSIG} %${JOB_ID} 2>/dev/null || killpg -${KILLSIG} ${JOB_PID} 2>/dev/null ; } &
                 do_debug_local "Sent $KILLSIG"
                 RTN_STATUS=$?
 
                 var_debug_local
 
                 # 3c-ii-2.)
-                [ $(pid_exists) -gt 0 ] && let ++KILL_RETRIES || return ${RTN_STATUS}
                 sleep 5  # wait for the kill signal to work
+                local KILL_RETRIES_ORD
+                case ${KILL_RETRIES} in
+                    1) KILL_RETRIES_ORD="${KILL_RETRIES}st";;
+                    2) KILL_RETRIES_ORD="${KILL_RETRIES}nd";;
+                    3) KILL_RETRIES_ORD="${KILL_RETRIES}rd";;
+                    *) KILL_RETRIES_ORD="${KILL_RETRIES}th";;
+                esac
+                if [ $(pid_exists) -gt 0 ]; then
+                    let ++KILL_RETRIES
+                    puts_warn_local "$KILLSIG hasn't worked yet. Continuing with $KILL_RETRIES_ORD try."
+                else
+                    puts_step_local "$KILLSIG worked on the $KILL_RETRIES_ORD try."
+                    return ${RTN_STATUS}
+                fi
 
             done
         fi
