@@ -346,7 +346,6 @@ function proc_watcher() {
                 X=232
             fi
         done
-        [ $(time_remaining) -le 0 ] && X=1 || true
         echo -n ${X}
     }
     var_debug_local() {
