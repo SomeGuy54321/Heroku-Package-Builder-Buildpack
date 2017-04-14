@@ -42,9 +42,9 @@ export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages an
 export_configvar BUILDPACK_XTRACE 0  # print all commands to log
 
 # set prompts
+export PS4='$(countdown)       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 if [ ${BUILDPACK_XTRACE:-0} -gt 0 ]; then
     #export PS4='$(countdown)       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-    export PS4='$(countdown)       +($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
     set -o xtrace
 fi
 
