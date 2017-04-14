@@ -329,7 +329,7 @@ function proc_watcher() {
         return ${PIPESTATUS[0]}
     }
 
-    "$@"  # <--<--<-- raw execute whatever was passed <--<--<--
+    "$@" &  # <--<--<-- raw execute whatever was passed <--<--<--
     jobs -x 'assign_job_vars' %+
 
     # 3c.)
