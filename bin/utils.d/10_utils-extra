@@ -367,7 +367,7 @@ function proc_watcher() {
     var_debug_local
 
     # 3c.)
-    while [ $(pid_exists) -gt 0 ] || [ $(jobs_running) -gt 0 ]; do  # [ $(wait_for_result_local) -eq 0 ]
+    while [ ! $(cat "${RTN_STATUS_TMPFILE}") ]; do #[ $(pid_exists) -gt 0 ] || [ $(jobs_running) -gt 0 ]; do  # [ $(wait_for_result_local) -eq 0 ]
 
         local TIME_LEFT=$(time_remaining)
         if [ ${TIME_LEFT} -gt 0 ]; then
