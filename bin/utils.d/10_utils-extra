@@ -365,6 +365,7 @@ function proc_watcher() {
         do_debug_local "${RTN_STATUS_TMPFILE} contents: $(cat ${RTN_STATUS_TMPFILE})"
         do_debug_local "\$(pgrep $THE_EXE)=$(pgrep ${THE_EXE})"
         do_debug_local "\$(pgrep -P $THIS_PID)=$(pgrep -P ${THIS_PID})"
+        do_debug_local "\$(pgrep -P \$JOB_PID)=$(pgrep -P ${JOB_PID})"
         return 0
     }
 
