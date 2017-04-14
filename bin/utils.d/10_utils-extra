@@ -323,8 +323,8 @@ function proc_watcher() {
     }
     assign_job_vars() { JOB_ID=$1; JOB_PID=$(jobs -p %${JOB_ID}); }
     # kill -0 prints nothing if the job is running, and an error to stderr if its not
-    pid_exists() { echo -n $(kill -0 %${JOB_ID} | grep --count .); }
-    jobs_running() { echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep --count .); }
+    pid_exists() { echo -n $(kill -0 %${JOB_ID} |& grep --count .) || true; }
+    jobs_running() { echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep --count .) || true; }
     # these are necessary because any indentation is done when this function is called
     indent_local() { sed -u 's/^/        /'; }
     indent_debug_local() { [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && sed -u 's/^/        /' || true; }
