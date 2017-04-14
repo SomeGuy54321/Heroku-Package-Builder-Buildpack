@@ -107,7 +107,7 @@ CURR_DIR="$PWD"
 # show_linuxbrew_files
 
 # Move the linuxbrew cache to APP_DIR, or optionally reinstall by deleting the cache dirs
-    ORIG_XTRACE=$(shopt -po xtrace)
+    ORIG_XTRACE=$(shopt -po xtrace || true)
     set -x
 if [ ${PACKAGE_BUILDER_REINSTALL_LINUXBREW:-0} -eq 0 ]; then
     for d in ${LINUXBREW_DIRS}; do
