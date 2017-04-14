@@ -114,7 +114,9 @@ indent-debug() {
 
 function do-debug() {
     if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
-        puts-step "DEBUG: $@"
+        RE='s/^/ ~~~~~> DEBUG: /; e countdown;' && \
+        echo $@ | sed ${SED_FLAG} "$RE"  || \
+        echo " ~~~~~> DEBUG: $@"
     fi
 }
 
@@ -301,10 +303,6 @@ function proc_watcher() {
 
     ## Instructions here continued from step (3) in brew_do
     # 3a.)
-    declare -i JOB_PID JOB_ID RTN_STATUS KILL_RETRIES=0 SLEEP_TIME=30
-    declare -i TIME_REMAINING=$(time_remaining)
-    declare -i LAST_SLEEP_TIME=$((TIME_REMAINING - SLEEP_TIME))
-
     set_sleep_time() {
         [ ${TIME_REMAINING} -le 120 ] && SLEEP_TIME=20 || \
         [ ${TIME_REMAINING} -le 60  ] && SLEEP_TIME=10 || \
@@ -321,14 +319,14 @@ function proc_watcher() {
         do_debug_local "JOB_PID=$JOB_PID"
     }
     pid_exists() {
-        echo $(kill -0 %${JOB_ID} 2>/dev/null | grep --count .)
+        echo -n $(kill -0 %${JOB_ID} 2>/dev/null | grep --count .)
     }
     jobs_running() {
-        echo $(jobs -r %${JOB_ID} 2>/dev/null | grep --count .)
+        echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep --count .)
     }
     # these are necessary because any indentation is done when this function is called
     do_debug_local() {
-        [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo "DEBUG: $@" || true
+        [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo " ~~~~~> DEBUG: $@" || true
         return ${PIPESTATUS[0]}
     }
     puts_step_local() {
@@ -337,6 +335,12 @@ function proc_watcher() {
     puts_warn_local() {
         echo " !     $@"
     }
+
+    declare -i JOB_PID JOB_ID RTN_STATUS KILL_RETRIES LAST_SLEEP_TIME
+    declare -i SLEEP_TIME=30
+    declare -i TIME_REMAINING=$(time_remaining)
+    set_sleep_time
+    #declare -i LAST_SLEEP_TIME=$((TIME_REMAINING - SLEEP_TIME))
 
     "$@" &  # <--<--<-- raw execute whatever was passed in background <--<--<--
     jobs -x 'assign_job_vars' %+
@@ -362,12 +366,12 @@ function proc_watcher() {
             declare -u KILLSIG
             while [ 1 ]; do
 
-                case ${KILL_RETRIES} in
+                case ${KILL_RETRIES:-0} in
                     0) KILLSIG=SIGTERM ;;
                     1) KILLSIG=SIGINT  ;;
                     2) KILLSIG=SIGABRT ;;
                     3) KILLSIG=SIGQUIT ;;
-                    *) echo "! Something's way wrong. Killing the $1 altogether with SIGKILL."
+                    *) puts_warn_local "Something's way wrong. Killing the $1 altogether with SIGKILL."
                        kill -SIGKILL %${JOB_ID} #&
                        RTN_STATUS=$?
                        sleep 5
@@ -375,8 +379,9 @@ function proc_watcher() {
                     ;;
                 esac
 
-                echo "! Aborting with $KILLSIG"
+                puts_warn_local "Aborting with $KILLSIG"
                 kill -${KILLSIG} %${JOB_ID} #&
+                do_debug_local "Sent $KILLSIG"
                 RTN_STATUS=$?
 
                 # 3c-ii-2.)
@@ -388,13 +393,13 @@ function proc_watcher() {
     done
 
     # 3d.)
-    echo_debug "Waiting on $1 return status"
+    do_debug_local "Waiting on $1 return status"
     wait %${JOB_ID}
     declare -i WAIT_RTN_STATUS=$?
-    echo_debug "WAIT_RTN_STATUS=$WAIT_RTN_STATUS"
+    do_debug_local "WAIT_RTN_STATUS=$WAIT_RTN_STATUS"
 
     # 3e.)
     RTN_STATUS=${WAIT_RTN_STATUS:-$RTN_STATUS}
-    echo_debug "Leaving ${FUNCNAME[0]} with RTN_STATUS = $RTN_STATUS"
+    do_debug_local "Leaving ${FUNCNAME[0]} with RTN_STATUS = $RTN_STATUS"
     return ${RTN_STATUS}
 }

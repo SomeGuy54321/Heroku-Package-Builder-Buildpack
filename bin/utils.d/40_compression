@@ -73,7 +73,7 @@ function job_reduce_increment() {
 
 function compress_do() {
     ORIG_ERREXIT=$(shopt -po errexit || true)
-    set +e  # don't exit if error
+    set +o errexit  # don't exit if error
 
     declare -l DO_WHAT="$1"
     local INPATH="$2"
@@ -106,7 +106,7 @@ function compress_do() {
         DO_WHAT_LABEL="Compressing";
     else
         echo "Need to specify the tar action at compress_do"
-        "$ORIG_ERREXIT"  # set to original errexit value
+        ${ORIG_ERREXIT}  # set to original errexit value
         return 1
     fi
 
@@ -132,10 +132,10 @@ function compress_do() {
             # rethink compression level
             COMPRESS_PROGRAM=$(echo ${COMPRESS_PROGRAM} | sed -e "s/\s\?-[0-9]\b\s\?/ -${COMP_LEVEL:-9} /")
         else
-            "$ORIG_ERREXIT"  # set to original errexit value
+            ${ORIG_ERREXIT}  # set to original errexit value
             return ${RTN_VAL}
             #break
         fi
     done
-    "$ORIG_ERREXIT"  # set to original errexit value
+    ${ORIG_ERREXIT}  # set to original errexit value
 }

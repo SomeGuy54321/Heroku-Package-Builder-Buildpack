@@ -17,14 +17,14 @@ indent() {
 }
 
 # Buildpack Steps.
-function puts-step (){
+function puts-step() {
     RE='s/^/ -----> /; e countdown;' && \
     echo $@ | sed ${SED_FLAG} "$RE"  || \
     echo " -----> $@"
 }
 
 # Buildpack Warnings.
-function puts-warn (){
+function puts-warn() {
     RE='s/^/ !      /; e countdown;' && \
     echo $@ | sed ${SED_FLAG} "$RE"  || \
     echo " !     $@"
