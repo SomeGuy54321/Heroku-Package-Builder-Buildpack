@@ -311,7 +311,9 @@ function proc_watcher() {
     declare -i SLEEP_TIME=30
     declare -i TIME_LEFT=$(time_remaining)
     declare -i LAST_SLEEP_TIME=$((TIME_LEFT - SLEEP_TIME))
-    declare -i JOB_PID JOB_ID RTN_STATUS KILL_RETRIES
+    declare -i RTN_STATUS=0
+    local RTN_STATUS_TMPFILE=$(mktemp)
+    declare -i JOB_PID JOB_PID_DOLL_EXCLAM JOB_ID KILL_RETRIES
 
     get_sleep_time() {
         declare -i REM=$(time_remaining)
@@ -331,23 +333,32 @@ function proc_watcher() {
     do_debug_local() { [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo " ~~~~~> DEBUG: $@" || true; }
     puts_step_local() { echo " -----> $@"; }
     puts_warn_local() { echo " !     $@"; }
+    wait_for_result_local() {
+        local X=$(cat "${RTN_STATUS_TMPFILE}")
+        while [ ${#X} -eq 0 ]; do
+            X=$(cat "${RTN_STATUS_TMPFILE}")
+        done
+        echo -n ${X}
+    }
     var_debug_local() {
         do_debug_local "jobs -l:"
         jobs -l |& indent_debug_local
         do_debug_local "JOB_ID=$JOB_ID"
         do_debug_local "JOB_PID=$JOB_PID"
+        do_debug_local "JOB_PID_DOLL_EXCLAM=$JOB_PID_DOLL_EXCLAM"
         do_debug_local "SLEEP_TIME=$SLEEP_TIME"
         do_debug_local "TIME_LEFT=$TIME_LEFT"
         do_debug_local "LAST_SLEEP_TIME=$LAST_SLEEP_TIME"
         do_debug_local "\$(jobs_running)=$(jobs_running)"
         do_debug_local "\$(pid_exists)=$(pid_exists)"
+        do_debug_local "${RTN_STATUS_TMPFILE} contents: $(cat ${RTN_STATUS_TMPFILE})"
         return 0
     }
 
 
     if [ 1 ]; then
         [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && local ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
-        "$@" &  # <--<--<-- raw execute in background whatever was passed <--<--<--
+        { "$@"; echo -n $? > ${RTN_STATUS_TMPFILE} } & JOB_PID_DOLL_EXCLAM=$!    # <--<--<-- raw execute in background whatever was passed <--<--<--
         ${ORIG_XTRACE} 2>/dev/null || true
     fi
     jobs -x 'assign_job_vars' %+
@@ -408,12 +419,11 @@ function proc_watcher() {
 
     # 3d.)
     do_debug_local "Waiting on $1 return status"
-    wait %${JOB_ID}
-    declare -i WAIT_RTN_STATUS=$?
-    do_debug_local "WAIT_RTN_STATUS=$WAIT_RTN_STATUS"
+    declare -i JOB_RESULT=$(wait_for_result_local)
+    do_debug_local "TAIL_RTN_STATUS=$TAIL_RTN_STATUS"
 
     # 3e.)
-    RTN_STATUS=${WAIT_RTN_STATUS:-$RTN_STATUS}
+    RTN_STATUS=${TAIL_RTN_STATUS:-$RTN_STATUS}
     do_debug_local "Leaving ${FUNCNAME[0]} with RTN_STATUS = $RTN_STATUS"
     return ${RTN_STATUS}
 }
