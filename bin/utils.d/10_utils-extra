@@ -312,7 +312,7 @@ function proc_watcher() {
     declare -i TIME_LEFT=$(time_remaining)
     declare -i LAST_SLEEP_TIME=$((TIME_LEFT - SLEEP_TIME))
     declare -i RTN_STATUS=0
-    local RTN_STATUS_TMPFILE=$(mktemp)
+    export RTN_STATUS_TMPFILE=$(mktemp)
     declare -i JOB_PID JOB_PID_DOLL_EXCLAM JOB_ID KILL_RETRIES
 
     get_sleep_time() {
@@ -356,7 +356,7 @@ function proc_watcher() {
 
     if [ 1 ]; then
         [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && local ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
-        { "$@"; echo -n $? > ${RTN_STATUS_TMPFILE}; } &  # <--<--<-- raw execute in background whatever was passed <--<--<--
+        { "$@"; echo -n $? > $RTN_STATUS_TMPFILE; } &  # <--<--<-- raw execute in background whatever was passed <--<--<--
         JOB_PID_DOLL_EXCLAM=$!
         ${ORIG_XTRACE} #2>/dev/null || true
     fi
@@ -419,7 +419,7 @@ function proc_watcher() {
     # 3d.)
     do_debug_local "Waiting on $1 return status"
     declare -i JOB_RESULT=$(wait_for_result_local)
-    rm -f "${RTN_STATUS_TMPFILE}" &>/dev/null
+    rm -f "${RTN_STATUS_TMPFILE}" &>/dev/null; unset RTN_STATUS_TMPFILE
     do_debug_local "JOB_RESULT=$JOB_RESULT"
 
     # 3e.)
