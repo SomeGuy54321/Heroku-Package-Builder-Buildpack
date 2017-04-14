@@ -361,6 +361,8 @@ function proc_watcher() {
         do_debug_local "\$(jobs_running)=$(jobs_running)"
         do_debug_local "\$(pid_exists)=$(pid_exists)"
         do_debug_local "${RTN_STATUS_TMPFILE} contents: $(cat ${RTN_STATUS_TMPFILE})"
+        do_debug_local "\$(pgrep \$2)=$(pgrep $2)"
+        do_debug_local "\$(pgrep \$\$)=$(pgrep $$)"
         return 0
     }
 
@@ -410,7 +412,8 @@ function proc_watcher() {
                         KILLSIG=SIGSTOP ;;  # only SIGSTOP and SIGKILL cannot be ignored
                     *)
                         puts_warn_local "Something's way wrong. Killing $2 altogether with SIGKILL."
-                        killpg -SIGKILL %${JOB_ID} &
+                        #killpg -SIGKILL %${JOB_ID} &
+                        pkill -SIGKILL $$ &
                         RTN_STATUS=$?
                         sleep 5
                         return ${RTN_STATUS}
