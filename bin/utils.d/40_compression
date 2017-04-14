@@ -72,8 +72,6 @@ function job_reduce_increment() {
 }
 
 function compress_do() {
-    ORIG_XTRACE=$(shopt -po xtrace)
-    set -x
     ORIG_ERREXIT=$(shopt -po errexit)
     set +e  # don't exit if error
 
@@ -140,5 +138,4 @@ function compress_do() {
         fi
     done
     "$ORIG_ERREXIT"  # set to original errexit value
-    "$ORIG_XTRACE"
 }
