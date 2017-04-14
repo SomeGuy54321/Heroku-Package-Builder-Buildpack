@@ -398,6 +398,9 @@ function proc_watcher() {
         fi
     done
 
+    do_debug_local "jobs -l:"
+    jobs -l |& indent_debug_local
+
     # 3d.)
     do_debug_local "Waiting on $1 return status"
     wait %${JOB_ID}
