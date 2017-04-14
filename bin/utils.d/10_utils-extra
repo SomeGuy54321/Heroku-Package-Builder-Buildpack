@@ -350,13 +350,15 @@ function proc_watcher() {
         local TIME_REMAINING=$(time_remaining)
 
         # 3c-i.)
-        if [ ${TIME_REMAINING} -gt 0 -a ${TIME_REMAINING} -le ${LAST_SLEEP_TIME} ]; then
+        if [ ${TIME_REMAINING} -gt 0 ]; then
 
             # 3c-i-1.)
-            echo "..... $(date --date=@${TIME_REMAINING} +'%M:%S') until abort"
-            set_sleep_time
-            do_debug_local "jobs -l:"
-            jobs -l
+            if [ ${TIME_REMAINING} -le ${LAST_SLEEP_TIME} ]; then
+                echo "..... $(date --date=@${TIME_REMAINING} +'%M:%S') until abort"
+                set_sleep_time
+                do_debug_local "jobs -l:"
+                jobs -l
+            fi
 
         # 3c-ii.)
         elif [ ${TIME_REMAINING} -le 0 ]; then
