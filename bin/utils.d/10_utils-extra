@@ -329,14 +329,14 @@ function proc_watcher() {
     jobs_running() { echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep -cm 1 . || true); }
     # these are necessary because any indentation is done when this function is called
     indent_local() { sed -u 's/^/        /'; }
-    indent_debug_local() { [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && sed -u 's/^/       /' || true; }
-    do_debug_local() { [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo "~~~~~> DEBUG: $@" || true; }
+    indent_debug_local() { if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then sed -u 's/^/       /'; fi; }
+    do_debug_local() { if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then echo "~~~~~> DEBUG: $@"; fi;; }
     puts_step_local() { echo "-----> $@"; }
     puts_warn_local() { echo "!      $@"; }
     wait_for_result_local() {
         local X=$(cat "${RTN_STATUS_TMPFILE}")
         while [ ${#X} -eq 0 ]; do
-            X=$(cat "${RTN_STATUS_TMPFILE}")  #; sleep 1
+            X=$(cat "${RTN_STATUS_TMPFILE}")  ; sleep 1
         done
         echo -n ${X}
     }
@@ -367,7 +367,7 @@ function proc_watcher() {
     var_debug_local
 
     # 3c.)
-    while [ ! $(cat "${RTN_STATUS_TMPFILE}") ]; do #[ $(pid_exists) -gt 0 ] || [ $(jobs_running) -gt 0 ]; do  # [ $(wait_for_result_local) -eq 0 ]
+    while [ ! $(cat "${RTN_STATUS_TMPFILE}") ]; do  # [ $(pid_exists) -gt 0 ] || [ $(jobs_running) -gt 0 ]; do  # [ $(wait_for_result_local) -eq 0 ]
 
         local TIME_LEFT=$(time_remaining)
         if [ ${TIME_LEFT} -gt 0 ]; then
@@ -414,6 +414,7 @@ function proc_watcher() {
 
             done
         fi
+        sleep 1
     done
 
     var_debug_local
