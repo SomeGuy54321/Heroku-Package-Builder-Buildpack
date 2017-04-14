@@ -311,7 +311,7 @@ function proc_watcher() {
 
     ## Instructions here continued from step (3) in brew_do
     # 3a.)
-    declare -i ENFORCE_TIME_LIMIT=${1:-1}
+    declare -i ENFORCE_TIME_LIMIT=$1
     declare -i SLEEP_TIME=30
     declare -i TIME_LEFT=$(time_remaining)
     declare -i LAST_SLEEP_TIME=$((TIME_LEFT - SLEEP_TIME))
@@ -350,6 +350,7 @@ function proc_watcher() {
         jobs -l |& indent_debug_local
         do_debug_local "JOB_ID=$JOB_ID"
         do_debug_local "JOB_PID=$JOB_PID"
+        do_debug_local "ENFORCE_TIME_LIMIT=$ENFORCE_TIME_LIMIT"
         do_debug_local "JOB_PID_DOLL_EXCLAM=$JOB_PID_DOLL_EXCLAM"
         do_debug_local "SLEEP_TIME=$SLEEP_TIME"
         do_debug_local "TIME_LEFT=$TIME_LEFT"
@@ -407,7 +408,7 @@ function proc_watcher() {
                 esac
 
                 puts_warn_local "Aborting with $KILLSIG"
-                kill -${KILLSIG} %${JOB_ID} &
+                { kill -${KILLSIG} %${JOB_ID} || kill -${KILLSIG} ${JOB_PID}; } &
                 do_debug_local "Sent $KILLSIG"
                 RTN_STATUS=$?
 
