@@ -335,9 +335,7 @@ function proc_watcher() {
     puts_warn_local() { echo " !     $@"; }
     wait_for_result_local() {
         local X=$(cat "${RTN_STATUS_TMPFILE}")
-        while [ ${#X} -eq 0 ]; do
-            X=$(cat "${RTN_STATUS_TMPFILE}")
-        done
+        while [ ${#X} -eq 0 ]; do X=$(cat "${RTN_STATUS_TMPFILE}"); done
         echo -n ${X}
     }
     var_debug_local() {
@@ -358,8 +356,9 @@ function proc_watcher() {
 
     if [ 1 ]; then
         [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && local ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
-        { "$@"; echo -n $? > ${RTN_STATUS_TMPFILE} } & JOB_PID_DOLL_EXCLAM=$!    # <--<--<-- raw execute in background whatever was passed <--<--<--
-        ${ORIG_XTRACE} 2>/dev/null || true
+        { "$@"; echo -n $? >${RTN_STATUS_TMPFILE} } &  # <--<--<-- raw execute in background whatever was passed <--<--<--
+        JOB_PID_DOLL_EXCLAM=$!
+        ${ORIG_XTRACE} #2>/dev/null || true
     fi
     jobs -x 'assign_job_vars' %+
 
