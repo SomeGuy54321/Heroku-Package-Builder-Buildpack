@@ -303,12 +303,13 @@ function proc_watcher() {
 
     ## Instructions here continued from step (3) in brew_do
     # 3a.)
-    set_sleep_time() {
-        [ ${TIME_REMAINING} -le 120 ] && SLEEP_TIME=20 || \
-        [ ${TIME_REMAINING} -le 60  ] && SLEEP_TIME=10 || \
-        [ ${TIME_REMAINING} -le 30  ] && SLEEP_TIME=5  || \
-        [ ${TIME_REMAINING} -le 10  ] && SLEEP_TIME=1  || true
-        LAST_SLEEP_TIME=$((TIME_REMAINING - SLEEP_TIME))
+    get_sleep_time() {
+        declare -i REM=$(time_remaining)
+        [ ${REM} -le 120 ] && printf 20 || \
+        [ ${REM} -le 60  ] && printf 10 || \
+        [ ${REM} -le 30  ] && printf 5  || \
+        [ ${REM} -le 10  ] && printf 1  || \
+        printf ${SLEEP_TIME} || true
     }
     assign_job_vars() {  # used in 'jobs -x'
         JOB_ID=$1
@@ -318,29 +319,19 @@ function proc_watcher() {
         do_debug_local "JOB_ID=$JOB_ID"
         do_debug_local "JOB_PID=$JOB_PID"
     }
-    pid_exists() {
-        echo -n $(kill -0 %${JOB_ID} 2>/dev/null | grep --count .)
-    }
-    jobs_running() {
-        echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep --count .)
-    }
+    pid_exists() { echo -n $(kill -0 %${JOB_ID} 2>/dev/null | grep --count .); }
+    jobs_running() { echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep --count .); }
     # these are necessary because any indentation is done when this function is called
-    do_debug_local() {
-        [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo " ~~~~~> DEBUG: $@" || true
-        return ${PIPESTATUS[0]}
-    }
-    puts_step_local() {
-        echo " -----> $@"
-    }
-    puts_warn_local() {
-        echo " !     $@"
-    }
+    indent_local() { sed -l 's/^/        /'; }
+    indent_debug_local() { [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && sed -l 's/^/        /' || true; }
+    do_debug_local() { [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo " ~~~~~> DEBUG: $@" || true; }
+    puts_step_local() { echo " -----> $@"; }
+    puts_warn_local() { echo " !     $@"; }
 
     declare -i JOB_PID JOB_ID RTN_STATUS KILL_RETRIES LAST_SLEEP_TIME
     declare -i SLEEP_TIME=30
     declare -i TIME_REMAINING=$(time_remaining)
-    set_sleep_time
-    #declare -i LAST_SLEEP_TIME=$((TIME_REMAINING - SLEEP_TIME))
+    declare -i LAST_SLEEP_TIME=$((TIME_REMAINING - SLEEP_TIME))
 
     "$@" &  # <--<--<-- raw execute whatever was passed in background <--<--<--
     jobs -x 'assign_job_vars' %+
@@ -355,7 +346,7 @@ function proc_watcher() {
             # 3c-i-1.)
             if [ ${TIME_REMAINING} -le ${LAST_SLEEP_TIME} ]; then
                 echo "..... $(date --date=@${TIME_REMAINING} +'%M:%S') until abort"
-                set_sleep_time
+                LAST_SLEEP_TIME=$((TIME_REMAINING - $(get_sleep_time)))
                 do_debug_local "jobs -l:"
                 jobs -l
             fi
