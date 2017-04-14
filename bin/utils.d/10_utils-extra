@@ -288,6 +288,9 @@ function proc_watcher() {
     ## IMPORTANT:
     #  If an argument has "quotes" or 'quotes' the arguments should be passed as \"quotes\" or \'quotes\'
 
+    ## USAGE:
+    # proc_watcher [ 1 to enforce time limit, 0 to not ] [ command and args ]
+
     ## This thing does:
     # 1.) Traps the brew process id
     # 2.) Sends it to the background
@@ -308,6 +311,7 @@ function proc_watcher() {
 
     ## Instructions here continued from step (3) in brew_do
     # 3a.)
+    declare -i ENFORCE_TIME_LIMIT=${1:-1}
     declare -i SLEEP_TIME=30
     declare -i TIME_LEFT=$(time_remaining)
     declare -i LAST_SLEEP_TIME=$((TIME_LEFT - SLEEP_TIME))
@@ -359,7 +363,7 @@ function proc_watcher() {
 
     if [ 1 ]; then
         [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && local ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
-        { "$@"; echo -n $? > ${RTN_STATUS_TMPFILE}; } &  # <--<--<-- raw execute in background whatever was passed <--<--<--
+        { "${@:2}"; echo -n $? > ${RTN_STATUS_TMPFILE}; } &  # <--<--<-- raw execute in background whatever was passed <--<--<--
         JOB_PID_DOLL_EXCLAM=$!
         ${ORIG_XTRACE} #2>/dev/null || true
     fi
@@ -371,13 +375,13 @@ function proc_watcher() {
     while [ ! $(cat "${RTN_STATUS_TMPFILE}") ]; do  # [ $(pid_exists) -gt 0 ] || [ $(jobs_running) -gt 0 ]; do  # [ $(wait_for_result_local) -eq 0 ]
 
         local TIME_LEFT=$(time_remaining)
-        if [ ${TIME_LEFT} -gt 0 ]; then
+        if [ ${TIME_LEFT} -gt 0 ] || [ ${ENFORCE_TIME_LIMIT} -eq 0 ]; then
 
             # 3c-i-1.)
             if [ ${TIME_LEFT} -le ${LAST_SLEEP_TIME} ]; then
                 echo "..... $(date --date=@${TIME_LEFT} +'%M:%S') until abort"
                 LAST_SLEEP_TIME=$((TIME_LEFT - $(get_sleep_time)))
-                var_debug_local |& indent_local
+                #var_debug_local |& indent_local
             fi
 
         # 3c-ii.)
@@ -395,7 +399,7 @@ function proc_watcher() {
                     2) KILLSIG=SIGABRT ;;
                     3) KILLSIG=SIGQUIT ;;
                     *) puts_warn_local "Something's way wrong. Killing $1 altogether with SIGKILL."
-                       kill -SIGKILL %${JOB_ID} #&
+                       kill -SIGKILL %${JOB_ID} &
                        RTN_STATUS=$?
                        sleep 5
                        return ${RTN_STATUS}
@@ -410,7 +414,7 @@ function proc_watcher() {
                 var_debug_local
 
                 # 3c-ii-2.)
-                [ $(pid_exists) -gt 0 ] && [ $(time_remaining) -gt 0 ] && let ++KILL_RETRIES || return ${RTN_STATUS}
+                [ $(pid_exists) -gt 0 ] && let ++KILL_RETRIES || return ${RTN_STATUS}
                 sleep 5  # wait for the kill signal to work
 
             done

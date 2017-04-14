@@ -90,7 +90,7 @@ function brew_do() {
                     puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
 
                     # 2.)
-                    proc_watcher brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler
+                    proc_watcher 1 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler
 
                     # 3.)
                     #jobs -x proc_watcher %+
