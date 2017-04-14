@@ -315,25 +315,31 @@ function proc_watcher() {
     assign_job_vars() {  # used in 'jobs -x'
         JOB_ID=$1
         JOB_PID=$(jobs -p %${JOB_ID})
-        echo_debug "jobs -l:"
+        do_debug_local "jobs -l:"
         jobs -l
-        echo_debug "JOB_ID=$JOB_ID"
-        echo_debug "JOB_PID=$JOB_PID"
+        do_debug_local "JOB_ID=$JOB_ID"
+        do_debug_local "JOB_PID=$JOB_PID"
     }
     pid_exists() {
         echo $(kill -0 %${JOB_ID} |& grep --count .)
     }
     # these are necessary because any indentation is done when this function is called
-    echo_debug() {
+    do_debug_local() {
         [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo "DEBUG: $@" || true
         return ${PIPESTATUS[0]}
     }
+    puts_step_local() {
+        echo " -----> $@"
+    }
+    puts_warn_local() {
+        echo " !     $@"
+    }
 
-    "$@" &  # <--<--<-- raw execute whatever was passed <--<--<--
+    "$@" &  # <--<--<-- raw execute whatever was passed in background <--<--<--
     jobs -x 'assign_job_vars' %+
 
     # 3c.)
-    while [ $(pid_exists) -eq 0 ]; do  # checks if the process is still active
+    while [ $(pid_exists) -gt 0 ]; do  # checks if the process is still active
         local TIME_REMAINING=$(time_remaining)
 
         # 3c-i.)
@@ -347,7 +353,7 @@ function proc_watcher() {
         elif [ ${TIME_REMAINING} -le 0 ]; then
 
             # 3c-ii-1.)
-            echo '! Out of time!'
+            puts_warn_local 'Out of time!!'
             declare -u KILLSIG
             while [ 1 ]; do
 
