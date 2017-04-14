@@ -330,7 +330,7 @@ function proc_watcher() {
     # these are necessary because any indentation is done when this function is called
     indent_local() { sed -u 's/^/        /'; }
     indent_debug_local() { if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then sed -u 's/^/       /'; fi; }
-    do_debug_local() { if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then echo "~~~~~> DEBUG: $@"; fi;; }
+    do_debug_local() { if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then echo "~~~~~> DEBUG: $@"; fi; }
     puts_step_local() { echo "-----> $@"; }
     puts_warn_local() { echo "!      $@"; }
     wait_for_result_local() {
