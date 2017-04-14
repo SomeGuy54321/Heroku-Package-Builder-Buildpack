@@ -318,6 +318,8 @@ function proc_watcher() {
     declare -i RTN_STATUS=0
     export RTN_STATUS_TMPFILE=$(mktemp)
     declare -i JOB_PID JOB_PID_DOLL_EXCLAM JOB_ID KILL_RETRIES
+    local THE_EXE=$2
+    local THIS_PID=$$
 
     get_sleep_time() {
         declare -i REM=$(time_remaining)
@@ -361,8 +363,8 @@ function proc_watcher() {
         do_debug_local "\$(jobs_running)=$(jobs_running)"
         do_debug_local "\$(pid_exists)=$(pid_exists)"
         do_debug_local "${RTN_STATUS_TMPFILE} contents: $(cat ${RTN_STATUS_TMPFILE})"
-        do_debug_local "\$(pgrep $2)=$(pgrep $2)"
-        do_debug_local "\$(pgrep -P $$)=$(pgrep -P $$)"
+        do_debug_local "\$(pgrep $THE_EXE)=$(pgrep ${THE_EXE})"
+        do_debug_local "\$(pgrep -P $THIS_PID)=$(pgrep -P ${THIS_PID})"
         return 0
     }
 
