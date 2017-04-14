@@ -361,8 +361,8 @@ function proc_watcher() {
         do_debug_local "\$(jobs_running)=$(jobs_running)"
         do_debug_local "\$(pid_exists)=$(pid_exists)"
         do_debug_local "${RTN_STATUS_TMPFILE} contents: $(cat ${RTN_STATUS_TMPFILE})"
-        do_debug_local "\$(pgrep \$2)=$(pgrep $2)"
-        do_debug_local "\$(pgrep \$\$)=$(pgrep $$)"
+        do_debug_local "\$(pgrep $2)=$(pgrep $2)"
+        do_debug_local "\$(pgrep -P $$)=$(pgrep -P $$)"
         return 0
     }
 
