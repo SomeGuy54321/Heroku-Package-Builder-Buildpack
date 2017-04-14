@@ -416,7 +416,9 @@ function proc_watcher() {
                     *)
                         puts_warn_local "Something's way wrong. Killing $2 altogether with SIGKILL."
                         #killpg -SIGKILL %${JOB_ID} &
-                        pkill -SIGKILL $$ &
+                        pkill -${KILLSIG} -P ${JOB_PID} &
+                        pkill -${KILLSIG} -P $$ &
+                        kill -${KILLSIG} ${JOB_PID} &
                         RTN_STATUS=$?
                         sleep 5
                         return ${RTN_STATUS}
@@ -425,7 +427,9 @@ function proc_watcher() {
 
                 puts_warn_local "Aborting with $KILLSIG"
                 #{ killpg -${KILLSIG} %${JOB_ID} 2>/dev/null || killpg -${KILLSIG} ${JOB_PID} 2>/dev/null ; } &
+                pkill -${KILLSIG} -P ${JOB_PID} &
                 pkill -${KILLSIG} -P $$ &
+                kill -${KILLSIG} ${JOB_PID} &
                 do_debug_local "Sent $KILLSIG"
                 RTN_STATUS=$?
 
