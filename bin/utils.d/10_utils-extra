@@ -278,6 +278,11 @@ function proper_word() {
 }
 
 
+function get_orig_opt() {
+    echo $(shopt -po ${1} || true)
+}
+
+
 function proc_watcher() {
 
     ## IMPORTANT:
@@ -303,6 +308,11 @@ function proc_watcher() {
 
     ## Instructions here continued from step (3) in brew_do
     # 3a.)
+    declare -i SLEEP_TIME=30
+    declare -i TIME_LEFT=$(time_remaining)
+    declare -i LAST_SLEEP_TIME=$((TIME_LEFT - SLEEP_TIME))
+    declare -i JOB_PID JOB_ID RTN_STATUS KILL_RETRIES
+
     get_sleep_time() {
         declare -i REM=$(time_remaining)
         [ ${REM} -le 120 ] && printf 20 || \
@@ -311,14 +321,7 @@ function proc_watcher() {
         [ ${REM} -le 10  ] && printf 1  || \
         printf ${SLEEP_TIME} || true
     }
-    assign_job_vars() {  # used in 'jobs -x'
-        JOB_ID=$1
-        JOB_PID=$(jobs -p %${JOB_ID})
-        do_debug_local "jobs -l:"
-        jobs -l
-        do_debug_local "JOB_ID=$JOB_ID"
-        do_debug_local "JOB_PID=$JOB_PID"
-    }
+    assign_job_vars() { JOB_ID=$1; JOB_PID=$(jobs -p %${JOB_ID}); }
     pid_exists() { echo -n $(kill -0 %${JOB_ID} 2>/dev/null | grep --count .); }
     jobs_running() { echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep --count .); }
     # these are necessary because any indentation is done when this function is called
@@ -328,43 +331,53 @@ function proc_watcher() {
     puts_step_local() { echo " -----> $@"; }
     puts_warn_local() { echo " !     $@"; }
 
-    declare -i JOB_PID JOB_ID RTN_STATUS KILL_RETRIES LAST_SLEEP_TIME
-    declare -i SLEEP_TIME=30
-    declare -i TIME_REMAINING=$(time_remaining)
-    declare -i LAST_SLEEP_TIME=$((TIME_REMAINING - SLEEP_TIME))
 
-    "$@" &  # <--<--<-- raw execute whatever was passed in background <--<--<--
+    if [ 1 ]; then
+        [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && local ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
+        "$@" &  # <--<--<-- raw execute in background whatever was passed <--<--<--
+        ${ORIG_XTRACE} 2>/dev/null || true
+    fi
     jobs -x 'assign_job_vars' %+
 
-    # 3c.)
-    while [ $(pid_exists) -gt 0 -a $(jobs_running) -gt 0 ]; do  # checks if the process is still active
-        local TIME_REMAINING=$(time_remaining)
 
-        # 3c-i.)
-        if [ ${TIME_REMAINING} -gt 0 ]; then
+    do_debug_local "jobs -l:"
+    jobs -l |& indent_debug_local
+    do_debug_local "JOB_ID=$JOB_ID"
+    do_debug_local "JOB_PID=$JOB_PID"
+    do_debug_local "SLEEP_TIME=$SLEEP_TIME"
+    do_debug_local "TIME_LEFT=$TIME_LEFT"
+    do_debug_local "LAST_SLEEP_TIME=$LAST_SLEEP_TIME"
+
+
+    # 3c.)
+    while [ $(pid_exists) -gt 0 ] && [ $(jobs_running) -gt 0 ]; do  # checks if the process is still active
+
+        local TIME_LEFT=$(time_remaining)
+        if [ ${TIME_LEFT} -gt 0 ]; then
 
             # 3c-i-1.)
-            if [ ${TIME_REMAINING} -le ${LAST_SLEEP_TIME} ]; then
-                echo "..... $(date --date=@${TIME_REMAINING} +'%M:%S') until abort"
-                LAST_SLEEP_TIME=$((TIME_REMAINING - $(get_sleep_time)))
+            if [ ${TIME_LEFT} -le ${LAST_SLEEP_TIME} ]; then
+                echo "..... $(date --date=@${TIME_LEFT} +'%M:%S') until abort"
+                LAST_SLEEP_TIME=$((TIME_LEFT - $(get_sleep_time)))
                 do_debug_local "jobs -l:"
-                jobs -l
+                jobs -l |& indent_debug_local
             fi
 
         # 3c-ii.)
-        elif [ ${TIME_REMAINING} -le 0 ]; then
+        elif [ ${TIME_LEFT} -le 0 ]; then
 
             # 3c-ii-1.)
             puts_warn_local 'Out of time!!'
             declare -u KILLSIG
             while [ 1 ]; do
 
+                do_debug_local "KILL_RETRIES=$KILL_RETRIES"
                 case ${KILL_RETRIES:-0} in
                     0) KILLSIG=SIGTERM ;;
                     1) KILLSIG=SIGINT  ;;
                     2) KILLSIG=SIGABRT ;;
                     3) KILLSIG=SIGQUIT ;;
-                    *) puts_warn_local "Something's way wrong. Killing the $1 altogether with SIGKILL."
+                    *) puts_warn_local "Something's way wrong. Killing $1 altogether with SIGKILL."
                        kill -SIGKILL %${JOB_ID} #&
                        RTN_STATUS=$?
                        sleep 5
