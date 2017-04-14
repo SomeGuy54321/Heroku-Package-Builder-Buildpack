@@ -323,7 +323,7 @@ function proc_watcher() {
         [ ${REM} -le 10  ] && printf 1  || \
         printf ${SLEEP_TIME} || true
     }
-    assign_job_vars() { JOB_ID=$1; JOB_PID=$(jobs -p %${JOB_ID}); }
+    assign_job_vars() { JOB_ID=$1; JOB_PID=$(jobs -p %${JOB_ID} || echo -n ${JOB_PID_DOLL_EXCLAM}); }
     # kill -0 prints nothing if the job is running, and an error to stderr if its not
     pid_exists() { declare -i ZERO_IF_EXIST=$(kill -0 %${JOB_ID} |& grep -cm 1 .); echo -n $((1 - ZERO_IF_EXIST)); }
     jobs_running() { echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep -cm 1 .); }
