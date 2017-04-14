@@ -72,7 +72,7 @@ function job_reduce_increment() {
 }
 
 function compress_do() {
-    ORIG_ERREXIT=$(shopt -po errexit)
+    ORIG_ERREXIT=$(shopt -po errexit || true)
     set +e  # don't exit if error
 
     declare -l DO_WHAT="$1"
