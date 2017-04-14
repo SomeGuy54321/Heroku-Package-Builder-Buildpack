@@ -7,7 +7,8 @@ JOB_REDUCE_MAX_TRIES=4
 
 # this can cause forking issues, if it does then
 # gradually reduce the jobs number
-export HOMEBREW_MAKE_JOBS=$(grep --count ^processor /proc/cpuinfo || echo 1)
+MAX_JOBS=$(grep --count ^processor /proc/cpuinfo || echo 1)
+export HOMEBREW_MAKE_JOBS=${MAX_JOBS}
 
 
 function job_reduce_increment() {
@@ -309,6 +310,7 @@ function brew_do() {
     else
         puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
     fi
+    export HOMEBREW_MAKE_JOBS=${MAX_JOBS}  # maybe the number of jobs wont be an issue for the next package.
 }
 
 
