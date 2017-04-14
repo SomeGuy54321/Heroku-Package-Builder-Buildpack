@@ -62,7 +62,7 @@ function brew_do() {
                 # test Bash recursion with this:
                 # f() { declare -i X=${1:-0}; while [ $X -lt 6 ]; do X=$((X+1)); echo "${FUNCNAME[*]} $X"; f $X; done; }
                 if [ ${#DEPS} -gt 0 ]; then
-                    puts-step "Recursively installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | sed 's/ /, /g')"
+                    puts-step "Recursively installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | sed -u 's/ /, /g')"
                     for dep in ${DEPS}; do
                         IS_INSTALLED=$(brew_checkfor ${dep})
                         if [ ${IS_INSTALLED} -eq 0 ]; then

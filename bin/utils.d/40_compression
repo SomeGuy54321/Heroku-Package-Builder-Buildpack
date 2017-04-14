@@ -128,9 +128,9 @@ function compress_do() {
             # remove extreme compression
             COMPRESS_PROGRAM=${COMPRESS_PROGRAM/--extreme/}
             # reduce number of threads
-            COMPRESS_PROGRAM=$(echo ${COMPRESS_PROGRAM} | sed -e "s/\s\?--threads=[0-9]*\s\?/ --threads=${JOBS:-0} /")
+            COMPRESS_PROGRAM=$(echo ${COMPRESS_PROGRAM} | sed -ue "s/\s\?--threads=[0-9]*\s\?/ --threads=${JOBS:-0} /")
             # rethink compression level
-            COMPRESS_PROGRAM=$(echo ${COMPRESS_PROGRAM} | sed -e "s/\s\?-[0-9]\b\s\?/ -${COMP_LEVEL:-9} /")
+            COMPRESS_PROGRAM=$(echo ${COMPRESS_PROGRAM} | sed -ue "s/\s\?-[0-9]\b\s\?/ -${COMP_LEVEL:-9} /")
         else
             ${ORIG_ERREXIT}  # set to original errexit value
             return ${RTN_VAL}
