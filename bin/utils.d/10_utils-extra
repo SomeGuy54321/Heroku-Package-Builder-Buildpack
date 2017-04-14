@@ -323,14 +323,26 @@ function proc_watcher() {
     }
     assign_job_vars() { JOB_ID=$1; JOB_PID=$(jobs -p %${JOB_ID}); }
     # kill -0 prints nothing if the job is running, and an error to stderr if its not
-    pid_exists() { echo -n $(kill -0 %${JOB_ID} |& grep --count .) || true; }
-    jobs_running() { echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep --count .) || true; }
+    pid_exists() { echo -n $(kill -0 %${JOB_ID} |& grep --null --count . || true); }
+    jobs_running() { echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep --null --count . || true); }
     # these are necessary because any indentation is done when this function is called
     indent_local() { sed -u 's/^/        /'; }
     indent_debug_local() { [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && sed -u 's/^/        /' || true; }
     do_debug_local() { [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && echo " ~~~~~> DEBUG: $@" || true; }
     puts_step_local() { echo " -----> $@"; }
     puts_warn_local() { echo " !     $@"; }
+    var_debug_local() {
+        do_debug_local "jobs -l:"
+        jobs -l |& indent_debug_local
+        do_debug_local "JOB_ID=$JOB_ID"
+        do_debug_local "JOB_PID=$JOB_PID"
+        do_debug_local "SLEEP_TIME=$SLEEP_TIME"
+        do_debug_local "TIME_LEFT=$TIME_LEFT"
+        do_debug_local "LAST_SLEEP_TIME=$LAST_SLEEP_TIME"
+        do_debug_local "\$(jobs_running)=$(jobs_running)"
+        do_debug_local "\$(pid_exists)=$(pid_exists)"
+        return 0
+    }
 
 
     if [ 1 ]; then
@@ -340,15 +352,7 @@ function proc_watcher() {
     fi
     jobs -x 'assign_job_vars' %+
 
-
-    do_debug_local "jobs -l:"
-    jobs -l |& indent_debug_local
-    do_debug_local "JOB_ID=$JOB_ID"
-    do_debug_local "JOB_PID=$JOB_PID"
-    do_debug_local "SLEEP_TIME=$SLEEP_TIME"
-    do_debug_local "TIME_LEFT=$TIME_LEFT"
-    do_debug_local "LAST_SLEEP_TIME=$LAST_SLEEP_TIME"
-
+    var_debug_local
 
     # 3c.)
     while [ $(pid_exists) -eq 0 ] && [ $(jobs_running) -gt 0 ]; do  # checks if the process is still active
@@ -360,8 +364,7 @@ function proc_watcher() {
             if [ ${TIME_LEFT} -le ${LAST_SLEEP_TIME} ]; then
                 echo "..... $(date --date=@${TIME_LEFT} +'%M:%S') until abort"
                 LAST_SLEEP_TIME=$((TIME_LEFT - $(get_sleep_time)))
-                do_debug_local "jobs -l:"
-                jobs -l |& indent_debug_local
+                var_debug_local
             fi
 
         # 3c-ii.)
@@ -391,6 +394,8 @@ function proc_watcher() {
                 do_debug_local "Sent $KILLSIG"
                 RTN_STATUS=$?
 
+                var_debug_local
+
                 # 3c-ii-2.)
                 [ $(pid_exists) -gt 0 ] && let ++KILL_RETRIES || return ${RTN_STATUS}
                 sleep 5  # wait for the kill signal to work
@@ -399,8 +404,7 @@ function proc_watcher() {
         fi
     done
 
-    do_debug_local "jobs -l:"
-    jobs -l |& indent_debug_local
+    var_debug_local
 
     # 3d.)
     do_debug_local "Waiting on $1 return status"
