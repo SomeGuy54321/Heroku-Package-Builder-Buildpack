@@ -322,7 +322,8 @@ function proc_watcher() {
         printf ${SLEEP_TIME} || true
     }
     assign_job_vars() { JOB_ID=$1; JOB_PID=$(jobs -p %${JOB_ID}); }
-    pid_exists() { echo -n $(kill -0 %${JOB_ID} 2>/dev/null | grep --count .); }
+    # kill -0 prints nothing if the job is running, and an error to stderr if its not
+    pid_exists() { echo -n $(kill -0 %${JOB_ID} | grep --count .); }
     jobs_running() { echo -n $(jobs -r %${JOB_ID} 2>/dev/null | grep --count .); }
     # these are necessary because any indentation is done when this function is called
     indent_local() { sed -u 's/^/        /'; }
@@ -350,7 +351,7 @@ function proc_watcher() {
 
 
     # 3c.)
-    while [ $(pid_exists) -gt 0 ] && [ $(jobs_running) -gt 0 ]; do  # checks if the process is still active
+    while [ $(pid_exists) -eq 0 ] && [ $(jobs_running) -gt 0 ]; do  # checks if the process is still active
 
         local TIME_LEFT=$(time_remaining)
         if [ ${TIME_LEFT} -gt 0 ]; then
