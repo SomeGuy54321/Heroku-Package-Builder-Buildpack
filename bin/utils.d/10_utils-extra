@@ -397,7 +397,7 @@ function proc_watcher() {
             while [ 1 ]; do
                 # FIXME: this hangs and doesnt exit
                 do_debug_local "KILL_RETRIES=$KILL_RETRIES"
-                case ${KILL_RETRIES:-0} in
+                case ${KILL_RETRIES:=0} in
                     0)
                         KILLSIG=SIGINT  ;;
                     1)
@@ -418,7 +418,8 @@ function proc_watcher() {
                 esac
 
                 puts_warn_local "Aborting with $KILLSIG"
-                { killpg -${KILLSIG} %${JOB_ID} 2>/dev/null || killpg -${KILLSIG} ${JOB_PID} 2>/dev/null ; } &
+                #{ killpg -${KILLSIG} %${JOB_ID} 2>/dev/null || killpg -${KILLSIG} ${JOB_PID} 2>/dev/null ; } &
+                pkill -${KILLSIG} -P $$ &
                 do_debug_local "Sent $KILLSIG"
                 RTN_STATUS=$?
 
