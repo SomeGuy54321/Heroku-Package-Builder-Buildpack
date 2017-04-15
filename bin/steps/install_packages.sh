@@ -65,28 +65,22 @@ function package_manage() {
     fi
 }
 
-function main() {
 
-    if [ ${USE_DPKG_BUILDFLAGS} -ne 0 ] && [ -x "$(which dpkg-buildflags)" ]; then
-        do-debug "Exporting dpkg-buildflags:"
-        dpkg-buildflags --status |& indent_debug || true
-        eval $(dpkg-buildflags --export=sh)
-    fi
+if [ ${USE_DPKG_BUILDFLAGS} -ne 0 ] && [ -x "$(which dpkg-buildflags)" ]; then
+    do-debug "Exporting dpkg-buildflags:"
+    dpkg-buildflags --status |& indent_debug || true
+    eval $(dpkg-buildflags --export=sh)
+fi
 
-    # the only thing this line does is displays the variables just for debugging, no variables are set
-    do-debug "YAML variables:"
-    parse_yaml "$BUILD_DIR/package-extras.yaml" 'PACKAGE_EXTRAS_' |& indent_debug
+puts-step "Parsing package-extras.yaml"
+[ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
+eval $(parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_')
+${ORIG_XTRACE}; unset ORIG_XTRACE
 
-    puts-step "Parsing package-extras.yaml"
-    eval $(parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_')
+package_manage install
+package_manage reinstall
+package_manage uninstall
 
-    package_manage install
-    package_manage reinstall
-    package_manage uninstall
-
-    # delete all but the latest downloads of installed packages, or older than 30 days
-    puts-step "Running brew cleanup"
-    brew cleanup |& indent |& brew_quiet
-}
-
-main
+# delete all but the latest downloads of installed packages, or older than 30 days
+puts-step "Running brew cleanup"
+brew cleanup |& indent |& brew_quiet
