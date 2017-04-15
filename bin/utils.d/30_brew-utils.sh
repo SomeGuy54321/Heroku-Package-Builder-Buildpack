@@ -86,20 +86,12 @@ function brew_do() {
                     ####################################################################################################
                     ## This is the most important part of the Linuxbrew part of the buildpack. Step-by-step:
                     # TODO: document the hard part of brew_do
-                    # 1.)
+
                     puts-step "Running 'brew $ACTION $PACKAGE $FLAGS'"
 
                     # 2.)
                     proc_watcher 1 brew ${ACTION} ${PACKAGE} ${FLAGS} |& brew_outputhandler
 
-                    # 3.)
-                    #jobs -x proc_watcher %+
-                    #declare -i BREW_PID=$(jobs -p | tail -n1)
-
-                    # 4.)
-                    #proc_watcher ${BREW_PID}
-
-                    # 5.)
                     local BREW_RTN_STATUS=$?
                     do-debug "Received from proc_watcher BREW_RTN_STATUS is '$BREW_RTN_STATUS'"
                     ####################################################################################################
