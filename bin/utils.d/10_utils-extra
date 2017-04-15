@@ -385,6 +385,7 @@ function proc_watcher() {
         do_debug_local "\$(pgrep -a \$THE_EXE)=$(pgrep -a ${THE_EXE})"
         do_debug_local "\$(pgrep -a -P \$THIS_PID)=$(pgrep -a -P ${THIS_PID})"
         do_debug_local "\$(pgrep -a -P \$JOB_PID)=$(pgrep -a -P ${JOB_PID})"
+        ps aux
         return 0
     }
 
@@ -441,7 +442,7 @@ function proc_watcher() {
                 esac
 
                 puts_warn_local "Aborting with $KILLSIG"
-                do_kill SIGKILL ${JOB_PID} 5
+                do_kill ${KILLSIG} ${JOB_PID} 5
                 do_debug_local "Sent $KILLSIG"
                 RTN_STATUS=$?
 
