@@ -289,14 +289,18 @@ function get_orig_opt() {
 
 function do_kill() {
     local SIGNAL=$1
-    local PID=$2
-    [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && local ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
+#    local PID=$2
+    local WHAT_TO_KILL=$2  # ideally this can be anything matching a line in ps -ef e.g. PID, name
     local WAIT=${3:-5}
-    pkill --signal ${SIGNAL} --pgroup ${PID} || true
-    pkill --signal ${SIGNAL} --parent ${PID} || true
-    kill -${SIGNAL} -- -${PID} || true
-    kill -${SIGNAL} -${PID} || true
-    kill -${SIGNAL} ${PID} || true
+    [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && local ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
+
+    ps -ef | grep "${WHAT_TO_KILL}" | awk '{ print $2 }' | kill -${SIGNAL}
+#    pkill --signal ${SIGNAL} --pgroup ${PID} || true
+#    pkill --signal ${SIGNAL} --parent ${PID} || true
+#    kill -${SIGNAL} -- -${PID} || true
+#    kill -${SIGNAL} -${PID} || true
+#    kill -${SIGNAL} ${PID} || true
+
     local RTN=$?
     sleep ${WAIT}
     return ${RTN}
@@ -445,7 +449,8 @@ function proc_watcher() {
                 esac
 
                 puts_warn_local "Aborting with $KILLSIG"
-                do_kill ${KILLSIG} ${JOB_PID} 5
+#                do_kill ${KILLSIG} ${JOB_PID} 5
+                do_kill ${KILLSIG} "$(which brew)" 5
                 do_debug_local "Sent $KILLSIG"
                 RTN_STATUS=$?
 
