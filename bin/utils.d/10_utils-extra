@@ -410,7 +410,7 @@ function proc_watcher() {
             if [ ${TIME_LEFT} -le ${LAST_SLEEP_TIME} ]; then
                 echo "..... $(date --date=@${TIME_LEFT} +'%M:%S') until abort"
                 LAST_SLEEP_TIME=$((TIME_LEFT - $(get_sleep_time)))
-                #var_debug_local |& indent_local
+                var_debug_local
             fi
 
         # 3c-ii.)
