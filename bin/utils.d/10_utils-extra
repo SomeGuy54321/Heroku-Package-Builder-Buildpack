@@ -288,11 +288,11 @@ function do_kill() {
     local PID=$2
     [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && local ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
     local WAIT=${3:-5}
-    pkill --signal ${SIGNAL} --pgroup ${PID}
-    do_debug_local ""
-    pkill --signal ${SIGNAL} --parent ${PID}
-    kill -${SIGNAL} -${PID}
-    kill -${SIGNAL} ${PID}
+    pkill --signal ${SIGNAL} --pgroup ${PID} || true
+    pkill --signal ${SIGNAL} --parent ${PID} || true
+    kill -${SIGNAL} -- -${PID} || true
+    kill -${SIGNAL} -${PID} || true
+    kill -${SIGNAL} ${PID} || true
     local RTN=$?
     sleep ${WAIT}
     return ${RTN}
