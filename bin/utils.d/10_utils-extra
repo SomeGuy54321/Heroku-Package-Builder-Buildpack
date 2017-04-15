@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export BUILD_DEBUG_DEFAULT=1
+export BUILD_DEBUG_DEFAULT=0
 
 # taken from https://gist.github.com/DinoChiesa/3e3c3866b51290f31243
 # which is derived from https://gist.github.com/epiloque/8cf512c6d64641bde388
@@ -108,7 +108,6 @@ indent-debug() {
     if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
         indent
     fi
-    return ${PIPESTATUS[0]}
 }
 
 
@@ -411,7 +410,7 @@ function proc_watcher() {
             if [ ${TIME_LEFT} -le ${LAST_SLEEP_TIME} ]; then
                 echo "..... $(date --date=@${TIME_LEFT} +'%M:%S') until abort"
                 LAST_SLEEP_TIME=$((TIME_LEFT - $(get_sleep_time)))
-                var_debug_local
+                #var_debug_local
             fi
 
         # 3c-ii.)
