@@ -75,7 +75,7 @@ function main() {
 
     # the only thing this line does is displays the variables just for debugging, no variables are set
     do-debug "YAML variables:"
-    parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_' |& indent_debug
+    parse_yaml "$BUILD_DIR/package-extras.yaml" 'PACKAGE_EXTRAS_' |& indent_debug
 
     puts-step "Parsing package-extras.yaml"
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_')
