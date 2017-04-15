@@ -103,7 +103,7 @@ function print-env() {
 }
 
 
-function indent-debug() {
+function indent_debug() {
     if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
         indent
     else

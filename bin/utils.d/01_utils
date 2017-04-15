@@ -80,7 +80,7 @@ function deep-mv (){
 function show_files() {
     VAR="$1"
     do-debug "Contents of $VAR:"
-    ls -Flah "${VAR}" |& indent-debug || true
+    ls -Flah "${VAR}" |& indent_debug || true
 }
 
 # Does some serious copying.

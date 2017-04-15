@@ -69,13 +69,13 @@ function main() {
 
     if [ ${USE_DPKG_BUILDFLAGS} -ne 0 ] && [ -x "$(which dpkg-buildflags)" ]; then
         do-debug "Exporting dpkg-buildflags:"
-        dpkg-buildflags --status |& indent-debug || true
+        dpkg-buildflags --status |& indent_debug || true
         eval $(dpkg-buildflags --export=sh)
     fi
 
     # the only thing this line does is displays the variables just for debugging, no variables are set
     do-debug "YAML variables:"
-    parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_' |& indent-debug
+    parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_' |& indent_debug
 
     puts-step "Parsing package-extras.yaml"
     eval $(parse_yaml $BUILD_DIR/package-extras.yaml 'PACKAGE_EXTRAS_')

@@ -171,14 +171,14 @@ function brew_do() {
                                 1)
                                     puts-warn "Got the weird ruby error 'syserr_fail2_in'. Jumping to uninstall ${PACKAGE}."
                                     do-debug "Running 'brew uninstall ${PACKAGE}'"
-                                    brew uninstall ${PACKAGE} |& indent-debug
+                                    brew uninstall ${PACKAGE} |& indent_debug
                                     puts-step "Retrying ${ACTION}ation of $PACKAGE"
                                     brew_do $ACTION $PACKAGE $FLAGS
                                 ;;
                                 2)
                                     puts-warn "Still got the weird ruby error 'syserr_fail2_in'. Forcefully uninstalling ${PACKAGE}."
                                     do-debug "Running 'brew uninstall --force --ignore-dependencies ${PACKAGE}'"
-                                    brew uninstall --force --ignore-dependencies ${PACKAGE} |& indent-debug
+                                    brew uninstall --force --ignore-dependencies ${PACKAGE} |& indent_debug
                                     puts-step "Retrying ${ACTION}ation of $PACKAGE"
                                     brew_do $ACTION $PACKAGE $FLAGS
                                 ;;
@@ -194,31 +194,31 @@ function brew_do() {
                                     puts-warn "Got a weird ruby error. Running a possible remedy."
                                     do-debug    "This remedy was built when I had a failed gcc build, which was"
                                     # align these echos with do-debug text by indenting to the width of 'DEBUG: ' (+7)
-                                    echo "       then archived, then upon decompressing and trying to restart  " |& indent-debug
-                                    echo "       the build I'd get 'Error: File exists @ syserr_fail2_in'      " |& indent-debug
+                                    echo "       then archived, then upon decompressing and trying to restart  " |& indent_debug
+                                    echo "       the build I'd get 'Error: File exists @ syserr_fail2_in'      " |& indent_debug
                                     do-debug "Running 'brew link --overwrite --force ${PACKAGE}'"
-                                    brew link --overwrite --force ${PACKAGE} |& indent-debug
+                                    brew link --overwrite --force ${PACKAGE} |& indent_debug
                                     puts-step "Retrying ${ACTION}ation of $PACKAGE"
                                     brew_do $ACTION $PACKAGE $FLAGS
                                 ;;
                                 2)
                                     puts-warn "Got another weird ruby error. Running another possible remedy."
                                     do-debug "Running 'brew cleanup -s ${PACKAGE}'"
-                                    brew cleanup -s ${PACKAGE} |& indent-debug
+                                    brew cleanup -s ${PACKAGE} |& indent_debug
                                     puts-step "Retrying ${ACTION}ation of $PACKAGE"
                                     brew_do $ACTION $PACKAGE $FLAGS
                                 ;;
                                 3)
                                     puts-warn "Yet another weird ruby error. Resorting to more drastic measures."
                                     do-debug "Running 'brew uninstall ${PACKAGE}'"
-                                    brew uninstall ${PACKAGE} |& indent-debug
+                                    brew uninstall ${PACKAGE} |& indent_debug
                                     puts-step "Retrying ${ACTION}ation of $PACKAGE"
                                     brew_do $ACTION $PACKAGE $FLAGS
                                 ;;
                                 *)
                                     puts-warn "Weird ruby error again. Last ditch effort to fix this."
                                     do-debug "Running 'brew uninstall --force --ignore-dependencies ${PACKAGE}'"
-                                    brew uninstall --force --ignore-dependencies ${PACKAGE} |& indent-debug
+                                    brew uninstall --force --ignore-dependencies ${PACKAGE} |& indent_debug
                                     puts-step "Retrying ${ACTION}ation of $PACKAGE"
                                     brew_do $ACTION $PACKAGE $FLAGS
                                 ;;
@@ -375,11 +375,11 @@ function brew_quiet() {
 
 function show_linuxbrew() {
     do-debug "Contents of $HOME/.linuxbrew:"
-    ls -Flah $HOME/.linuxbrew | indent-debug || true
+    ls -Flah $HOME/.linuxbrew | indent_debug || true
     do-debug "Contents of $HOME/.linuxbrew/bin:"
-    ls -Flah $HOME/.linuxbrew/bin | indent-debug || true
+    ls -Flah $HOME/.linuxbrew/bin | indent_debug || true
     do-debug "Contents of $HOME/.linuxbrew/Cellar:"
-    ls -Flah $HOME/.linuxbrew/Cellar | indent-debug || true
+    ls -Flah $HOME/.linuxbrew/Cellar | indent_debug || true
 }
 
 
