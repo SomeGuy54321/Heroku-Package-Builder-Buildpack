@@ -106,8 +106,8 @@ function print-env() {
 function indent-debug() {
     if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
         indent
-#    else
-#        return 0
+    else
+        return 0
     fi
 }
 
@@ -117,6 +117,8 @@ function do-debug() {
         RE='s/^/ ~~~~~> DEBUG: /; e countdown;' && \
         echo $@ | sed ${SED_FLAG} "$RE"  || \
         echo " ~~~~~> DEBUG: $@"
+    else
+        return 0
     fi
 }
 
