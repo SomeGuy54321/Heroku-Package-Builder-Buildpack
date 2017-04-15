@@ -75,6 +75,9 @@ Removes all packages installed before and starts anew
 __*PACKAGE_BUILDER_MAX_BUILDTIME*__ (time in minutes)<br>
 Max time to take building (not exact)
 
+__*BUILD_DEBUG*__ (1 or 0)<br>
+Print extra stuff when building
+
 __*PACKAGE_BUILDER_NOINSTALL_GAWK*__ (1 or 0)<br>
 __*PACKAGE_BUILDER_NOINSTALL_GCC*__ (1 or 0)<br>
 ~~__*PACKAGE_BUILDER_NOINSTALL_RUBY*__~~ (1 or 0)<br>
@@ -82,19 +85,30 @@ __*PACKAGE_BUILDER_NOINSTALL_GCC*__ (1 or 0)<br>
 ~~__*PACKAGE_BUILDER_NOINSTALL_PYTHON*__~~ (1 or 0)<br>
 ~~__*PACKAGE_BUILDER_NOINSTALL_DEFAULTS*__~~ (1 or 0)<br>
 Some core tools are automatically installed on first install. Setting this to 1 disables this. PACKAGE_BUILDER_NOINSTALL_DEFAULTS=1 disables all automatic installs.
+
 __*USE_DPKG_BUILDFLAGS*__ (1 or 0)<br>
 Use the default buildflags as dpkg (on by default)
 
+OVERVIEW
+========
+This buildpack allows you to install any software. At the moment it uses Linuxbrew exclusively, so if you want to install a non-Linuxbrew package you'll need to write a formula (read more [here](https://github.com/Homebrew/brew/blob/master/docs/Formula-Cookbook.md)).
+
+Aside from simply running `brew install <package>` this buildpack aims to deal witht he unique constraints of Heroku, including the ~15 minute timeout and the max slug size limit (thsi part's in development).
+
+If a package doesn't install, check the build log. Important messages will print to the log regardless, but diagnosis may require you setting BUILD_DEBUG=1. Note that you *could* enable xtrace to the result of absolutely every command run by setting BUILDPACK_XTRACE=1, but it would print so much that something might break. So it's not recommended.
+
+Lastly, if you think I messed something up or you think that *everything* is just *perfect* then please let me know by opening an issue.
+
 NOTES
-====
+=====
 1. If the build process times out before all packages are installed, reduce the number of packages in `package-extras.yaml` until you have a successful build. Then on the next build replace the successful packages with the removed packages. The successfully installed packages should still be available.
 2. If you can't even get one package to build, have a look in the build log and see what its dependencies are. Try installing those individually before the main package, following the pattern in (1).
 3. This package mostly depends on [Linuxbrew](https://github.com/Linuxbrew/brew), which is a fork of  [Homebrew](https://github.com/Homebrew/brew), which collects some anonymized info about your usage. To disable this set the config var `HOMEBREW_NO_ANALYTICS` to `1`.
 
 TODO
 ====
-- build stuff without relying on linuxbrew
-- smart compression selecting
-- smart job number selecting
+- test having formulas in the project root
+- check on the slug size before installing more packages
+- install multiple packages simultaneously
 - make better yaml parser
 - make json parser
