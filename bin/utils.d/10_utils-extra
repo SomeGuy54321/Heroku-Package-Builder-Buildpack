@@ -103,8 +103,7 @@ function print-env() {
 }
 
 
-indent-debug() {
-    #RE="s/^/       /"
+function indent-debug() {
     if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
         indent
     fi

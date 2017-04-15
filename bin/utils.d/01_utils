@@ -9,38 +9,38 @@ export PATH="$(dirname $BASH_SOURCE)/bin:$PATH"
 #echo $PATH
 
 # Syntax sugar.
-indent() {
+function indent() {
     RE='s/^/        /; e countdown;' && \
     sed ${SED_FLAG} "$RE"            || \
-    sed ${SED_FLAG} 's/^/        /'
+    sed ${SED_FLAG} 's/^/        /'  || true
 }
 
 # Buildpack Steps.
 function puts-step() {
     RE='s/^/ -----> /; e countdown;' && \
     echo $@ | sed ${SED_FLAG} "$RE"  || \
-    echo " -----> $@"
+    echo " -----> $@"                || true
 }
 
 # Buildpack Warnings.
 function puts-warn() {
     RE='s/^/ !      /; e countdown;' && \
     echo $@ | sed ${SED_FLAG} "$RE"  || \
-    echo " !     $@"
+    echo " !     $@"                 || true
 }
 
 # Buildpack Commands.
-puts-cmd() {
+function puts-cmd() {
     RE='s/^/      $ /; e countdown;' && \
     echo $@ | sed ${SED_FLAG} "$RE"  || \
-    echo "     $ $@"
+    echo "     $ $@"                 || true
 }
 
 # Waiting for stuff
-puts-wait() {
+function puts-wait() {
     RE='s/^/ ...... /; e countdown;' && \
     echo $@ | sed ${SED_FLAG} "$RE"  || \
-    echo " ..... $@"
+    echo " ..... $@"                 || true
 }
 
 # Usage: $ set-env key value
