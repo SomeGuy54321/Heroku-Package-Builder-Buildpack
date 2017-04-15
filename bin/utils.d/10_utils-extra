@@ -107,7 +107,8 @@ function indent-debug() {
     if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
         indent
     else
-        return 0
+#        return 0
+        true
     fi
 }
 
@@ -118,7 +119,8 @@ function do-debug() {
         echo $@ | sed ${SED_FLAG} "$RE"  || \
         echo " ~~~~~> DEBUG: $@"
     else
-        return 0
+#        return 0
+        true
     fi
 }
 
