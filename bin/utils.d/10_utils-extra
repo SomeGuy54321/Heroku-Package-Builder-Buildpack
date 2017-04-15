@@ -385,7 +385,7 @@ function proc_watcher() {
         do_debug_local "\$(pgrep -a \$THE_EXE)=$(pgrep -a ${THE_EXE})"
         do_debug_local "\$(pgrep -a -P \$THIS_PID)=$(pgrep -a -P ${THIS_PID})"
         do_debug_local "\$(pgrep -a -P \$JOB_PID)=$(pgrep -a -P ${JOB_PID})"
-        ps axjf
+        ps axjf | sed "s;$CACHE_DIR;CACHE_DIR;g; s;$BUILD_DIR;BUILD_DIR;g; s;$ORIG_BUILD_DIR;ORIG_BUILD_DIR;g; s;$BIN_DIR;BIN_DIR;g"
         return 0
     }
 
@@ -451,7 +451,7 @@ function proc_watcher() {
                 # 3c-ii-2.)
                 sleep 5  # wait for the kill signal to work
                 local KILL_RETRIES_ORD
-                case ${KILL_RETRIES} in
+                case ${KILL_RETRIES: -1} in
                     1) KILL_RETRIES_ORD="${KILL_RETRIES}st";;
                     2) KILL_RETRIES_ORD="${KILL_RETRIES}nd";;
                     3) KILL_RETRIES_ORD="${KILL_RETRIES}rd";;
