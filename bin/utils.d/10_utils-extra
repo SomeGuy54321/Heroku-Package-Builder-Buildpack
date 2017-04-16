@@ -351,14 +351,14 @@ function kill_descendants() {
     local KILLSIG=${1:-SIGKILL}
     local PARENT_PID=${2:-$$}
 
-    local children=$(ps -o pid= --ppid ${PARENT_PID} || true)
+    local children=$(ps -o pid= --ppid $PARENT_PID || true)
 
-    for pid in ${children}; do
-        kill -SIGSTOP ${pid} & true
-        kill_descendants ${KILLSIG} ${pid} || true
+    for pid in $children; do
+        #kill -SIGSTOP ${pid} & true
+        kill_descendants $KILLSIG $pid || true
     done
 
-    kill -${KILLSIG} ${children} & true
+    kill -$KILLSIG $children || true
 }
 
 
