@@ -354,16 +354,16 @@ function find_all_exe() {
 
 
 # https://unix.stackexchange.com/a/124148
+unset PID_LIST
+declare -a PID_LIST
 function list_descendants() {
-    unset PID_LIST
-    declare -ag PID_LIST
     local children=$(ps -o pid= --ppid "$1" )
 
     for pid in ${children}
     do
       list_descendants "$pid"
     done
-    PID_LIST+=(${children})
+    PID_LIST+=($children)
     #echo "$children" | grep -vE '^\s*$' | sed 's/^[[:space:]]*//g' || true
     #return 0
 }
