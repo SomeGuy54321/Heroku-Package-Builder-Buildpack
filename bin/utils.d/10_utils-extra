@@ -346,11 +346,6 @@ function find_all_exe() {
 
 # https://unix.stackexchange.com/a/124148
 function list_descendants() {
-    local ORIG_PIPEFAIL=$(get_orig_opt pipefail)
-    set +o pipefail
-    local ORIG_ERREXIT=$(get_orig_opt errexit)
-    set +o errexit
-
     local children=$(ps -o pid= --ppid "$1" )
 
     for pid in ${children}
@@ -359,8 +354,6 @@ function list_descendants() {
     done
 
     echo "$children" | grep -vE '^\s*$' | sed 's/^[[:space:]]*//g' || true
-    ${ORIG_ERREXIT}
-    ${ORIG_PIPEFAIL}
     return 0
 }
 
@@ -517,7 +510,16 @@ function proc_watcher() {
 #                do_kill ${KILLSIG} ${JOB_PID} 5
 #                do_kill ${KILLSIG} "$(which brew)" 5
 #                kill -${KILLSIG} ${ALL_PIDS} 2>/dev/null
+
+                local ORIG_PIPEFAIL=$(get_orig_opt pipefail)
+                set +o pipefail
+                local ORIG_ERREXIT=$(get_orig_opt errexit)
+                set +o errexit
+
                 kill -${KILLSIG} $(list_descendants $$) #2>/dev/null
+
+                ${ORIG_ERREXIT}
+                ${ORIG_PIPEFAIL}
 
                 RTN_STATUS=$?
                 do_debug_local "Sent $KILLSIG"
