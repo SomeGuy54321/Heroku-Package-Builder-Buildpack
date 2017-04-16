@@ -283,7 +283,7 @@ function proper_word() {
 
 
 function get_orig_opt() {
-    echo $(shopt -po ${1} || true)
+    echo $(shopt -po ${1} || shopt -p ${1} || true)
 }
 
 
