@@ -288,24 +288,75 @@ function get_orig_opt() {
 
 
 function do_kill() {
+    local ORIG_XTRACE=$(get_orig_opt xtrace)
+    [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && set -x || true
+
     local SIGNAL=$1
 #    local PID=$2
-    local WHAT_TO_KILL=$2  # ideally this can be anything matching a line in ps -ef e.g. PID, name
-    local WAIT=${3:-5}
-    [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && local ORIG_XTRACE=$(get_orig_opt xtrace) && set -x || true
+    local WHAT_TO_KILL=${@:2}  # ideally this can be anything matching a line in ps -ef e.g. PID, name
+    local RTN
 
-    ps -ef | grep "${WHAT_TO_KILL}" | awk '{ print $2 }' | kill -${SIGNAL}
-#    pkill --signal ${SIGNAL} --pgroup ${PID} || true
-#    pkill --signal ${SIGNAL} --parent ${PID} || true
-#    kill -${SIGNAL} -- -${PID} || true
-#    kill -${SIGNAL} -${PID} || true
-#    kill -${SIGNAL} ${PID} || true
+    local ORIG_ERREXIT=$(get_orig_opt errexit)
+    set +e
+    for prog in ${WHAT_TO_KILL}; do
+        #ps -ef
+        ps -ef | grep "${prog}" | grep -v grep | grep -v $$ | awk '{ print $2 }' | xargs kill --signal ${SIGNAL}
+        #ps -ef
+    #    pkill --signal ${SIGNAL} --pgroup ${PID} || true
+    #    pkill --signal ${SIGNAL} --parent ${PID} || true
+    #    kill -${SIGNAL} -- -${PID} || true
+    #    kill -${SIGNAL} -${PID} || true
+    #    kill -${SIGNAL} ${PID} || true
 
-    local RTN=$?
-    sleep ${WAIT}
-    return ${RTN}
+        RTN=$(( $RTN + $? ))
+    done
+
     ${ORIG_XTRACE}
+    ${ORIG_ERREXIT}
+    sleep 5
+    return ${RTN}
 }
+
+
+# creates an array EXES with all executables in the string
+function find_all_exe() {
+    unset EXES
+    local STR="$@"
+    local ORIG_DIR="$(pwd)"
+    for arg in ${STR}; do
+        local argtest=${arg#-}  # remove leading '-' if any
+        if [ ${#argtest} -eq ${#arg} ]; then  # see if length of $arg w/o a leading '-' is same as unmodified $arg
+            if [ -x "$(which ${arg})" ]; then  # this is true if $arg is in the path and executable. $arg musn't have any spaces in it. also setting arg=$(which arg) doesnt work.
+                arg="$(which ${arg})"
+                while [ -h "${arg}" ]; do  # test if it's a symbolic link and try to find the real thing
+                    cd $(dirname ${arg})  # all this just in case the symbolic link is relative
+                    arg="$(readlink ${arg})"
+                    local BASENAME=$(basename ${arg})
+                    local DIRNAME=$(dirname ${arg})
+                    local ABSDIR=$(cd ${DIRNAME}; pwd)
+                    arg="${ABSDIR}/${BASENAME}"
+                done
+                EXES+=(${arg})
+            fi
+        fi
+    done
+    cd "${ORIG_DIR}"
+    return 0
+}
+
+# https://unix.stackexchange.com/a/124148
+function list_descendants ()
+{
+  local children=$(ps -o pid= --ppid "$1")
+
+  for pid in $children
+  do
+    list_descendants "$pid"
+  done
+
+  echo "$children" | grep -vE '^\s*$'
+}
+
 
 
 function proc_watcher() {
@@ -343,8 +394,8 @@ function proc_watcher() {
     declare -i RTN_STATUS=0
     export RTN_STATUS_TMPFILE=$(mktemp)
     declare -i JOB_PID JOB_PID_DOLL_EXCLAM JOB_ID KILL_RETRIES
-    local THE_EXE=$2
     local THIS_PID=$$
+    local THE_EXE=$2
 
     get_sleep_time() {
         declare -i REM=$(time_remaining)
@@ -425,9 +476,11 @@ function proc_watcher() {
 
             # 3c-ii-1.)
             puts_warn_local 'Out of time!!'
-            declare -u KILLSIG
             while [ 1 ]; do
+
                 # FIXME: this hangs and doesnt exit
+
+                declare -u KILLSIG
                 do_debug_local "KILL_RETRIES=$KILL_RETRIES"
                 case ${KILL_RETRIES:=0} in
                     0)
@@ -450,9 +503,11 @@ function proc_watcher() {
 
                 puts_warn_local "Aborting with $KILLSIG"
 #                do_kill ${KILLSIG} ${JOB_PID} 5
-                do_kill ${KILLSIG} "$(which brew)" 5
-                do_debug_local "Sent $KILLSIG"
+#                do_kill ${KILLSIG} "$(which brew)" 5
+                declare -a ALL_PIDS+=($(list_descendants $$))  # will include $$ and the process number of ps, so at least two elements
+                kill -${KILLSIG} ${ALL_PIDS[*]} 2>/dev/null
                 RTN_STATUS=$?
+                do_debug_local "Sent $KILLSIG"
 
                 var_debug_local
 
@@ -465,8 +520,9 @@ function proc_watcher() {
                     3) KILL_RETRIES_ORD="${KILL_RETRIES}rd";;
                     *) KILL_RETRIES_ORD="${KILL_RETRIES}th";;
                 esac
-                if [ $(pid_exists) -gt 0 ]; then
+                if [ $(pid_exists) -gt 0 ] || [ ${#ALL_PIDS[*]} -gt 2 ]; then
                     let ++KILL_RETRIES
+                    unset ALL_PIDS
                     puts_warn_local "$KILLSIG hasn't worked yet. Continuing with $KILL_RETRIES_ORD try."
                 else
                     puts_step_local "$KILLSIG worked on the $KILL_RETRIES_ORD try."
