@@ -288,6 +288,7 @@ function get_orig_opt() {
 
 
 function do_kill() {
+    local ORIG_ERREXIT=$(get_orig_opt errexit)
     local ORIG_XTRACE=$(get_orig_opt xtrace)
     [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ] && set -x || true
 
@@ -296,7 +297,6 @@ function do_kill() {
     local WHAT_TO_KILL=${@:2}  # ideally this can be anything matching a line in ps -ef e.g. PID, name
     local RTN
 
-    local ORIG_ERREXIT=$(get_orig_opt errexit)
     set +e
     for prog in ${WHAT_TO_KILL}; do
         #ps -ef
@@ -345,17 +345,23 @@ function find_all_exe() {
 }
 
 # https://unix.stackexchange.com/a/124148
-function list_descendants()
-{
-  local children=$(ps -o pid= --ppid "$1" )
+function list_descendants() {
+    local ORIG_PIPEFAIL=$(get_orig_opt pipefail)
+    set +o pipefail
+    local ORIG_ERREXIT=$(get_orig_opt errexit)
+    set +o errexit
 
-  for pid in $children
-  do
-    list_descendants "$pid"
-  done
+    local children=$(ps -o pid= --ppid "$1" )
 
-  echo "$children" | grep -vE '^\s*$' | sed 's/^[[:space:]]*//g' || true
-  return 0
+    for pid in ${children}
+    do
+      list_descendants "$pid"
+    done
+
+    echo "$children" | grep -vE '^\s*$' | sed 's/^[[:space:]]*//g' || true
+    ${ORIG_ERREXIT}
+    ${ORIG_PIPEFAIL}
+    return 0
 }
 
 
