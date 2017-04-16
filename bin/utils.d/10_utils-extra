@@ -344,19 +344,29 @@ function find_all_exe() {
     return 0
 }
 
+
+#local ORIG_PIPEFAIL=$(get_orig_opt pipefail)
+#set +o pipefail
+#local ORIG_ERREXIT=$(get_orig_opt errexit)
+#set +o errexit
+#${ORIG_ERREXIT}
+#${ORIG_PIPEFAIL}
+
+
 # https://unix.stackexchange.com/a/124148
 function list_descendants() {
+    unset PID_LIST
+    declare -ag PID_LIST
     local children=$(ps -o pid= --ppid "$1" )
 
     for pid in ${children}
     do
       list_descendants "$pid"
     done
-
-    echo "$children" | grep -vE '^\s*$' | sed 's/^[[:space:]]*//g' || true
-    return 0
+    PID_LIST+=(${children})
+    #echo "$children" | grep -vE '^\s*$' | sed 's/^[[:space:]]*//g' || true
+    #return 0
 }
-
 
 
 function proc_watcher() {
@@ -511,15 +521,8 @@ function proc_watcher() {
 #                do_kill ${KILLSIG} "$(which brew)" 5
 #                kill -${KILLSIG} ${ALL_PIDS} 2>/dev/null
 
-                local ORIG_PIPEFAIL=$(get_orig_opt pipefail)
-                set +o pipefail
-                local ORIG_ERREXIT=$(get_orig_opt errexit)
-                set +o errexit
-
-                kill -${KILLSIG} $(list_descendants $$) #2>/dev/null
-
-                ${ORIG_ERREXIT}
-                ${ORIG_PIPEFAIL}
+                list_descendants $$
+                kill -${KILLSIG} ${PID_LIST[*]} #2>/dev/null
 
                 RTN_STATUS=$?
                 do_debug_local "Sent $KILLSIG"
