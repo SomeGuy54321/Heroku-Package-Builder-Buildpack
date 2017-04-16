@@ -484,7 +484,7 @@ function proc_watcher() {
                 do_debug_local "KILL_RETRIES=$KILL_RETRIES"
                 case ${KILL_RETRIES:=0} in
                     0)
-                        KILLSIG=SIGKILL  ;;
+                        KILLSIG=SIGINT  ;;
                     1)
                         KILLSIG=SIGABRT ;;
                     2)
