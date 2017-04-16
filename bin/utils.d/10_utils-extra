@@ -358,7 +358,10 @@ function kill_descendants() {
         kill_descendants $KILLSIG $pid || true
     done
 
-    kill -$KILLSIG $children || true
+    local children_check=${children/ /}
+    if [ ${#children_check} -ne 0 ]; then
+        kill -$KILLSIG $children || true
+    fi
 }
 
 
