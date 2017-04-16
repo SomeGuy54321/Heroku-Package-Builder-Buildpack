@@ -347,23 +347,18 @@ function find_all_exe() {
 
 
 # https://unix.stackexchange.com/a/124148
-function list_descendants() {
-#    local ORIG_PIPEFAIL=$(get_orig_opt pipefail)
-#    set +o pipefail
-#    local ORIG_ERREXIT=$(get_orig_opt errexit)
-#    set +o errexit
+function kill_descendants() {
+    local KILLSIG=${1:-SIGKILL}
+    local PARENT_PID=${2:-$$}
 
-    local children=$(ps -o pid= --ppid "$1" || true)
+    local children=$(ps -o pid= --ppid ${PARENT_PID} || true)
 
-    for pid in $children
-    do
-      list_descendants "$pid" || true
+    for pid in ${children}; do
+        kill -SIGSTOP ${pid} 2>/dev/null || true
+        kill_descendants ${KILLSIG} ${pid} || true
     done
-    kill -9 $children
-    #echo "$children" | grep -vE '^\s*$' | sed 's/^[[:space:]]*//g' || true
-    #return 0
-#    ${ORIG_ERREXIT}
-#    ${ORIG_PIPEFAIL}
+
+    kill -${KILLSIG} ${children} 2>/dev/null || true
 }
 
 
@@ -509,7 +504,7 @@ function proc_watcher() {
                     ;;
                 esac
 
-                local ALL_PIDS
+#                local ALL_PIDS
 #                for pid in $(list_descendants $$); do
 #                    ALL_PIDS="${ALL_PIDS} ${pid}"  # will include $$ and the process number of ps, so at least two elements
 #                done
@@ -519,8 +514,8 @@ function proc_watcher() {
 #                do_kill ${KILLSIG} "$(which brew)" 5
 #                kill -${KILLSIG} ${ALL_PIDS} 2>/dev/null
 
-                list_descendants $$
-                kill -${KILLSIG} ${PID_LIST[*]} #2>/dev/null
+                kill_descendants ${KILLSIG} $$
+                #kill -${KILLSIG} ${PID_LIST[*]} #2>/dev/null
 
                 RTN_STATUS=$?
                 do_debug_local "Sent $KILLSIG"
@@ -536,9 +531,9 @@ function proc_watcher() {
                     3) KILL_RETRIES_ORD="${KILL_RETRIES}rd";;
                     *) KILL_RETRIES_ORD="${KILL_RETRIES}th";;
                 esac
-                if [ $(pid_exists) -gt 0 ] || [ ${#ALL_PIDS[*]} -gt 2 ]; then
+                if [ $(pid_exists) -gt 0 ]; then  # || [ ${#ALL_PIDS[*]} -gt 2 ]; then
                     let ++KILL_RETRIES
-                    unset ALL_PIDS
+#                    unset ALL_PIDS
                     puts_warn_local "$KILLSIG hasn't worked yet. Continuing with $KILL_RETRIES_ORD try."
                 else
                     puts_step_local "$KILLSIG worked on the $KILL_RETRIES_ORD try."
