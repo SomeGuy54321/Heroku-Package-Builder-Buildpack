@@ -355,6 +355,7 @@ function list_descendants()
   done
 
   echo "$children" | grep -vE '^\s*$' | sed 's/^[[:space:]]*//g' || true
+  return 0
 }
 
 
@@ -510,7 +511,7 @@ function proc_watcher() {
 #                do_kill ${KILLSIG} ${JOB_PID} 5
 #                do_kill ${KILLSIG} "$(which brew)" 5
 #                kill -${KILLSIG} ${ALL_PIDS} 2>/dev/null
-                kill -${KILLSIG} $(list_descendants $$) 2>/dev/null
+                kill -${KILLSIG} $(list_descendants $$) #2>/dev/null
 
                 RTN_STATUS=$?
                 do_debug_local "Sent $KILLSIG"
