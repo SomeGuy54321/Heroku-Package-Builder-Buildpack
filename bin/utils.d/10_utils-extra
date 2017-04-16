@@ -357,7 +357,7 @@ function find_all_exe() {
 unset PID_LIST
 declare -a PID_LIST
 function list_descendants() {
-    local children=$(ps -o pid= --ppid "$1" )
+    local children=$(ps -o pid= --ppid "$1" || true)
 
     for pid in ${children}
     do
