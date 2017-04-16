@@ -354,7 +354,7 @@ function list_descendants ()
     list_descendants "$pid"
   done
 
-  echo "$children" | grep -vE '^\s*$'
+  echo "$children" | grep -vE '^\s*$' || true
 }
 
 
