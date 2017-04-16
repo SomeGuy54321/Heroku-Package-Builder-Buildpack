@@ -504,7 +504,8 @@ function proc_watcher() {
                 puts_warn_local "Aborting with $KILLSIG"
 #                do_kill ${KILLSIG} ${JOB_PID} 5
 #                do_kill ${KILLSIG} "$(which brew)" 5
-                declare -a ALL_PIDS+=($(list_descendants $$))  # will include $$ and the process number of ps, so at least two elements
+                declare -a ALL_PIDS
+                ALL_PIDS+=($(list_descendants $$))  # will include $$ and the process number of ps, so at least two elements
                 kill -${KILLSIG} ${ALL_PIDS[*]} 2>/dev/null
                 RTN_STATUS=$?
                 do_debug_local "Sent $KILLSIG"
