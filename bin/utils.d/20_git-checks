@@ -17,40 +17,40 @@ function git_remedy_linuxbuild() {
     case $REMEDY_NUM in
     0)
         [ $BUILD_DEBUG -gt 0 ] && set -o xtrace || true
-        git --git-dir=$REPO init |& indent-debug
-        git --git-dir=$REPO stash list |& indent-debug
+        git --git-dir=$REPO init |& indent_debug
+        git --git-dir=$REPO stash list |& indent_debug
         brew update-reset
         [ $BUILDPACK_XTRACE -eq 0 ] && set +o xtrace || true
         return 0
     ;;
     1)
         [ $BUILD_DEBUG -gt 0 ] && set -o xtrace || true
-        git --git-dir=$REPO init |& indent-debug
-        git --git-dir=$REPO add origin https://github.com/Linuxbrew/brew.git |& indent-debug
-        git --git-dir=$REPO pull --autostash --rebase=true origin master |& indent-debug
+        git --git-dir=$REPO init |& indent_debug
+        git --git-dir=$REPO add origin https://github.com/Linuxbrew/brew.git |& indent_debug
+        git --git-dir=$REPO pull --autostash --rebase=true origin master |& indent_debug
         [ $BUILDPACK_XTRACE -eq 0 ] && set +o xtrace || true
         return 0
     ;;
     2)
         [ $BUILD_DEBUG -gt 0 ] && set -o xtrace || true
-        git --git-dir=$REPO checkout -f master |& indent-debug
-        git --git-dir=$REPO stash clear |& indent-debug
-        git --git-dir=$REPO stash |& indent-debug
+        git --git-dir=$REPO checkout -f master |& indent_debug
+        git --git-dir=$REPO stash clear |& indent_debug
+        git --git-dir=$REPO stash |& indent_debug
         [ $BUILDPACK_XTRACE -eq 0 ] && set +o xtrace || true
         return 0
     ;;
     3)
         [ $BUILD_DEBUG -gt 0 ] && set -o xtrace || true
-        git --git-dir=$REPO init |& indent-debug
-        git --git-dir=$REPO remote set-url origin https://github.com/Linuxbrew/brew.git |& indent-debug
-        git --git-dir=$REPO fetch --all --recurse-submodules=yes --jobs=$(grep --count ^processor /proc/cpuinfo) #|& indent-debug
-        git --git-dir=$REPO checkout -f master |& indent-debug
-        git --git-dir=$REPO stash clear |& indent-debug
-        git --git-dir=$REPO stash |& indent-debug
-        git --git-dir=$REPO clean -d -f |& indent-debug
-        git --git-dir=$REPO update-index --really-refresh |& indent-debug
-        git --git-dir=$REPO reset --hard |& indent-debug
-        git --git-dir=$REPO pull --rebase=true --autostash origin master |& indent-debug
+        git --git-dir=$REPO init |& indent_debug
+        git --git-dir=$REPO remote set-url origin https://github.com/Linuxbrew/brew.git |& indent_debug
+        git --git-dir=$REPO fetch --all --recurse-submodules=yes --jobs=$(grep --count ^processor /proc/cpuinfo) #|& indent_debug
+        git --git-dir=$REPO checkout -f master |& indent_debug
+        git --git-dir=$REPO stash clear |& indent_debug
+        git --git-dir=$REPO stash |& indent_debug
+        git --git-dir=$REPO clean -d -f |& indent_debug
+        git --git-dir=$REPO update-index --really-refresh |& indent_debug
+        git --git-dir=$REPO reset --hard |& indent_debug
+        git --git-dir=$REPO pull --rebase=true --autostash origin master |& indent_debug
         [ $BUILDPACK_XTRACE -eq 0 ] && set +o xtrace || true
         return 0
     ;;
@@ -61,38 +61,38 @@ function git_remedy_linuxbuild() {
         # in which I was somehow able to rebuild the git repo. I don't know
         # what combination of these did the trick. But we're desperate at
         # this point.
-        brew update-reset |& indent-debug
-        brew update |& indent-debug
-        brew update-reset |& indent-debug
-        brew update |& indent-debug
-        brew update-reset |& indent-debug
-        brew prune  |& indent-debug
-        git --git-dir=/app/.linuxbrew/Library/.git clean -d |& indent-debug
-        git --git-dir=$REPO init |& indent-debug
-        git --git-dir=/app/.linuxbrew/Library/.git clean -d |& indent-debug
-        brew update-reset |& indent-debug
-        git --git-dir=/app/.linuxbrew/Library/.git clean -d |& indent-debug
-        brew cleanup -s |& indent-debug
-        git --git-dir=$REPO init |& indent-debug
-        git --git-dir=$REPO rev-parse --verify HEAD |& indent-debug
-        git --git-dir=$REPO fetch |& indent-debug
-        git --git-dir=$REPO stash clear |& indent-debug
-        git --git-dir=$REPO stash |& indent-debug
-        git --git-dir=$REPO stash --all |& indent-debug
-        git --git-dir=$REPO clean -n |& indent-debug
-        git --git-dir=$REPO clean -nd |& indent-debug
-        git --git-dir=$REPO fetch -p |& indent-debug
-        git --git-dir=$REPO fetch --recurse-submodules=yes --jobs=$(grep -c ^processor /proc/cpuinfo) --all |& indent-debug
-        git --git-dir=$REPO stash clear |& indent-debug
+        brew update-reset |& indent_debug
+        brew update |& indent_debug
+        brew update-reset |& indent_debug
+        brew update |& indent_debug
+        brew update-reset |& indent_debug
+        brew prune  |& indent_debug
+        git --git-dir=/app/.linuxbrew/Library/.git clean -d |& indent_debug
+        git --git-dir=$REPO init |& indent_debug
+        git --git-dir=/app/.linuxbrew/Library/.git clean -d |& indent_debug
+        brew update-reset |& indent_debug
+        git --git-dir=/app/.linuxbrew/Library/.git clean -d |& indent_debug
+        brew cleanup -s |& indent_debug
+        git --git-dir=$REPO init |& indent_debug
+        git --git-dir=$REPO rev-parse --verify HEAD |& indent_debug
+        git --git-dir=$REPO fetch |& indent_debug
+        git --git-dir=$REPO stash clear |& indent_debug
+        git --git-dir=$REPO stash |& indent_debug
+        git --git-dir=$REPO stash --all |& indent_debug
+        git --git-dir=$REPO clean -n |& indent_debug
+        git --git-dir=$REPO clean -nd |& indent_debug
+        git --git-dir=$REPO fetch -p |& indent_debug
+        git --git-dir=$REPO fetch --recurse-submodules=yes --jobs=$(grep -c ^processor /proc/cpuinfo) --all |& indent_debug
+        git --git-dir=$REPO stash clear |& indent_debug
         [ $BUILDPACK_XTRACE -eq 0 ] && set +o xtrace || true
         return 0
     ;;
     5)
         [ $BUILD_DEBUG -gt 0 ] && set -o xtrace || true
         puts-warn "Trying one more thing..."
-        git --git-dir=$REPO init |& indent-debug
-        git --git-dir=$REPO remote set-url origin https://github.com/Linuxbrew/brew.git |& indent-debug
-        brew update-reset |& indent-debug
+        git --git-dir=$REPO init |& indent_debug
+        git --git-dir=$REPO remote set-url origin https://github.com/Linuxbrew/brew.git |& indent_debug
+        brew update-reset |& indent_debug
         [ $BUILDPACK_XTRACE -eq 0 ] && set +o xtrace || true
         return 0
     ;;
@@ -106,7 +106,7 @@ function git_remedy_linuxbuild() {
 
 function git_rebuild_latest() {
     do-debug "Running 'brew update --force'"
-    brew update --force |& indent-debug
+    brew update --force |& indent_debug
 #    git --git-dir=$REPO reset --hard $LINUXBREW_COMMIT
 #    # ensure there's quotes because the stdout can have an asterisk
 #    BRANCH="$(git --git-dir=$REPO branch --contains $LINUXBREW_COMMIT | head -1)"; BRANCH="${BRANCH##* }"
@@ -127,15 +127,15 @@ function git_commit_check() {
     # this seems to fix things consistently
     [ $BUILD_DEBUG -gt 0 ] && set -o xtrace || true
     puts-warn "Cleaning up git repo"
-    git --git-dir=$REPO init |& indent-debug
-    git --git-dir=$REPO remote set-url origin https://github.com/Linuxbrew/brew.git |& indent-debug
-    git --git-dir=$REPO stash save |& indent-debug
-    git --git-dir=$REPO fetch --prune |& indent-debug
-    brew update-reset |& indent-debug
+    git --git-dir=$REPO init |& indent_debug
+    git --git-dir=$REPO remote set-url origin https://github.com/Linuxbrew/brew.git |& indent_debug
+    git --git-dir=$REPO stash save |& indent_debug
+    git --git-dir=$REPO fetch --prune |& indent_debug
+    brew update-reset |& indent_debug
     [ $BUILDPACK_XTRACE -eq 0 ] && set +o xtrace || true
 
     #LINUXBREW_CURRENT_COMMIT="$(git --git-dir=$REPO show --oneline -s | cut -d' ' -f1)"
-    local LINUXBREW_CURRENT_COMMIT=$(git --git-dir=$REPO rev-parse --verify HEAD) #|& indent-debug
+    local LINUXBREW_CURRENT_COMMIT=$(git --git-dir=$REPO rev-parse --verify HEAD) #|& indent_debug
 
     while [ $LINUXBREW_CURRENT_COMMIT != $LINUXBREW_COMMIT ]; do
 
@@ -149,7 +149,7 @@ function git_commit_check() {
 
     done
 
-    LINUXBREW_CURRENT_COMMIT=$(git --git-dir=$REPO rev-parse --verify HEAD) #|& indent-debug
+    LINUXBREW_CURRENT_COMMIT=$(git --git-dir=$REPO rev-parse --verify HEAD) #|& indent_debug
     while [ $LINUXBREW_CURRENT_COMMIT != $LINUXBREW_COMMIT ]; do
 
         git_gc_linuxbrew

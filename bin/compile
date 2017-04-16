@@ -28,26 +28,33 @@ export BIN_DIR=$(cd $(dirname $0); pwd)
 export BUILD_DIR=$1
 export CACHE_DIR=$2
 export CONFIG_DIR=$3
+export APP_DIR="/app"
+
 
 # Sanitizing environment variables.
 unset GIT_DIR
+
 
 # Syntactic starch (more complex)
 # Note '-d' doesnt match hidden dirs
 # -p + grep prevents sourcing of directories
 for f in $(ls -dp ${BIN_DIR}/utils.d/* | grep -vE '/$'); do source ${f}; done
 
+
 # debug settings
 export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
 export_configvar BUILDPACK_XTRACE 0  # print all commands to log
+
 
 # set prompts
 export PS4='+        $(countdown) ($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 [ ${BUILDPACK_XTRACE:-0} -gt 0 ] && set -o xtrace || true
 
+
 # measuring
 do-debug "Number of columns in this terminal window: $(tput -T $TERM cols 2>/dev/null)"
 do-debug "Number of lines in this terminal window: $(tput -T $TERM lines  2>/dev/null)"
+
 
 export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
 if [ ${PACKAGE_BUILDER_HOMEBREW_VERBOSE} -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
@@ -69,7 +76,8 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_GCC 0
 export_configvar PACKAGE_BUILDER_NOINSTALL_RUBY 1  # disabling these for now
 export_configvar PACKAGE_BUILDER_NOINSTALL_PERL 1
 export_configvar PACKAGE_BUILDER_NOINSTALL_PYTHON 1
-export_configvar PACKAGE_BUILDER_NOINSTALL_DEFAULTS 1
+export_configvar PACKAGE_BUILDER_NOINSTALL_DEFAULTS 0
+
 
 # setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
 export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 10
@@ -85,8 +93,13 @@ export PROFILE_PATH="${BUILD_DIR}/.profile.d/ραckage_builder.sh"
 [ $(ls -A ${PROFILE_PATH} 2>/dev/null | grep --count .) -eq 0 ] && mkdir -p $(dirname ${PROFILE_PATH}) || true
 
 
+# Copy Anvil app dir to temporary storage. Without doing this the next buildpack will fail.
+TMP_APP_DIR=${CACHE_DIR}/tmp_app_dir
+mkdir -p ${TMP_APP_DIR}
+deep-mv ${APP_DIR} ${TMP_APP_DIR}
+
+
 # Move all code from BUILD_DIR to APP_DIR, make APP_DIR the new BUILD_DIR, and enter the new BUILD_DIR
-APP_DIR="/app"
 deep-mv ${BUILD_DIR} ${APP_DIR}
 ORIG_BUILD_DIR=${BUILD_DIR}
 BUILD_DIR=${APP_DIR}
@@ -155,6 +168,10 @@ export INFOPATH=${OLD_INFOPATH}; do-debug "INFOPATH reset to '$INFOPATH'"
 
 # Move all things in /app to BUILD_DIR (which will eventually be moved back)
 deep-mv ${BUILD_DIR} ${ORIG_BUILD_DIR}
+
+
+# Move what was originally in /app from ${CACHE_DIR}/tmp_app_dir pack into /app
+deep-mv ${TMP_APP_DIR} ${APP_DIR}
 
 # Note that PROFILE_PATH still refers to .profile.d in ORIG_BUILD_DIR so we wait til everythigns moved back
 # for some reason the brew executable ends up in /app/bin when followed by a Scala buildpack.

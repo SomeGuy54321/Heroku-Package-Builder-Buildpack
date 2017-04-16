@@ -21,11 +21,11 @@ else
 
 fi
 
-do-debug "brew config:"
-brew config |& indent-debug || true
+puts-step "Linuxbrew configuration:"
+brew config |& indent || true
 
-do-debug "brew doctor:"
-brew doctor |& indent-debug || true
+puts-step "Running 'brew doctor':"
+brew doctor |& indent || true
 
 # run even if already installed in case the first core-tools install was interrupted
 brew_install_defaults
