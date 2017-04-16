@@ -360,7 +360,7 @@ function kill_descendants() {
 
     children=${children/ /}
     if [ ${#children} -ne 0 ]; then
-        kill -$KILLSIG $children || true
+        kill -$KILLSIG $children 2>/dev/null || true  # if a process has ended by this point then stderr reads 'kill: ($children) - No such process'
     fi
 }
 
