@@ -348,7 +348,7 @@ function find_all_exe() {
 
 # https://unix.stackexchange.com/a/124148
 unset PID_LIST
-declare -a PID_LIST
+PID_LIST=""
 function list_descendants() {
 #    local ORIG_PIPEFAIL=$(get_orig_opt pipefail)
 #    set +o pipefail
@@ -361,7 +361,7 @@ function list_descendants() {
     do
       list_descendants "$pid" || true
     done
-    PID_LIST+=($children)
+    PID_LIST="$PID_LIST $children"
     #echo "$children" | grep -vE '^\s*$' | sed 's/^[[:space:]]*//g' || true
     #return 0
 #    ${ORIG_ERREXIT}
