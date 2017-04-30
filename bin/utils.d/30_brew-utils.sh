@@ -53,29 +53,29 @@ function brew_do() {
 
         # else its not installed and we should manage how it installs
         else
-            ## start checking for dependencies
-            if [ ${ACTION} = "install" ] || [ ${ACTION} = "reinstall" ]; then  # && [ ${SKIP_DEPENDENCY_CHECK} -ne 0 ]; then
-
-                local DEPS_INSTALLED=$(echo -n "$(brew deps --include-build ${PACKAGE} --installed)" | tr '\n' '|')
-                local DEPS=$(brew deps -n --include-optional --skip-recommended ${PACKAGE} | grep -vE "$DEPS_INSTALLED")
-
-                ## start installing dependencies recursively
-                # test Bash recursion with this:
-                # f() { declare -i X=${1:-0}; while [ $X -lt 6 ]; do X=$((X+1)); echo "${FUNCNAME[*]} $X"; f $X; done; }
-                if [ ${#DEPS} -gt 0 ]; then
-                    puts-step "Recursively installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | sed -u 's/ /, /g')"
-                    for dep in ${DEPS}; do
-                        IS_INSTALLED=$(brew_checkfor ${dep})
-                        if [ ${IS_INSTALLED} -eq 0 ]; then
-                            brew_do ${ACTION} ${dep}
-                        else
-                            puts-step "${dep} has already been installed by Linuxbrew"
-                        fi
-                    done
-                fi
-                ## end installing dependencies recursively
-            fi
-            ## end checking for dependencies
+#            ## start checking for dependencies
+#            if [ ${ACTION} = "install" ] || [ ${ACTION} = "reinstall" ]; then  # && [ ${SKIP_DEPENDENCY_CHECK} -ne 0 ]; then
+#
+#                local DEPS_INSTALLED=$(echo -n "$(brew deps --include-build ${PACKAGE} --installed)" | tr '\n' '|')
+#                local DEPS=$(brew deps -n --include-optional --skip-recommended ${PACKAGE} | grep -vE "$DEPS_INSTALLED")
+#
+#                ## start installing dependencies recursively
+#                # test Bash recursion with this:
+#                # f() { declare -i X=${1:-0}; while [ $X -lt 6 ]; do X=$((X+1)); echo "${FUNCNAME[*]} $X"; f $X; done; }
+#                if [ ${#DEPS} -gt 0 ]; then
+#                    puts-step "Recursively installing dependencies for ${PACKAGE}: $(echo -n ${DEPS} | sed -u 's/ /, /g')"
+#                    for dep in ${DEPS}; do
+#                        IS_INSTALLED=$(brew_checkfor ${dep})
+#                        if [ ${IS_INSTALLED} -eq 0 ]; then
+#                            brew_do ${ACTION} ${dep}
+#                        else
+#                            puts-step "${dep} has already been installed by Linuxbrew"
+#                        fi
+#                    done
+#                fi
+#                ## end installing dependencies recursively
+#            fi
+#            ## end checking for dependencies
 
             # this is ugly but the time needs to be checked again since the incremental dependency install loop may have taken awhile
             ## start checking if theres time left for actual $ACTION
