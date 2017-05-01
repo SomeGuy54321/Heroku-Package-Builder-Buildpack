@@ -179,7 +179,7 @@ deep-mv ${TMP_APP_DIR} ${APP_DIR}
 echo "alias brew='$BREW_EXE_LOCATION'" >>"$PROFILE_PATH"
 
 ## Set context environment variables.
-set-env PATH "\$HOME/.linuxbrew/bin:\$HOME/.linuxbrew/sbin:\$PATH"
+set-env PATH "\"\$HOME/.linuxbrew/bin:\$HOME/.linuxbrew/sbin:\$PATH\""
 set-env MANPATH "\$HOME/.linuxbrew/share/man:\$MANPATH"
 set-env INFOPATH "\$HOME/.linuxbrew/share/info:\$INFOPATH"
 set-default-env HOMEBREW_NO_ANALYTICS ${HOMEBREW_NO_ANALYTICS}
