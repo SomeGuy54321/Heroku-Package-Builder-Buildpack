@@ -34,6 +34,8 @@ export APP_DIR="/app"
 unset GIT_DIR
 
 
+for d in $(ls $CONFIG_DIR); do echo $d; cat $d; done
+
 # Syntactic starch (more complex)
 # Note '-d' doesnt match hidden dirs
 # -p + grep prevents sourcing of directories
