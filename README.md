@@ -25,7 +25,7 @@ config:
 ```
 YAML Setup
 ==========
-#### _IMPORTANT_ <br>If your package name contains dashes "-" replace them with double-underscores "__" e.g. man-db -> man__db
+#### _IMPORTANT_ <br>If your package name contains dashes "-" replace them with double-underscores "\_\_" e.g. man-db -> man\_\_db
 ##### install
 - just the package name
 - installed in the order entered
