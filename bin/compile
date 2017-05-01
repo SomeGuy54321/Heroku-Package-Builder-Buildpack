@@ -30,11 +30,6 @@ export CACHE_DIR=$2
 export CONFIG_DIR=$3
 export APP_DIR="/app"
 
-# $USER wasn't set for brew install exim and it was messing stuff up
-USER_DEFAULT="$(grep $UID /etc/passwd | cut -d: -f1)"
-export USER="${USER:-$USER_DEFAULT}"
-do-debug "Set USER=$USER"
-
 # Sanitizing environment variables.
 unset GIT_DIR
 
@@ -43,6 +38,12 @@ unset GIT_DIR
 # Note '-d' doesnt match hidden dirs
 # -p + grep prevents sourcing of directories
 for f in $(ls -dp ${BIN_DIR}/utils.d/* | grep -vE '/$'); do source ${f}; done
+
+
+# $USER wasn't set for brew install exim and it was messing stuff up
+USER_DEFAULT="$(grep $UID /etc/passwd | cut -d: -f1)"
+export USER="${USER:-$USER_DEFAULT}"
+do-debug "Set USER=$USER"
 
 
 # debug settings
