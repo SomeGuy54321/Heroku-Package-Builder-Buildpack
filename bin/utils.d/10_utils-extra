@@ -567,8 +567,8 @@ function proc_watcher() {
 #   1 if files differ
 #   0 if they're the same
 function check_filechange() {
-    local CURR_FILE=${1}
-    local STORED_HASH_FILE=${2}
+    local CURR_FILE=${1:-$BUILD_DIR/package-extras.yaml}
+    local STORED_HASH_FILE=${2:-$CACHE_HASHFILE}
     [ ! -a "${STORED_HASH_FILE}" ] && return 1 || true
     local CURR_HASH=$(md5sum "${CURR_FILE}"  2>/dev/null | cut -d' ' -f1)
     local STORED_HASH=$(cat "${STORED_HASH_FILE}" 2>/dev/null || echo -n "NONE")
@@ -578,7 +578,7 @@ function check_filechange() {
     do-debug "check_filechange: CURR_HASH=$CURR_HASH"
     do-debug "check_filechange: STORED_HASH=$STORED_HASH"
     do-debug "check_filechange: HASH_IS_DIFF=$HASH_IS_DIFF"
-    echo ${HASH_IS_DIFF}
+    return ${HASH_IS_DIFF}
 }
 
 function make_md5hashfile() {

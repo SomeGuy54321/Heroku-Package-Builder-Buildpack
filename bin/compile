@@ -127,7 +127,7 @@ source ${BIN_DIR}/steps/install_linuxbrew.sh
 # first check if the package-extras.yaml file is different from last time
 # if it is, we continue to install new packages
 # if its not we leave the decompressed .linuxbrew in /app and run finalization tasks
-YAML_FILE_IS_DIFFERENT=$(check_filechange ${BUILD_DIR}/package-extras.yaml ${CACHE_HASHFILE} || echo 1)
+check_filechange ${BUILD_DIR}/package-extras.yaml ${CACHE_HASHFILE}; YAML_FILE_IS_DIFFERENT=$? # returnstatus=1 --> files are different
 if [ ${YAML_FILE_IS_DIFFERENT} -eq 0 ]; then
     puts-step "No change in package-extras.yaml from last build. Skipping packages install and archive step."
 else
