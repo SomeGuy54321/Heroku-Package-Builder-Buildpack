@@ -130,6 +130,7 @@ if [ ${YAML_FILE_IS_DIFFERENT} -eq 0 ]; then
     fi
     exit 0
 else
+    puts-step "New packages detected. Continuing."
     # store the current md5 hash and continue build
     make_md5hashfile ${BUILD_DIR}/package-extras.yaml ${CACHE_DIR}/package-extras.yaml.md5hash
 
