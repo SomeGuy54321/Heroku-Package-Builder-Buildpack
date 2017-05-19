@@ -69,7 +69,6 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_RUBY 1  # disabling these for now
 export_configvar PACKAGE_BUILDER_NOINSTALL_PERL 1
 export_configvar PACKAGE_BUILDER_NOINSTALL_PYTHON 1
 export_configvar PACKAGE_BUILDER_NOINSTALL_DEFAULTS 0
-export CACHE_HASHFILE="${CACHE_DIR}/package-extras.yaml.md5hash"
 # setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
 export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 10
 export PACKAGE_BUILDER_MAX_BUILDTIME=$(min ${PACKAGE_BUILDER_MAX_BUILDTIME} 14)
@@ -127,6 +126,7 @@ source ${BIN_DIR}/steps/install_linuxbrew.sh
 # first check if the package-extras.yaml file is different from last time
 # if it is, we continue to install new packages
 # if its not we leave the decompressed .linuxbrew in /app and run finalization tasks
+export CACHE_HASHFILE="${CACHE_DIR}/package-extras.yaml.md5hash"
 check_hashchange ${BUILD_DIR}/package-extras.yaml ${CACHE_HASHFILE}; YAML_FILE_IS_DIFFERENT=$? # returnstatus=1 --> files are different
 if [ ${YAML_FILE_IS_DIFFERENT} -eq 0 ]; then
     puts-step "No change in package-extras.yaml from last build. Skipping packages install and archive step."
