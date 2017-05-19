@@ -345,7 +345,6 @@ function find_all_exe() {
 }
 
 
-
 # https://unix.stackexchange.com/a/124148
 function kill_descendants() {
     local KILLSIG=${1:-SIGKILL}
