@@ -561,3 +561,21 @@ function proc_watcher() {
     do_debug_local "Leaving ${FUNCNAME[0]} with RTN_STATUS = $RTN_STATUS"
     return ${RTN_STATUS}
 }
+
+# check the md5 hash of one file against the stored md5 hash of another
+# file to see if the file has changed
+# RETURNS:
+#   1 if files differ
+#   0 if they're the same
+function check_filechange() {
+    local CURR_FILE=${1}
+    local STORED_HASH_FILE=${2}
+    declare -i IS_DIFF=$(echo $(md5sum "${CURR_FILE}" | cut -d' ' -f1 || echo -n 0) | diff "${STORED_HASH_FILE}" - &>/dev/null ; echo $?)
+    echo ${IS_DIFF}
+}
+
+function make_md5hashfile() {
+    HASH_THIS_FILE=${1}
+    TO_THIS_FILE=${2}
+    echo $(md5sum "${HASH_THIS_FILE}" | cut -d' ' -f1 || echo -n 0) >${TO_THIS_FILE}
+}
