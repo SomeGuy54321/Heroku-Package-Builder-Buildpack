@@ -115,32 +115,25 @@ if [ ${PACKAGE_BUILDER_REINSTALL_LINUXBREW:-0} -eq 0 ]; then
     done
 fi
 
+# linuxbrew bases its installation on the HOME variable so temporarily we set this to the BUILD_DIR
+OLD_HOME=$HOME; export HOME=${BUILD_DIR}
+OLD_PATH=$PATH; export PATH="$HOME/.linuxbrew/bin:$HOME/.linuxbrew/sbin:$PATH"
+OLD_MANPATH=${MANPATH}; export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
+OLD_INFOPATH=${INFOPATH}; export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
+
+source ${BIN_DIR}/steps/install_linuxbrew.sh
+
 # start check for new package-extras.yaml
-YAML_FILE_IS_DIFFERENT=$(check_filechange ${BUILD_DIR}/package-extras.yaml ${CACHE_HASHFILE} || echo 1)
 # first check if the package-extras.yaml file is different from last time
 # if it is, we continue to install new packages
 # if its not we leave the decompressed .linuxbrew in /app and run finalization tasks
+YAML_FILE_IS_DIFFERENT=$(check_filechange ${BUILD_DIR}/package-extras.yaml ${CACHE_HASHFILE} || echo 1)
 if [ ${YAML_FILE_IS_DIFFERENT} -eq 0 ]; then
-    # file is the same as last time so go to next buildpack
-    puts-step "No change in package-extras.yaml from last build. Exiting SassyCustom/PackageBuilder."
-    BREWCACHE="${BUILD_DIR}/.cache/Homebrew"
-    if [ -d "${BREWCACHE}" ]; then
-        do-debug "Deleting '${BREWCACHE}' to save dyno space"
-        rm -rf "${BREWCACHE}"
-    fi
-    exit 0
+    puts-step "No change in package-extras.yaml from last build. Skipping packages install and archive step."
 else
     puts-step "New packages detected. Continuing."
-    # store the current md5 hash and continue build
     make_md5hashfile ${BUILD_DIR}/package-extras.yaml ${CACHE_DIR}/package-extras.yaml.md5hash
 
-    # linuxbrew bases its installation on the HOME variable so temporarily we set this to the BUILD_DIR
-    OLD_HOME=$HOME; export HOME=${BUILD_DIR}
-    OLD_PATH=$PATH; export PATH="$HOME/.linuxbrew/bin:$HOME/.linuxbrew/sbin:$PATH"
-    OLD_MANPATH=${MANPATH}; export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
-    OLD_INFOPATH=${INFOPATH}; export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
-
-    source ${BIN_DIR}/steps/install_linuxbrew.sh
     source ${BIN_DIR}/steps/install_packages.sh
 
     # Copy the new linuxbrew directories to CACHE_DIR
@@ -153,26 +146,25 @@ else
             do-debug "Couldn't find directory ${BUILD_DIR}/${d}. Skipping."
         fi
     done
-
-    # empty the local .cache to save space (latest download for each version should be archived already)
-    puts-step "Clearing dyno's download cache"
-    brew cleanup -s |& indent |& brew_quiet
-    rm -rf $(brew --cache) |& indent |& brew_quiet
-
-    BREW_EXE_LOCATION="$(which brew)"
-
-    # The brew .git directory breaks *again* when running an interactive session.
-    # For now we'll tell the user how to fix it. Maybe we fix it ourselves in the future.
-    echo 'echo -e "If you are in a shell and brew keeps saying \"fatal: Not a git repository\" then run this:\n> find ~/.linuxbrew -type d -name .git -exec rm -rf \"{}\" \; ; brew update --force"' >> $HOME/.bashrc
-
-    # reset to default locations
-    export HOME=${OLD_HOME}; do-debug "HOME reset to '$HOME'"
-    export PATH=${OLD_PATH}; do-debug "PATH reset to '$PATH'"
-    export MANPATH=${OLD_MANPATH}; do-debug "MANPATH reset to '$MANPATH'"
-    export INFOPATH=${OLD_INFOPATH}; do-debug "INFOPATH reset to '$INFOPATH'"
-
 fi
 # end check for new package-extras.yaml
+
+# empty the local .cache to save space (latest download for each version should be archived already)
+puts-step "Clearing dyno's download cache"
+brew cleanup -s |& indent |& brew_quiet
+rm -rf $(brew --cache) |& indent |& brew_quiet
+
+BREW_EXE_LOCATION="$(which brew)"
+
+# The brew .git directory breaks *again* when running an interactive session.
+# For now we'll tell the user how to fix it. Maybe we fix it ourselves in the future.
+echo 'echo -e "If you are in a shell and brew keeps saying \"fatal: Not a git repository\" then run this:\n> find ~/.linuxbrew -type d -name .git -exec rm -rf \"{}\" \; ; brew update --force"' >> $HOME/.bashrc
+
+# reset to default locations
+export HOME=${OLD_HOME}; do-debug "HOME reset to '$HOME'"
+export PATH=${OLD_PATH}; do-debug "PATH reset to '$PATH'"
+export MANPATH=${OLD_MANPATH}; do-debug "MANPATH reset to '$MANPATH'"
+export INFOPATH=${OLD_INFOPATH}; do-debug "INFOPATH reset to '$INFOPATH'"
 ### END Linuxbrew-specific stuff #######################################################################################
 
 
