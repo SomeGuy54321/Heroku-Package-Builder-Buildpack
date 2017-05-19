@@ -33,27 +33,18 @@ export APP_DIR="/app"
 # Sanitizing environment variables.
 unset GIT_DIR
 
-
-#for d in $(ls $CONFIG_DIR); do echo $d; cat $CONFIG_DIR/$d; done
-
-# Syntactic starch (more complex)
-# Note '-d' doesnt match hidden dirs
-# -p + grep prevents sourcing of directories
+# Syntactic starch
+# Notes: '-d' doesnt match hidden dirs, -p + grep prevents sourcing of directories
 for f in $(ls -dp ${BIN_DIR}/utils.d/* | grep -vE '/$'); do source ${f}; done
 
+# debug settings
+export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
+export_configvar BUILDPACK_XTRACE 0  # print all commands to log
+export PS4='+        $(countdown) ($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+[ ${BUILDPACK_XTRACE:-0} -gt 0 ] && set -o xtrace || true
 
-# first check if the package-extras.yaml file is different from last time
-# if it is, we continue as notmal
-# if its not we exit 0 and jump straight to ./release
-YML_FILE_IS_DIFFERENT=$(check_filechange ${BUILD_DIR}/package-extras.yaml ${CACHE_DIR}/package-extras.yaml.md5hash || echo 1)
-if [ ${YML_FILE_IS_DIFFERENT} -eq 0 ]; then
-    # file is the same as last time so go to next buildpack
-    puts-step "No change in package-extras.yaml from last build. Exiting SassyCustom/PackageBuilder."
-    exit 0
-else
-    # store the current md5 hash and continue build
-    make_md5hashfile ${BUILD_DIR}/package-extras.yaml ${CACHE_DIR}/package-extras.yaml.md5hash
-fi
+# check if i got the right PATH form last buildpack
+do-debug "PREV_BUILDPACK_PATH when starting: '${PREV_BUILDPACK_PATH}'"
 
 # $USER wasn't set for brew install exim and it was messing stuff up
 USER_DEFAULT="$(grep $UID /etc/passwd | cut -d: -f1)"
@@ -61,28 +52,9 @@ export USER="${USER:-$USER_DEFAULT}"
 do-debug "Set USER=$USER"
 
 
-# debug settings
-export_configvar BUILD_DEBUG 0  # trigger the specially placed debug messages and verbose outputs
-export_configvar BUILDPACK_XTRACE 0  # print all commands to log
-
-
-# set prompts
-export PS4='+        $(countdown) ($(basename $BASH_SOURCE):${LINENO}) ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-[ ${BUILDPACK_XTRACE:-0} -gt 0 ] && set -o xtrace || true
-
-
-# measuring
-do-debug "Number of columns in this terminal window: $(tput -T $TERM cols 2>/dev/null)"
-do-debug "Number of lines in this terminal window: $(tput -T $TERM lines  2>/dev/null)"
-
-
 export_configvar PACKAGE_BUILDER_HOMEBREW_VERBOSE 0
 if [ ${PACKAGE_BUILDER_HOMEBREW_VERBOSE} -gt 0 ]; then export HOMEBREW_VERBOSE=1; fi  # maybe do verbose
 export_configvar PACKAGE_BUILDER_INSTALL_QUIET 0
-
-
-# check if i got the right PATH form last buildpack
-do-debug "PREV_BUILDPACK_PATH when starting: '${PREV_BUILDPACK_PATH}'"
 
 
 # get things from CONFIG_DIR
@@ -97,14 +69,11 @@ export_configvar PACKAGE_BUILDER_NOINSTALL_RUBY 1  # disabling these for now
 export_configvar PACKAGE_BUILDER_NOINSTALL_PERL 1
 export_configvar PACKAGE_BUILDER_NOINSTALL_PYTHON 1
 export_configvar PACKAGE_BUILDER_NOINSTALL_DEFAULTS 0
-
-
+export CACHE_HASHFILE="${CACHE_DIR}/package-extras.yaml.md5hash"
 # setup the time limit, might throw an error if the user set PACKAGE_BUILDER_MAX_BUILDTIME to a noninteger
 export_configvar PACKAGE_BUILDER_MAX_BUILDTIME 10
 export PACKAGE_BUILDER_MAX_BUILDTIME=$(min ${PACKAGE_BUILDER_MAX_BUILDTIME} 14)
 export BUILD_MAX_RUNTIME=$(awk '{printf "%f", ($1 * 60.0) + $2}' <<< "${PACKAGE_BUILDER_MAX_BUILDTIME} $(date +'%s.%N')")
-
-
 # use epoch date to hopefully control the order in which the profile.d scripts are executed
 #export PROFILE_PATH="$BUILD_DIR/.profile.d/$(date +'%s')_finalize.sh"
 # try to make this get sourced last with special characters
@@ -146,43 +115,63 @@ if [ ${PACKAGE_BUILDER_REINSTALL_LINUXBREW:-0} -eq 0 ]; then
     done
 fi
 
-# linuxbrew bases its installation on the HOME variable so temporarily we set this to the BUILD_DIR
-OLD_HOME=$HOME; export HOME=${BUILD_DIR}
-OLD_PATH=$PATH; export PATH="$HOME/.linuxbrew/bin:$HOME/.linuxbrew/sbin:$PATH"
-OLD_MANPATH=${MANPATH}; export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
-OLD_INFOPATH=${INFOPATH}; export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
-
-source ${BIN_DIR}/steps/install_linuxbrew.sh
-source ${BIN_DIR}/steps/install_packages.sh
-
-# Copy the new linuxbrew directories to CACHE_DIR
-for d in ${LINUXBREW_DIRS}; do
-    if [ -d "$BUILD_DIR/$d" ]; then
-        do-debug "Deleting cached ${d}.tar.xz"
-        rm -rf ${CACHE_DIR}/${d}.tar.xz || true
-        compress_to_cache "${BUILD_DIR}/${d}"
-    else
-        do-debug "Couldn't find directory ${BUILD_DIR}/${d}. Skipping."
+# start check for new package-extras.yaml
+YAML_FILE_IS_DIFFERENT=$(check_filechange ${BUILD_DIR}/package-extras.yaml ${CACHE_HASHFILE} || echo 1)
+# first check if the package-extras.yaml file is different from last time
+# if it is, we continue to install new packages
+# if its not we leave the decompressed .linuxbrew in /app and run finalization tasks
+if [ ${YAML_FILE_IS_DIFFERENT} -eq 0 ]; then
+    # file is the same as last time so go to next buildpack
+    puts-step "No change in package-extras.yaml from last build. Exiting SassyCustom/PackageBuilder."
+    BREWCACHE="${BUILD_DIR}/.cache/Homebrew"
+    if [ -d "${BREWCACHE}" ]; then
+        do-debug "Deleting '${BREWCACHE}' to save dyno space"
+        rm -rf "${BREWCACHE}"
     fi
-done
+    exit 0
+else
+    # store the current md5 hash and continue build
+    make_md5hashfile ${BUILD_DIR}/package-extras.yaml ${CACHE_DIR}/package-extras.yaml.md5hash
 
-# empty the local .cache to save space (latest download for each version should be archived already)
-puts-step "Clearing dyno's download cache"
-brew cleanup -s |& indent |& brew_quiet
-rm -rf $(brew --cache) |& indent |& brew_quiet
+    # linuxbrew bases its installation on the HOME variable so temporarily we set this to the BUILD_DIR
+    OLD_HOME=$HOME; export HOME=${BUILD_DIR}
+    OLD_PATH=$PATH; export PATH="$HOME/.linuxbrew/bin:$HOME/.linuxbrew/sbin:$PATH"
+    OLD_MANPATH=${MANPATH}; export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
+    OLD_INFOPATH=${INFOPATH}; export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
 
-BREW_EXE_LOCATION="$(which brew)"
+    source ${BIN_DIR}/steps/install_linuxbrew.sh
+    source ${BIN_DIR}/steps/install_packages.sh
 
-# The brew .git directory breaks *again* when running an interactive session.
-# For now we'll tell the user how to fix it. Maybe we fix it ourselves in the future.
-echo 'echo -e "If you are in a shell and brew keeps saying \"fatal: Not a git repository\" then run this:\n> find ~/.linuxbrew -type d -name .git -exec rm -rf \"{}\" \; ; brew update --force"' >> $HOME/.bashrc
+    # Copy the new linuxbrew directories to CACHE_DIR
+    for d in ${LINUXBREW_DIRS}; do
+        if [ -d "$BUILD_DIR/$d" ]; then
+            do-debug "Deleting cached ${d}.tar.xz"
+            rm -rf ${CACHE_DIR}/${d}.tar.xz || true
+            compress_to_cache "${BUILD_DIR}/${d}"
+        else
+            do-debug "Couldn't find directory ${BUILD_DIR}/${d}. Skipping."
+        fi
+    done
 
-# reset to default locations
-export HOME=${OLD_HOME}; do-debug "HOME reset to '$HOME'"
-export PATH=${OLD_PATH}; do-debug "PATH reset to '$PATH'"
-export MANPATH=${OLD_MANPATH}; do-debug "MANPATH reset to '$MANPATH'"
-export INFOPATH=${OLD_INFOPATH}; do-debug "INFOPATH reset to '$INFOPATH'"
+    # empty the local .cache to save space (latest download for each version should be archived already)
+    puts-step "Clearing dyno's download cache"
+    brew cleanup -s |& indent |& brew_quiet
+    rm -rf $(brew --cache) |& indent |& brew_quiet
 
+    BREW_EXE_LOCATION="$(which brew)"
+
+    # The brew .git directory breaks *again* when running an interactive session.
+    # For now we'll tell the user how to fix it. Maybe we fix it ourselves in the future.
+    echo 'echo -e "If you are in a shell and brew keeps saying \"fatal: Not a git repository\" then run this:\n> find ~/.linuxbrew -type d -name .git -exec rm -rf \"{}\" \; ; brew update --force"' >> $HOME/.bashrc
+
+    # reset to default locations
+    export HOME=${OLD_HOME}; do-debug "HOME reset to '$HOME'"
+    export PATH=${OLD_PATH}; do-debug "PATH reset to '$PATH'"
+    export MANPATH=${OLD_MANPATH}; do-debug "MANPATH reset to '$MANPATH'"
+    export INFOPATH=${OLD_INFOPATH}; do-debug "INFOPATH reset to '$INFOPATH'"
+
+fi
+# end check for new package-extras.yaml
 ### END Linuxbrew-specific stuff #######################################################################################
 
 

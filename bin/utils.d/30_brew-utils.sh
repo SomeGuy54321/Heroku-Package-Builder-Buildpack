@@ -29,6 +29,7 @@ function fail_print() {
     local ACTION=$1
     local PACKAGE=$2
     puts-warn "Unable to ${ACTION} $PACKAGE at $HOMEBREW_MAKE_JOBS job(s)."
+    nullify_md5hashfile
     echo "This build will now fail. Sorry about that.
 Perhaps consider removing $PACKAGE from your brew-extras.yaml, or changing
 some of its 'options' parameters, or setting PACKAGE_BUILDER_BUILDFAIL=0 and
@@ -252,6 +253,7 @@ function brew_do() {
                                     # else it's failed and we care
                                     else
                                         puts-warn "Unable to ${ACTION} ${PACKAGE}. Continuing since PACKAGE_BUILDER_BUILDFAIL==0 or you're doing an uninstall."
+                                        nullify_md5hashfile
                                     fi
                                 ;;
                             esac
@@ -274,6 +276,7 @@ function brew_do() {
                                         puts-step "Successfully ${ACTION}ed ${PACKAGE}"
                                     else
                                         puts-warn "Unsuccessful ${ACTION}ation of ${PACKAGE}..."
+                                        nullify_md5hashfile
                                     fi
                                     ## end check the new $PACKAGE is available if doing re/install
 
@@ -284,6 +287,7 @@ function brew_do() {
                                         puts-step "Successfully ${ACTION}ed ${PACKAGE}"
                                     else
                                         puts-warn "Unsuccessful ${ACTION}ation of ${PACKAGE}..."
+                                        nullify_md5hashfile
                                     fi
                                     ## end check the new $PACKAGE is *not* available if doing uninstall
 
@@ -292,6 +296,7 @@ function brew_do() {
 
                             else
                                 puts-warn "Leaving the ${ACTION} with an error code. You may need to log in to your app to see if everything worked out."
+                                nullify_md5hashfile
                             fi
                             ## end see if we exited with an error
                         fi
@@ -303,21 +308,21 @@ function brew_do() {
             # ran out of time
             else
                 puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
+                nullify_md5hashfile
             fi
             ## end checking if theres time left for actual $ACTION
         fi
         ## end checking if ACTION=='install' and the package is already installed
     else
         puts-warn "Not enough time to ${ACTION} ${PACKAGE}"
+        nullify_md5hashfile
     fi
     export HOMEBREW_MAKE_JOBS=${MAX_JOBS}  # maybe the number of jobs wont be an issue for the next package.
 }
 
-
 function brew_checkfor() {
     brew list | grep --count "$1" || true
 }
-
 
 function brew_install_defaults() {
     # install core tools

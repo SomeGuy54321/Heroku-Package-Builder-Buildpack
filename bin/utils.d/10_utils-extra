@@ -572,24 +572,26 @@ function check_filechange() {
     local CURR_HASH=$(md5sum "${CURR_FILE}"  2>/dev/null | cut -d' ' -f1)
     local STORED_HASH=$(cat "${STORED_HASH_FILE}" 2>/dev/null || echo -n "NONE")
     declare -i HASH_IS_DIFF=$(diff <(echo ${STORED_HASH}) <(echo ${STORED_HASH}) &>/dev/null; echo $?)
-    if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
-        do-debug "check_filechange: CURR_FILE=$CURR_FILE"
-        do-debug "check_filechange: STORED_HASH_FILE=$STORED_HASH_FILE"
-        do-debug "check_filechange: CURR_HASH=$CURR_HASH"
-        do-debug "check_filechange: STORED_HASH=$STORED_HASH"
-        do-debug "check_filechange: HASH_IS_DIFF=$HASH_IS_DIFF"
-    fi
+    do-debug "check_filechange: CURR_FILE=$CURR_FILE"
+    do-debug "check_filechange: STORED_HASH_FILE=$STORED_HASH_FILE"
+    do-debug "check_filechange: CURR_HASH=$CURR_HASH"
+    do-debug "check_filechange: STORED_HASH=$STORED_HASH"
+    do-debug "check_filechange: HASH_IS_DIFF=$HASH_IS_DIFF"
     echo ${HASH_IS_DIFF}
 }
 
 function make_md5hashfile() {
-    local HASH_THIS_FILE=${1}
-    local TO_THIS_FILE=${2}
+    local HASH_THIS_FILE=${1:-$BUILD_DIR/package-extras.yaml}
+    local TO_THIS_FILE=${2:-$CACHE_HASHFILE}
     local STORE_HASH=$(md5sum "${HASH_THIS_FILE}" | cut -d' ' -f1 2>/dev/null || echo -n "ERROR WHEN HASHING $(date)")
-    if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
-        do-debug "check_filechange: HASH_THIS_FILE=$HASH_THIS_FILE"
-        do-debug "check_filechange: TO_THIS_FILE=$TO_THIS_FILE"
-        do-debug "check_filechange: STORE_HASH=$STORE_HASH"
-    fi
+    do-debug "check_filechange: HASH_THIS_FILE=$HASH_THIS_FILE"
+    do-debug "check_filechange: TO_THIS_FILE=$TO_THIS_FILE"
+    do-debug "check_filechange: STORE_HASH=$STORE_HASH"
     echo ${STORE_HASH} >${TO_THIS_FILE}
+}
+
+function nullify_md5hashfile() {
+    local HASHFILE=${1:-$CACHE_HASHFILE}
+    do-debug "Nullifying CACHE_HASHFILE=$HASHFILE"
+    echo "HASH NULLIFIED DURING BUILD $(date)" >${HASHFILE}
 }

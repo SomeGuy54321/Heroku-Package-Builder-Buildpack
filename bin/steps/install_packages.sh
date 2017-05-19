@@ -59,6 +59,7 @@ function package_manage() {
     done
 
     if [ ${#REMAINING_PACKAGES} -gt 0 ]; then
+        nullify_md5hashfile
         puts-warn "The following packages did not ${ACTION} in time:"
         echo -e $REMAINING_PACKAGES |& indent_notime | indent
         puts-warn "Try building again or increasing your PACKAGE_BUILDER_MAX_BUILDTIME configvar."
