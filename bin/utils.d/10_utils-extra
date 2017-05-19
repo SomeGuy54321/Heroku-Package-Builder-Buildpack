@@ -569,7 +569,7 @@ function proc_watcher() {
 function check_filechange() {
     local CURR_FILE=${1:-$BUILD_DIR/package-extras.yaml}
     local STORED_HASH_FILE=${2:-$CACHE_HASHFILE}
-    [ ! -a "${STORED_HASH_FILE}" ] && return 1 || true
+    #[ ! -a "${STORED_HASH_FILE}" ] && return 1 || true
     local CURR_HASH=$(md5sum "${CURR_FILE}"  2>/dev/null | cut -d' ' -f1)
     local STORED_HASH=$(cat "${STORED_HASH_FILE}" 2>/dev/null || echo -n "NONE")
     declare -i HASH_IS_DIFF=$(diff <(echo ${STORED_HASH}) <(echo ${STORED_HASH}) &>/dev/null; echo $?)
