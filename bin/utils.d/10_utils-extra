@@ -569,12 +569,27 @@ function proc_watcher() {
 function check_filechange() {
     local CURR_FILE=${1}
     local STORED_HASH_FILE=${2}
-    declare -i IS_DIFF=$(md5sum "${CURR_FILE}"  &>/dev/null | cut -d' ' -f1 | diff "${STORED_HASH_FILE}" - &>/dev/null; echo $?)
-    echo ${IS_DIFF}
+    local CURR_HASH=$(md5sum "${CURR_FILE}"  2>/dev/null | cut -d' ' -f1)
+    local STORED_HASH=$(cat "${STORED_HASH_FILE}" 2>/dev/null || echo -n "NONE")
+    declare -i HASH_IS_DIFF=$(diff <(echo ${STORED_HASH}) <(echo ${STORED_HASH}) &>/dev/null; echo $?)
+    if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
+        do-debug "check_filechange: CURR_FILE=$CURR_FILE"
+        do-debug "check_filechange: STORED_HASH_FILE=$STORED_HASH_FILE"
+        do-debug "check_filechange: CURR_HASH=$CURR_HASH"
+        do-debug "check_filechange: STORED_HASH=$STORED_HASH"
+        do-debug "check_filechange: HASH_IS_DIFF=$HASH_IS_DIFF"
+    fi
+    echo ${HASH_IS_DIFF}
 }
 
 function make_md5hashfile() {
-    HASH_THIS_FILE=${1}
-    TO_THIS_FILE=${2}
-    echo $(md5sum "${HASH_THIS_FILE}" | cut -d' ' -f1 || echo -n 0) >${TO_THIS_FILE}
+    local HASH_THIS_FILE=${1}
+    local TO_THIS_FILE=${2}
+    local STORE_HASH=$(md5sum "${HASH_THIS_FILE}" | cut -d' ' -f1 2>/dev/null || echo -n "ERROR WHEN HASHING $(date)")
+    if [ ${BUILD_DEBUG:-$BUILD_DEBUG_DEFAULT} -gt 0 ]; then
+        do-debug "check_filechange: HASH_THIS_FILE=$HASH_THIS_FILE"
+        do-debug "check_filechange: TO_THIS_FILE=$TO_THIS_FILE"
+        do-debug "check_filechange: STORE_HASH=$STORE_HASH"
+    fi
+    echo ${STORE_HASH} >${TO_THIS_FILE}
 }

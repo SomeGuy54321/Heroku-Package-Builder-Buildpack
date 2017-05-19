@@ -48,6 +48,7 @@ for f in $(ls -dp ${BIN_DIR}/utils.d/* | grep -vE '/$'); do source ${f}; done
 YML_FILE_IS_DIFFERENT=$(check_filechange ${BUILD_DIR}/package-extras.yaml ${CACHE_DIR}/package-extras.yaml.md5hash || echo 1)
 if [ ${YML_FILE_IS_DIFFERENT} -eq 0 ]; then
     # file is the same as last time so go to next buildpack
+    puts-step "No change in package-extras.yaml from last build. Exiting SassyCustom/PackageBuilder."
     exit 0
 else
     # store the current md5 hash and continue build
