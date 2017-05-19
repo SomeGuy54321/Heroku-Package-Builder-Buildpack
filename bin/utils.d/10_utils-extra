@@ -585,14 +585,14 @@ function make_md5hashfile() {
     local HASH_THIS_FILE=${1:-$BUILD_DIR/package-extras.yaml}
     local TO_THIS_FILE=${2:-$CACHE_HASHFILE}
     local STORE_HASH=$(md5sum "${HASH_THIS_FILE}" | cut -d' ' -f1 2>/dev/null || echo -n "ERROR WHEN HASHING $(date)")
-    do-debug "check_filechange: HASH_THIS_FILE=$HASH_THIS_FILE"
-    do-debug "check_filechange: TO_THIS_FILE=$TO_THIS_FILE"
-    do-debug "check_filechange: STORE_HASH=$STORE_HASH"
+    do-debug "make_md5hashfile: HASH_THIS_FILE=$HASH_THIS_FILE"
+    do-debug "make_md5hashfile: TO_THIS_FILE=$TO_THIS_FILE"
+    do-debug "make_md5hashfile: STORE_HASH=$STORE_HASH"
     echo ${STORE_HASH} >${TO_THIS_FILE}
 }
 
 function nullify_md5hashfile() {
     local HASHFILE=${1:-$CACHE_HASHFILE}
-    do-debug "Nullifying CACHE_HASHFILE=$HASHFILE"
+    do-debug "nullify_md5hashfile: Nullifying CACHE_HASHFILE=$HASHFILE"
     echo "HASH NULLIFIED DURING BUILD $(date)" >${HASHFILE}
 }
