@@ -572,7 +572,8 @@ function check_filechange() {
     #[ ! -a "${STORED_HASH_FILE}" ] && return 1 || true
     local CURR_HASH=$(md5sum "${CURR_FILE}"  2>/dev/null | cut -d' ' -f1)
     local STORED_HASH=$(cat "${STORED_HASH_FILE}" 2>/dev/null || echo -n "NONE")
-    declare -i HASH_IS_DIFF=$(diff <(echo ${STORED_HASH}) <(echo ${STORED_HASH}) &>/dev/null; echo $?)
+    diff <(echo ${CURR_HASH}) <(echo ${STORED_HASH}) &>/dev/null
+    declare -i HASH_IS_DIFF=$?
     do-debug "check_filechange: CURR_FILE=$CURR_FILE"
     do-debug "check_filechange: STORED_HASH_FILE=$STORED_HASH_FILE"
     do-debug "check_filechange: CURR_HASH=$CURR_HASH"
