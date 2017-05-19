@@ -42,7 +42,7 @@ unset GIT_DIR
 for f in $(ls -dp ${BIN_DIR}/utils.d/* | grep -vE '/$'); do source ${f}; done
 
 
-# first check if the package-extras.yml file is different from last time
+# first check if the package-extras.yaml file is different from last time
 # if it is, we continue as notmal
 # if its not we exit 0 and jump straight to ./release
 YML_FILE_IS_DIFFERENT=$(check_filechange ${BUILD_DIR}/package-extras.yaml ${CACHE_DIR}/package-extras.yaml.md5hash || echo 1)
@@ -51,7 +51,7 @@ if [ ${YML_FILE_IS_DIFFERENT} -eq 0 ]; then
     exit 0
 else
     # store the current md5 hash and continue build
-    make_md5hashfile ${BUILD_DIR}/package-extras.yml ${CACHE_DIR}/package-extras.yaml.md5hash
+    make_md5hashfile ${BUILD_DIR}/package-extras.yaml ${CACHE_DIR}/package-extras.yaml.md5hash
 fi
 
 # $USER wasn't set for brew install exim and it was messing stuff up

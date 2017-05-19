@@ -569,7 +569,7 @@ function proc_watcher() {
 function check_filechange() {
     local CURR_FILE=${1}
     local STORED_HASH_FILE=${2}
-    declare -i IS_DIFF=$(echo $(md5sum "${CURR_FILE}" | cut -d' ' -f1 || echo -n 0) | diff "${STORED_HASH_FILE}" - &>/dev/null ; echo $?)
+    declare -i IS_DIFF=$(md5sum "${CURR_FILE}"  &>/dev/null | cut -d' ' -f1 | diff "${STORED_HASH_FILE}" - &>/dev/null; echo $?)
     echo ${IS_DIFF}
 }
 
