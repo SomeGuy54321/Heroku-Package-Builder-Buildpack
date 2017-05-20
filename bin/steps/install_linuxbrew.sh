@@ -21,6 +21,8 @@ else
 
 fi
 
+brew tap linuxbrew/extra |& indent || true
+
 puts-step "Linuxbrew configuration:"
 brew config |& indent || true
 
