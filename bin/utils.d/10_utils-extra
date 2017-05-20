@@ -434,18 +434,18 @@ function proc_watcher() {
     var_debug_local() {
         do_debug_local "jobs -l:"
         jobs -l |& indent_debug_local
-        do_debug_local "ENFORCE_TIME_LIMIT=$ENFORCE_TIME_LIMIT"
-        do_debug_local "JOB_PID_DOLL_EXCLAM=$JOB_PID_DOLL_EXCLAM"
-        do_debug_local "SLEEP_TIME=$SLEEP_TIME"
-        do_debug_local "TIME_LEFT=$TIME_LEFT"
-        do_debug_local "LAST_SLEEP_TIME=$LAST_SLEEP_TIME"
-        do_debug_local "\$(jobs_running)=$(jobs_running)"
-        do_debug_local "\$(pid_exists)=$(pid_exists)"
+        do_debug_local "ENFORCE_TIME_LIMIT=\"$ENFORCE_TIME_LIMIT\", "   \
+                       "JOB_PID_DOLL_EXCLAM=\"$JOB_PID_DOLL_EXCLAM\", " \
+                       "SLEEP_TIME=\"$SLEEP_TIME\", "                   \
+                       "TIME_LEFT=\"$TIME_LEFT\", "                     \
+                       "LAST_SLEEP_TIME=\"$LAST_SLEEP_TIME\", "         \
+                       "\$(jobs_running)=\"$(jobs_running)\", "         \
+                       "\$(pid_exists)=\"$(pid_exists)\", "             \
+                       "JOB_ID=\"$JOB_ID\", "                           \
+                       "JOB_PID=\"$JOB_PID\", "                         \
+                       "THE_EXE=\"$THE_EXE\", "                         \
+                       "THIS_PID=\"$THIS_PID\" "
         do_debug_local "${RTN_STATUS_TMPFILE} contents: $(cat ${RTN_STATUS_TMPFILE})"
-        do_debug_local "JOB_ID=$JOB_ID"
-        do_debug_local "JOB_PID=$JOB_PID"
-        do_debug_local "THE_EXE=$THE_EXE"
-        do_debug_local "THIS_PID=$THIS_PID"
         do_debug_local "\$(pgrep -a \$THE_EXE)=$(pgrep -a ${THE_EXE})"
         do_debug_local "\$(pgrep -a -P \$THIS_PID)=$(pgrep -a -P ${THIS_PID})"
         do_debug_local "\$(pgrep -a -P \$JOB_PID)=$(pgrep -a -P ${JOB_PID})"
