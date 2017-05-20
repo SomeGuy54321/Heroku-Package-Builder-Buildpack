@@ -333,6 +333,7 @@ function brew_install_defaults() {
         puts-step "Installing core tools"
 
         # gcc & glibc wont install without a newer gawk
+        # also this buildpack depends on having a newer gawk
         if [ ${PACKAGE_BUILDER_NOINSTALL_GAWK:-0} -ne 1 ] && [ $(brew_checkfor gawk) -eq 0 ]; then
             puts-step "Installing gawk"
             # these dont show up as dependencies but they are
@@ -342,13 +343,16 @@ function brew_install_defaults() {
             brew_do install gawk
         fi
 
-        if [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -ne 1 ] && [ $(brew_checkfor gcc) -eq 0 ]; then
-            puts-step "Installing GCC"
-            # these dont show up as dependencies but they are
-            brew_do install binutils
-            brew_do install linux-headers
-            brew_do install glibc
-            brew_do install gcc
+        # user can still install gcc by specifying it in their package-extras.yaml file
+        if [ $(can_use_system_gcc) -eq 0 ]; then
+            if [ ${PACKAGE_BUILDER_NOINSTALL_GCC:-0} -ne 1 ] && [ $(brew_checkfor gcc) -eq 0 ]; then
+                puts-step "Installing GCC"
+                # these dont show up as dependencies but they are
+                brew_do install binutils
+                brew_do install linux-headers
+                brew_do install glibc
+                brew_do install gcc
+            fi
         fi
 
         ## These are disabled for now, they take a while to install
@@ -456,4 +460,13 @@ function brew_clearerrorfile() {
     ERRORFILE="${1:-/tmp/brew_test_results.txt}"
     rm -f "${ERRORFILE}" &>/dev/null || true
     touch "${ERRORFILE}" &>/dev/null || true
+}
+
+# According to this: https://github.com/Linuxbrew/legacy-linuxbrew/issues/415#issuecomment-105616862
+# We can avoid installing gcc if gcc is version 4+, which saves 250 mb
+function can_use_system_gcc() {
+    local GCC_PATH=$(which gcc)
+    local MIN_VERSION=4
+    local INSTALLED_GCC_VERSION=$(${GCC_PATH} -dumpversion | cut -d. -f1 2>/dev/null)
+    [ ${INSTALLED_GCC_VERSION} -ge ${MIN_VERSION} ] && echo 1 || echo 0
 }
