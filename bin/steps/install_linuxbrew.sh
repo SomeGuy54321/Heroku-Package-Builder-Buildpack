@@ -30,4 +30,6 @@ puts-step "Running 'brew doctor':"
 brew doctor |& indent || true
 
 # run even if already installed in case the first core-tools install was interrupted
-brew_install_defaults
+# 21-MAY-2017 remove requirement to install core tools except gawk which is required for this buildpack to work right
+brew_do install gawk
+#brew_install_defaults
