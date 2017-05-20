@@ -321,7 +321,9 @@ function brew_do() {
 }
 
 function brew_checkfor() {
-    brew list | grep --count "$1" || true
+    local PACKAGE=${1}
+    PACKAGE=$(basename "${PACKAGE}" | cut -d. -f1) # this needed in case a url is passed
+    brew list | grep --count "$PACKAGE" || true
 }
 
 function brew_install_defaults() {
