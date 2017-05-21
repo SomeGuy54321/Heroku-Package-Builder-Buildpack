@@ -10,6 +10,8 @@ export PATH="$(dirname $BASH_SOURCE)/bin:$PATH"
 
 # Syntax sugar.
 function indent() {
+    # only use the countdown prefix if the countdown file exists and is executable
+    # [ -f "$(find bin/countdown -maxdepth 0 -executable | head -n1)" ] && RE='s/^/        /; e countdown;' || RE='s/^/        /'
     RE='s/^/        /; e countdown;' && \
     sed ${SED_FLAG} "$RE"            || \
     sed ${SED_FLAG} 's/^/        /'  || true

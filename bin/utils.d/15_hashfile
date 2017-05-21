@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# check the md5 hash of one file against the stored md5 hash of another
+# file to see if the file has changed
+# RETURNS:
+#   1 if files differ
+#   0 if they're the same
+function check_hashchange() {
+    ORIG_PIPEFAIL=$(get_orig_opt pipefail)
+    ORIG_ERREXIT=$(get_orig_opt errexit)
+    set +o pipefail
+    set +o errexit
+    local CURR_FILE=${1:-$BUILD_DIR/package-extras.yaml}
+    local STORED_HASH_FILE=${2:-$CACHE_HASHFILE}
+    #[ ! -a "${STORED_HASH_FILE}" ] && return 1 || true
+    local CURR_HASH=$(md5sum "${CURR_FILE}"  2>/dev/null | cut -d' ' -f1)
+    local STORED_HASH=$(cat "${STORED_HASH_FILE}" 2>/dev/null || echo -n "NONE")
+    diff <(echo ${CURR_HASH}) <(echo ${STORED_HASH}) &>/dev/null
+    declare -i HASH_IS_DIFF=$?
+    do-debug "check_hashchange: CURR_FILE=$CURR_FILE"
+    do-debug "check_hashchange: STORED_HASH_FILE=$STORED_HASH_FILE"
+    do-debug "check_hashchange: CURR_HASH=$CURR_HASH"
+    do-debug "check_hashchange: STORED_HASH=$STORED_HASH"
+    do-debug "check_hashchange: HASH_IS_DIFF=$HASH_IS_DIFF"
+    return ${HASH_IS_DIFF}
+    ${ORIG_PIPEFAIL}
+    ${ORIG_ERREXIT}
+}
+
+function make_md5hashfile() {
+    local HASH_THIS_FILE=${1:-$BUILD_DIR/package-extras.yaml}
+    local TO_THIS_FILE=${2:-$CACHE_HASHFILE}
+    local STORE_HASH=$(md5sum "${HASH_THIS_FILE}" | cut -d' ' -f1 2>/dev/null || echo -n "ERROR WHEN HASHING $(date)")
+    do-debug "make_md5hashfile: HASH_THIS_FILE=$HASH_THIS_FILE"
+    do-debug "make_md5hashfile: TO_THIS_FILE=$TO_THIS_FILE"
+    do-debug "make_md5hashfile: STORE_HASH=$STORE_HASH"
+    echo ${STORE_HASH} >${TO_THIS_FILE}
+}
+
+function nullify_md5hashfile() {
+    local HASHFILE=${1:-$CACHE_HASHFILE}
+    do-debug "nullify_md5hashfile: Nullifying CACHE_HASHFILE=$HASHFILE"
+    echo "HASH NULLIFIED DURING BUILD $(date)" >${HASHFILE}
+}
